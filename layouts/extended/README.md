@@ -68,14 +68,16 @@ If you want to use additional objects, you will need to include them currently:
 
 ###POSITIONS
 You can use one of the following for 'from' or 'to':
-    - object positions -
+    *object positions*
     start|last|current
-    - positions on the screen -
+    *positions on the screen*
     top|left|right|bottom|center
     topleft|topright|bottomleft|bottomright
-    - positions off the screen -
+    *positions off the screen*
     offtop|offleft|offright|offbottom
     offtopleft|offtopright|offbottomleft|offbottomright
+    offtopleftx|offtoprightx|offbottomleftx|offbottomrightx
+    offtoplefty|offtoprighty|offbottomlefty|offbottomrighty
 
 A FEW NOTES:
 from = "current" to = wherever would be a one-time animation since on the next animation the from location would be the same as where its already at
@@ -89,6 +91,7 @@ You can look at some of the WIP objects for examples in extended\objects\.
 To create a new object that can be used with ExtendedObjects:
 1. create a new folder & file in: layouts\extended\objects\myobject\myobject.nut
 2. create a class extending ExtendedObject
+```
     class MyObject extends ExtendedObject {
         constructor(id, x, y, w, h) {
             base.constructor(id, x, y);
@@ -114,23 +117,28 @@ To create a new object that can be used with ExtendedObjects:
             return false;
         }
     }
+```
 3. add a hook so users can add your object:
+```
     ExtendedObjects.add_myobject <- function(id, x, y, w, h) {
         return ExtendedObjects.add(Wheel(id, x, y, w, h));
     }
-
+```
 4. In your layout.nut file, add your includes and object:
+```
     fe.do_nut("extended\extended.nut");
     fe.do_nut("extended\animate.nut");
     fe.do_nut("extended\objects\myobject\myobject.nut");
     ExtendedObjects.add_myobject("cool", 0, 0, 100, 100);
-    
+```
+
 ##Developing Animations **WIP**
 You can look at some of the WIP animations for examples in extended\anims\.
 
 To create a new animation that can be used with ExtendedObjects:
 1. create a new folder & file in: layouts\extended\anims\myanim\myanim.nut
-2. create a class extending ExtendedAnimation
+2. create a class extending ExtendedAnimation:
+```
     class MyAnim extends ExtendedAnimation {
         constructor(config) {
             base.constructor(config);
@@ -163,18 +171,22 @@ To create a new animation that can be used with ExtendedObjects:
             });
         }
     }
+```
 3. In your layout.nut file, add your includes and object:
+```
     fe.do_nut("extended\extended.nut");
     fe.do_nut("extended\animate.nut");
     fe.do_nut("extended\anims\myanim\myanim.nut");
     local obj = ExtendedObjects.add_myobject("cool", 0, 0, 100, 100);
     obj.my_anim(cfg);
+```
 
 ## Developing Further **WIP**
 ExtendedObjects and Animate can be extended even further than objects and animations. Any class you create can hook into ExtendedObjects or Animations via callbacks:
 
 1. Create a nut file: my.nut
 2. Create a class
+```
     class MyThing {
         constructor() {
             //hook into ExtendedObjects or Animate callbacks
@@ -193,6 +205,7 @@ ExtendedObjects and Animate can be extended even further than objects and animat
         }
         //if the callback functions exist, they will be executed
     }
+```
 
 ##Issues
 ------------
