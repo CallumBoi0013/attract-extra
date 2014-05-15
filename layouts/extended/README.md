@@ -1,7 +1,13 @@
-#ExtendedObjects and Animate library with demo layout and new objects
+#ExtendedObjects and Animate library
+
+The extended objects library extends the capabilities of the existing Attract-Mode objects.
 
 **ExtendedObjects**
-The extended objects library extends the capabilities of the existing Attract-Mode objects.
+ExtendedObjects is a .nut file you can include with your Attract-Mode layout to provide more functionality. It is also designed for expandibility, allowing developers to create new objects made from multiple other objects or add new animations to be used in your layout.
+
+**Animate**
+Animate is a .nut file that relies on ExtendedObjects to make it easy to add animations to objects in your Attract-Mode layout.
+
 
 ##ExtendedObjects Usage
 ----------------
@@ -20,6 +26,7 @@ If you want to use additional objects, you will need to include them currently:
 
 ##Animate Usage
 ----------------
+```Squirrel
     //load required files
     fe.do_nut("extended\extended.nut");
     fe.do_nut("extended\animate.nut");
@@ -27,16 +34,16 @@ If you want to use additional objects, you will need to include them currently:
     //you can access objects later by the id you provided
     ExtendedObjects.add_image("logo", "logo.png", 0, 0, fe.layout.width, fe.layout.height);
     ExtendedObjects.add_artwork("game", "snap", 0, 0, fe.layout.width, fe.layout.height);
-    //add your animations - object.addAnimation(which, config );
-    ExtendedObjects.getObject("logo").addAnimation("translate");
-    //you can provide your own configuration options for the animation, options are shown below
-    ExtendedObjects.getObject("game").addAnimation("translate", { duration = 1500, when = Transition.FromOldSelection, easing = "out", tween = "back", from = "offscreenbottom", to = "bottom" });
+    //add your animations - object.animate_translate(cfg) or object.animate_property(cfg);
+    ExtendedObjects.getObject("logo").animate_translate();
+    //you can provide your own configuration options for the animation in a table, options are shown below
+    ExtendedObjects.getObject("game").animate_translate({ duration = 1500, when = Transition.FromOldSelection, easing = "out", tween = "back", from = "offscreenbottom", to = "bottom" });
+```
 
-###AnimateConfig Parameters
-    config:                 optional table (surround with { } ) that contains your animation config options
+###Animation Parameters
+    cfg:                 optional table (surround with { } ) that contains your animation config options
 
-###AnimateConfig variables
-    which:                  which animation to run: "translate", "property"
+###Animation Config variables
     OPTION              DEFAULT                         DESCRIPTION
     when                Transition.FromOldSelection     when to run animation, one of Transition.TYPE provided by Attract-mode
     delay:              0                               delay before the animation starts in ms
@@ -50,7 +57,7 @@ If you want to use additional objects, you will need to include them currently:
                                                       
     reverse             false                           perform animation in reverse (true|false)
 
-###PROPERTY
+###Property Animation (object.animate_property(cfg))
     property            alpha                           the property to animate
     from                                                animation starts at this
     to:                                                 animation ends at this
@@ -62,36 +69,48 @@ If you want to use additional objects, you will need to include them currently:
                       height: object current height
                       rotate: 0 to 90
 
-###TRANSLATE
+###Translate Animation (object.animate_translate(cfg))
     from:               offscreenbottom                 animation starts from this position - an array [ x, y ] or position "center"
     to:                 center                          animation goes to this position - an array [ x, y ] or position "bottom"
 
-###POSITIONS
-You can use one of the following for 'from' or 'to':
-    *object positions*
+###Positions
+A nice feature of using ExtendedObjects is you can use positions to easily place objects at certain locations. These positions can also be used for animations 'from' or 'to' variables in your animation config:
+**object positions**
+```
     start|last|current
-    *positions on the screen*
+```
+**screen positions**
+```
     top|left|right|bottom|center
     topleft|topright|bottomleft|bottomright
-    *positions off the screen*
+```
+**offscreen positions**
+```
     offtop|offleft|offright|offbottom
     offtopleft|offtopright|offbottomleft|offbottomright
     offtopleftx|offtoprightx|offbottomleftx|offbottomrightx
     offtoplefty|offtoprighty|offbottomlefty|offbottomrighty
+```
 
-A FEW NOTES:
-from = "current" to = wherever would be a one-time animation since on the next animation the from location would be the same as where its already at
-from = "last" might be tricky to use, but if one animation finishes before the other starts, it might be useful
-certain 'easing' and 'tween' options might be odd in some situations
-easing 'out' animations probably aren't what you expect, these would be best used if you are 
+###A Few Notes:
+* positions are primarily for translate animations, but do work for x and y property animations
+* positions for x and y - remember you are only setting x or y - so if you go to 'bottomright', it's only going to go along the x or y axis
+* from = "current" to = wherever would be a one-time animation since on the next animation the from location would be the same as where its already at
+* from = "last" might be tricky to use, but if one animation finishes before the other starts, it might be useful
+* certain 'easing' and 'tween' options might be odd in some situations
+* easing 'out' animations probably aren't what you expect, these would be best used if you are 
 
-##Developing Objects **WIP**
+##Developers
+*** WIP ***
+Another nice feature of ExtendedObjects is it makes it pretty simple for coders to create new objects or animations.
+
+###Creating Objects
 You can look at some of the WIP objects for examples in extended\objects\.
 
 To create a new object that can be used with ExtendedObjects:
-1. create a new folder & file in: layouts\extended\objects\myobject\myobject.nut
-2. create a class extending ExtendedObject
-```
+*create a new folder & file in: layouts\extended\objects\myobject\myobject.nut
+*create a class extending ExtendedObject
+```Squirrel
     class MyObject extends ExtendedObject {
         constructor(id, x, y, w, h) {
             base.constructor(id, x, y);
@@ -118,27 +137,28 @@ To create a new object that can be used with ExtendedObjects:
         }
     }
 ```
-3. add a hook so users can add your object:
-```
+*add a hook so users can add your object:
+```Squirrel
     ExtendedObjects.add_myobject <- function(id, x, y, w, h) {
         return ExtendedObjects.add(Wheel(id, x, y, w, h));
     }
 ```
-4. In your layout.nut file, add your includes and object:
-```
+*In your layout.nut file, add your includes and object:
+```Squirrel
     fe.do_nut("extended\extended.nut");
     fe.do_nut("extended\animate.nut");
     fe.do_nut("extended\objects\myobject\myobject.nut");
     ExtendedObjects.add_myobject("cool", 0, 0, 100, 100);
 ```
 
-##Developing Animations **WIP**
+###Creating Animations
+***WIP***
 You can look at some of the WIP animations for examples in extended\anims\.
 
 To create a new animation that can be used with ExtendedObjects:
-1. create a new folder & file in: layouts\extended\anims\myanim\myanim.nut
-2. create a class extending ExtendedAnimation:
-```
+*create a new folder & file in: layouts\extended\anims\myanim\myanim.nut
+*create a class extending ExtendedAnimation:
+```Squirrel
     class MyAnim extends ExtendedAnimation {
         constructor(config) {
             base.constructor(config);
@@ -172,21 +192,27 @@ To create a new animation that can be used with ExtendedObjects:
         }
     }
 ```
-3. In your layout.nut file, add your includes and object:
-```
+*In your layout.nut file, add your includes and object:
+```Squirrel
     fe.do_nut("extended\extended.nut");
     fe.do_nut("extended\animate.nut");
     fe.do_nut("extended\anims\myanim\myanim.nut");
-    local obj = ExtendedObjects.add_myobject("cool", 0, 0, 100, 100);
+    local obj = ExtendedObjects.add_image("img", "frame.png", 0, 0, 100, 100);
+    local cfg = {
+                    when = ...
+                    ...
+                    my_property = ""
+                }
     obj.my_anim(cfg);
 ```
 
-## Developing Further **WIP**
+### Developing Further
+***WIP***
 ExtendedObjects and Animate can be extended even further than objects and animations. Any class you create can hook into ExtendedObjects or Animations via callbacks:
 
-1. Create a nut file: my.nut
-2. Create a class
-```
+*Create a nut file: my.nut
+*Create a class
+```Squirrel
     class MyThing {
         constructor() {
             //hook into ExtendedObjects or Animate callbacks
@@ -206,18 +232,18 @@ ExtendedObjects and Animate can be extended even further than objects and animat
         //if the callback functions exist, they will be executed
     }
 ```
+* Other interested classes can now listen for your callbacks using ExtendedObjects.add_callback("onMyThingInitialized");
 
 ##Issues
-------------
 This is a list of current issues I am addressing:
 * does not verify availability of ExtendedObjects and Animate library
 * animations cannot be interrupted (move to tick instead of transition)
 * fix these anims: bounce, inout expo, all outin anims
 * ExtendedObject must currently add an empty object
 * does not validate user entered config variables
+* animations currently added as add_property(cfg) and add_translate(cfg), should be animate("animation", cfg)
 
 ##Enhancements
--------------
 This is a list of todo items I am considering adding to the library:
 * improve method chaining config creator
 * easy include custom objects or animation classes (add_object("objectname"))
