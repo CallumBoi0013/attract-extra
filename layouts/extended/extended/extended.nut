@@ -169,6 +169,7 @@ class ShadowedObject extends ExtendedObject {
     function setHeight(h) { object.height = shadow.height = h; }
     function setRotation(r) { object.rotation = shadow.rotation = r; }
     function setShader(s) { object.shader = shadow.shader = s; }
+    function setVisible(v) { object.visible = shadow.visible = v; }
 }
 
 class ExtendedText extends ShadowedObject {
