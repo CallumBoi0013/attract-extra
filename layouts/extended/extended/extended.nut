@@ -1,16 +1,3 @@
-/*
- checking for ExtendedObjects exists
- setCenterAlign option for objects? If enabled, modify X/Y/W/H with -width / 2 and -height / 2
-    this may help with scale
- concerns on still forcing a primary object when extending ExtendedObject
- add shadows for text/images?
- actual debug lines in debugger
- reorder objects on draw list - sort?
- image clones
- push object config options to the layout config?
- some freakin' cool new objects (wheel, randomwheel, etc)
-*/
-
 fe.layout.width = ScreenWidth;
 fe.layout.height = ScreenHeight;
 fe.add_transition_callback( "extended_objects_transition" );
@@ -35,23 +22,26 @@ const OFFSCREEN = 20;
 TRANSITIONS <- ["StartLayout", "EndLayout", "ToNewSelection", "FromOldSelection", "ToGame", "FromGame", "ToNewList"];
 
 POSITIONS <- {
-    CENTER_X = function() { return fe.layout.width / 2; },
-    CENTER_Y = function() { return fe.layout.height / 2; },
+    centerX = function() { return fe.layout.width / 2; },
+    centerY = function() { return fe.layout.height / 2; },
+    screenPercentX = function(p) { return (p.tofloat() / 100) * fe.layout.width; },   
+    screenPercentY = function(p) { return (p.tofloat() / 100) * fe.layout.height; },   
     start = function(o) { return [ o.config.start_x, o.config.start_y ]; },
     last = function(o) { if ("last_x" in o.config == false || "last_y" in o.config == false) return start(o); return [ o.config.last_x, o.config.last_y ]; },
     current = function(o) { return [ o.getX(), o.getY() ]; },
-    top = function(o) { return [ CENTER_X() - (o.getWidth() / 2), 0 ]; },
-    left = function(o) { return [ 0, CENTER_Y() - (o.getHeight() / 2) ]; },
-    bottom = function(o) { return [ CENTER_X() - (o.getWidth() / 2), fe.layout.height - o.getHeight() ]; },
-    right = function(o) { return [ fe.layout.width - o.getWidth(), CENTER_Y() - (o.getHeight() / 2) ]; },
+    center = function(o) { return [ centerX() - (o.getWidth() / 2), centerY() - (o.getHeight() / 2) ]; },
+    top = function(o) { return [ centerX() - (o.getWidth() / 2), 0 ]; },
+    left = function(o) { return [ 0, centerY() - (o.getHeight() / 2) ]; },
+    bottom = function(o) { return [ centerX() - (o.getWidth() / 2), fe.layout.height - o.getHeight() ]; },
+    right = function(o) { return [ fe.layout.width - o.getWidth(), centerY() - (o.getHeight() / 2) ]; },
     topleft = function(o) { return [ 0, 0 ]; },
     topright = function(o) { return [ fe.layout.width - o.getWidth(), 0 ]; },
     bottomleft = function(o) { return [ 0, fe.layout.height - o.getHeight() ]; },
     bottomright = function(o) { return [ fe.layout.width - o.getWidth(), fe.layout.height - o.getHeight() ]; },
-    offtop = function(o) { return [ CENTER_X() - (o.getWidth() / 2), -o.getHeight() - OFFSCREEN ]; },
-    offbottom = function(o) { return [ CENTER_X() - (o.getWidth() / 2), fe.layout.height + o.getHeight() + OFFSCREEN ]; },
-    offleft = function(o) { return [ - o.getWidth() - OFFSCREEN, CENTER_Y() - (o.getHeight() / 2) ]; },
-    offright = function(o) { return [ fe.layout.width + o.getWidth() + OFFSCREEN, CENTER_Y() - (o.getHeight() / 2) ]; },
+    offtop = function(o) { return [ centerX() - (o.getWidth() / 2), -o.getHeight() - OFFSCREEN ]; },
+    offbottom = function(o) { return [ centerX() - (o.getWidth() / 2), fe.layout.height + o.getHeight() + OFFSCREEN ]; },
+    offleft = function(o) { return [ - o.getWidth() - OFFSCREEN, centerY() - (o.getHeight() / 2) ]; },
+    offright = function(o) { return [ fe.layout.width + o.getWidth() + OFFSCREEN, centerY() - (o.getHeight() / 2) ]; },
     offtopleftx = function(o) { return [ - o.getWidth() - OFFSCREEN, 0 ]; },
     offtoplefty = function(o) { return [ 0, - o.getHeight() - OFFSCREEN ]; },
     offtopleft = function(o) { return [ - o.getWidth() - OFFSCREEN, - o.getHeight() - OFFSCREEN ]; },
@@ -63,8 +53,7 @@ POSITIONS <- {
     offbottomleft = function(o) { return [ - o.getWidth() - OFFSCREEN, fe.layout.height + OFFSCREEN ]; },
     offbottomrightx = function(o) { return [ fe.layout.width + OFFSCREEN, 0 ]; },
     offbottomrighty = function(o) { return [ 0, fe.layout.height + OFFSCREEN ]; },
-    offbottomright = function(o) { return [ fe.layout.width + OFFSCREEN, fe.layout.height + OFFSCREEN ]; },
-    center = function(o) { return [ CENTER_X() - (o.getWidth() / 2), CENTER_Y() - (o.getHeight() / 2) ]; }
+    offbottomright = function(o) { return [ fe.layout.width + OFFSCREEN, fe.layout.height + OFFSCREEN ]; }
 }
 
 //extended callback stores which callback you want, and the object from where the function will run
@@ -293,15 +282,15 @@ class ExtendedDebugger {
     }
     
     function onAnimationFrame(params) {
+    }
+    
+    function onTick(params) {
+        //notice(params.ttime);
         foreach(o in ExtendedObjects.objects) {
             local dobj = get(o.id);
             dobj.setPosition( [ o.getX(), o.getY() ]);
             dobj.setText(o.toString());
         }
-    }
-    
-    function onTick(params) {
-        //notice(params.ttime);
     }
     
     function onTransition(params) {
