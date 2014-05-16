@@ -234,27 +234,47 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 ```
 * Other interested classes can now listen for your callbacks using ExtendedObjects.add_callback("onMyThingInitialized");
 
-##Issues
-This is a list of current issues I am addressing:
-* does not verify availability of ExtendedObjects and Animate library
-* animations cannot be interrupted (move to tick instead of transition)
+##TODO
+This is my active todo list (bugs and features):
+* add percentage positioning
+* specific transitions with property anim blocking other animations?
+* animations cannot be interrupted
+    Use onTick and onTransitions to handle animations
+    add animation 'kinds' - transition, transitionWait, atStart, atStop, onDemand
+    add animation 'repeat' - yoyo, loop, reverse
+    add animation 'repeatCount' - # or indefinite
+    indefinite animations and loop (reverse, restart, indefinite or set # of times)
+    blocking/locked/waitUntilFinished animation config option will not advance to next transition until finished
+* animation position not accurate - t wrong?
 * fix these anims: bounce, inout expo, all outin anims
-* ExtendedObject must currently add an empty object
-* does not validate user entered config variables
-* animations currently added as add_property(cfg) and add_translate(cfg), should be animate("animation", cfg)
+* updated methods to add objects or animation classes: add_object("objectname") or add_animation("property")
+* move POSITIONS to user friendly method
+* shadows still showing up when they are supposed to
+* actual debugger lines in debugger
 
-##Enhancements
-This is a list of todo items I am considering adding to the library:
-* improve method chaining config creator
-* easy include custom objects or animation classes (add_object("objectname"))
-* allow positions when adding objects
+###Issues
+This is a list of known issues:
+* ExtendedObject must currently add an empty object
+* does not verify availability of ExtendedObjects and Animate library
+* does not validate user entered config variables
+
+###Enhancements
+This is a list of enhancements I am considering adding to the library:
+* reorder objects on draw list - sort?
+* add_clone method - shadows uses clones, but separate images/artwork do not
+* some freakin' cool new objects (wheel, randomwheel, etc)
+* improve method and property naming - base it on other animation libraries (flash or android)
+* method chaining config creator
+    use AnimationConfig class instead of table to allow for proper method chaining
 * transform - scale + rotate from center
+    setCenterAlign option for objects? If enabled, modify X/Y/W/H with -width / 2 and -height / 2
 * color - from rgb to rgb
+* allow positions when adding objects
 * multiple transitions in animation config
+* provide config values for animations like back, expo, elastic for p, a or s
 * reorder objects on the draw list
 * clones (use weakrefs?)    
 * new objects (marquee wheel, etc)
-* indefinite animations and loop (reverse, restart, indefinite or set # of times)
 * quad bezier improvements (control point, arc option)
 * animation chains - chain multiple animations together (without needing multiple and delays)
 * animation paths - multiple points animations
