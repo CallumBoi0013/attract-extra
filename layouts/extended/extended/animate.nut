@@ -302,7 +302,7 @@ class ExtendedAnimation {
         if ("repeat" in config == false) config.repeat <- 1;
     }
     function getType() { return "ExtendedAnimation" };
-    function calculate(easing, tween, ttime, duration, start, end, amp = null, period = null) {
+    function calculate(easing, tween, ttime, start, end, duration, amp = null, period = null) {
         local t = (ttime.tofloat() / duration).tofloat();
         local change = end - start;
         switch(tween) {
@@ -377,7 +377,7 @@ class PropertyAnimation extends ExtendedAnimation {
     function frame(obj, ttime) {
         base.frame(obj, ttime);
         local value;
-        if (config.reverse) value = calculate(config.easing, config.tween, ttime, config.duration, config.end, config.start) else value = calculate(config.easing, config.tween, ttime, config.duration, config.start, config.end);
+        if (config.reverse) value = calculate(config.easing, config.tween, ttime, config.end, config.start, config.duration) else value = calculate(config.easing, config.tween, ttime, config.start, config.end, config.duration);
         switch (config.property) {
             case "x":
                 obj.setX(value);
@@ -441,8 +441,8 @@ class TranslateAnimation extends ExtendedAnimation {
                 local bezier = quadbezier(config.end[0], config.end[1], controlpoint[0], controlpoint[1], config.start[0], config.start[1], t)
                 point = [ bezier[0], bezier[1] ];
             } else {
-                point = [   calculate(config.easing, config.tween, ttime, config.duration, config.end[0], config.start[0]),
-                            calculate(config.easing, config.tween, ttime, config.duration, config.end[1], config.start[1])
+                point = [   calculate(config.easing, config.tween, ttime, config.end[0], config.start[0], config.duration),
+                            calculate(config.easing, config.tween, ttime, config.end[1], config.start[1], config.duration)
                         ];
             }
         } else {
@@ -452,11 +452,12 @@ class TranslateAnimation extends ExtendedAnimation {
                 local bezier = quadbezier(config.start[0], config.start[1], controlpoint[0], controlpoint[1], config.end[0], config.end[1], t);
                 point = [ bezier[0], bezier[1] ];
             } else {
-                point = [   calculate(config.easing, config.tween, ttime, config.duration, config.start[0], config.end[0]),
-                            calculate(config.easing, config.tween, ttime, config.duration, config.start[1], config.end[1])
+                point = [   calculate(config.easing, config.tween, ttime, config.start[0], config.end[0], config.duration),
+                            calculate(config.easing, config.tween, ttime, config.start[1], config.end[1], config.duration)
                         ];
             }
         }
-        obj.setPosition(point);
+        //ExtendedDebugger.notice(ttime + "," + config.start[0] + "x" + config.start[1] + " - " + config.end[0] + "x" + config.end[1] + "," + config.duration + " - " + point[0] + "x" + point[1]);
+        obj.setPosition( point );
     }
 }

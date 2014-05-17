@@ -3,7 +3,7 @@ Animation["particles"] <- function(c = {} ) {
     return ParticleAnimation(c);
 }
 
-const PCOUNT = 100;
+const PCOUNT = 2000;
 
 class ParticleAnimation extends ExtendedAnimation {
     particles = null;
@@ -38,10 +38,8 @@ class ParticleAnimation extends ExtendedAnimation {
     function frame(obj, ttime) {
         base.frame(obj, ttime);
         foreach (p in particles) {
-            local dir = "in";
-            if (p.forwardAnim) dir = "out";
-            p.set(  calculate(dir, "sine", ttime, config.duration, p.start[0], p.end[0]),
-                    calculate(dir, "sine", ttime, config.duration, p.start[1], p.end[1])
+            p.set(  calculate(config.easing, config.tween, ttime, p.start[0], p.end[0], config.duration),
+                    calculate(config.easing, config.tween, ttime, p.start[1], p.end[1], config.duration)
              );
         }
     }
