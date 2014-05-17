@@ -40,10 +40,11 @@ If you want to use additional objects, you will need to include them currently:
     ExtendedObjects.get("game").animate("translate", { duration = 1500, when = Transition.FromOldSelection, easing = "out", tween = "back", from = "offscreenbottom", to = "bottom" });
 ```
 
-###Animation Parameters
-    cfg:                 optional table (surround with { } ) that contains your animation config options
+###.animate() parameters
+    type:               "translate" or "property" (or others if you include a file from extended\animations\..)
+    cfg:                optional table (surround with { } ) that contains your animation config options
 
-###Animation Config variables
+###.animate() config variables
     OPTION              DEFAULT                         DESCRIPTION
     when                Transition.FromOldSelection     when to run animation, one of Transition.TYPE provided by Attract-mode
     kind                transition                      one of transition, loop, yoyo, continuous
@@ -59,19 +60,23 @@ If you want to use additional objects, you will need to include them currently:
                                                       
     reverse             false                           perform animation in reverse (true|false)
 
-###Property Animation (object.animate("property", cfg))
+###Property config variables (object.animate("property", cfg))
     property            alpha                           the property to animate
     from                                                animation starts at this
     to:                                                 animation ends at this
     Default 'from' and 'to' differ depending on property
                       alpha: 0 to 255
-                      x: offscreenleft to start
-                      y: offscreentop to start
-                      width: object current width
-                      height: object current height
+                      x: offleft to start
+                      y: offtop to start
+                      width: object width to object width + 50
+                      height: object height to object height + 50
+                      skew_x: 0 to 10
+                      skew_y: 0 to 10
+                      pinch_x: 0 to 10
+                      pinch_y: 0 to 10
                       rotate: 0 to 90
 
-###Translate Animation (object.animate("translate", cfg))
+###Translate config variables (object.animate("translate", cfg))
     from:               offscreenbottom                 animation starts from this position - an array [ x, y ] or position "center"
     to:                 center                          animation goes to this position - an array [ x, y ] or position "bottom"
 
