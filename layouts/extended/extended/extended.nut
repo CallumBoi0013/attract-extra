@@ -175,7 +175,7 @@ class ExtendedText extends ShadowedObject {
     function getCharSize() { return object.charsize; }
     function getFont() { return object.font; }
     function getStyle() { return object.style; }
-    function getText() { return object.msg; return "" }
+    function getText() { return object.msg; }
     function getWordWrap() { return object.word_wrap; return false; }
     
     function setAlign(a) { object.align = shadow.align = a; }
