@@ -302,19 +302,19 @@ class ExtendedAnimation {
         if ("repeat" in config == false) config.repeat <- 1;
     }
     function getType() { return "ExtendedAnimation" };
-    function calculate(ttime, duration, start, end, amp = null, period = null) {
+    function calculate(easing, tween, ttime, duration, start, end, amp = null, period = null) {
         local t = (ttime.tofloat() / duration).tofloat();
         local change = end - start;
-        switch(config.tween) {
+        switch(tween) {
             case "bounce":
             case "expo":
             case "elastic":
                 //these require ttime
-                return Animate.penner[config.easing][config.tween](ttime, start, change, config.duration);
+                return Animate.penner[easing][tween](ttime, start, change, config.duration);
             case "linear":
                 return Animate.penner["linear"](t, start, change, config.duration);
             default:
-                return Animate.penner[config.easing][config.tween](t, start, change, config.duration);
+                return Animate.penner[easing][tween](t, start, change, config.duration);
         }
     }
     //extend these
@@ -377,7 +377,7 @@ class PropertyAnimation extends ExtendedAnimation {
     function frame(obj, ttime) {
         base.frame(obj, ttime);
         local value;
-        if (config.reverse) value = calculate(ttime, config.duration, config.end, config.start) else value = calculate(ttime, config.duration, config.start, config.end);
+        if (config.reverse) value = calculate(config.easing, config.tween, ttime, config.duration, config.end, config.start) else value = calculate(config.easing, config.tween, ttime, config.duration, config.start, config.end);
         switch (config.property) {
             case "x":
                 obj.setX(value);
@@ -441,8 +441,8 @@ class TranslateAnimation extends ExtendedAnimation {
                 local bezier = quadbezier(config.end[0], config.end[1], controlpoint[0], controlpoint[1], config.start[0], config.start[1], t)
                 point = [ bezier[0], bezier[1] ];
             } else {
-                point = [   calculate(ttime, config.duration, config.end[0], config.start[0]),
-                            calculate(ttime, config.duration, config.end[1], config.start[1])
+                point = [   calculate(config.easing, config.tween, ttime, config.duration, config.end[0], config.start[0]),
+                            calculate(config.easing, config.tween, ttime, config.duration, config.end[1], config.start[1])
                         ];
             }
         } else {
@@ -452,8 +452,8 @@ class TranslateAnimation extends ExtendedAnimation {
                 local bezier = quadbezier(config.start[0], config.start[1], controlpoint[0], controlpoint[1], config.end[0], config.end[1], t);
                 point = [ bezier[0], bezier[1] ];
             } else {
-                point = [   calculate(ttime, config.duration, config.start[0], config.end[0]),
-                            calculate(ttime, config.duration, config.start[1], config.end[1])
+                point = [   calculate(config.easing, config.tween, ttime, config.duration, config.start[0], config.end[0]),
+                            calculate(config.easing, config.tween, ttime, config.duration, config.start[1], config.end[1])
                         ];
             }
         }
