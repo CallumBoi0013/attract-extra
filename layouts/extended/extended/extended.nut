@@ -147,11 +147,12 @@ class ShadowedObject extends ExtendedObject {
     function getShadowOffset() { return config.shadowOffset; }
 
     function setShadow(e) { config.shadowEnabled = shadow.visible = e; }
-    function setShadowAlpha(a) { if (a < 0) a = 0; if (a > 255) a = 255; config.shadowAlpha = a; if (a > 50) shadow.alpha = a * 0.25 else shadow.alpha = 0; }
+    function setShadowAlpha(a) { if (a < 0) a = 0; if (a > 255) a = 255; config.shadowAlpha = a; }
     function setShadowColor(r, g, b) { config.shadowColor = [r, g, b]; shadow.set_rgb(r, g, b); }
     function setShadowOffset(o) { config.shadowOffset = o; setX(getX()); setY(getY()); }
 
     //overrides
+    function setAlpha(a) {  base.setAlpha(a); if (a < 50) shadow.alpha = 0; }
     function setX(x) { object.x = x; shadow.x = x + config.shadowOffset; }
     function setY(y) { object.y = y; shadow.y = y + config.shadowOffset; }
     function setWidth(w) { object.width = shadow.width = w; }
@@ -260,9 +261,9 @@ class ExtendedDebugger {
         "align": Align.Left,
         "alpha": 255,
         "bg": [20, 20, 20],
-        "bg_alpha": 50,
-        "rgb": [240, 240, 240],
-        "charsize": 14,
+        "bg_alpha": 100,
+        "rgb": [255, 255, 255],
+        "charsize": 16,
         "word_wrap": true
     }
     constructor() {
@@ -272,7 +273,7 @@ class ExtendedDebugger {
             objects.append(obj);
         }
         
-        local notice = ExtendedText("debug_debuggernotice", "notice", 0, 0, fe.layout.width, 100);
+        local notice = ExtendedText("debug_notice", "notice", 0, 0, fe.layout.width, 100);
         ExtendedObjects.add_callback(this, "onObjectAdded");
         ExtendedObjects.add_callback(this, "onTransition");
         ExtendedObjects.add_callback(this, "onTick");
@@ -282,10 +283,10 @@ class ExtendedDebugger {
     }
     
     function onAnimationFrame(params) {
+        onAnimationStop(params);
     }
     
-    function onTick(params) {
-        //notice(params.ttime);
+    function onAnimationStop(params) {
         foreach(o in ExtendedObjects.objects) {
             local dobj = get(o.id);
             dobj.setPosition( [ o.getX(), o.getY() ]);
@@ -293,11 +294,15 @@ class ExtendedDebugger {
         }
     }
     
+    function onTick(params) {
+        //notice(params.ttime);
+    }
+    
     function onTransition(params) {
         local ttype = params.ttype;
         local var = params.var;
         local ttime = params.ttime;
-        //notice("Transition: " + ttype);
+        //ExtendedDebugger.get("notice").setText("Transition: " + ttype);
         return false;
     }
     
@@ -311,8 +316,8 @@ class ExtendedDebugger {
         obj.setWordWrap(config.word_wrap);
     }
     function notice(text) {
-        local notice = get("debuggernotice");
-        notice.setText(text);
+        local notice = get("notice");
+        if (notice != null) notice.setText(text);
     }
     
     function get(id) { foreach (o in objects) { if ("debug_" + id == o.id) return o; } return null; }
