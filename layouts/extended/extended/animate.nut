@@ -17,7 +17,8 @@ class Animate {
             "expo": function (ttime, b, c, d) { if ( ttime == 0) return b; return c * pow(2, 10 * ( ttime.tofloat() / d - 1)) + b; },
             "circle": function (t, b, c, d) { return -c * (sqrt(1 - pow(t, 2)) - 1) + b; },
             "elastic": function (ttime, b, c, d, a = null, p = null) { if (ttime == 0) return b; local t = ttime.tofloat() / d; if (t == 1) return b + c; if (p == null) p = d * 0.37; local s; if (a == null || a < abs(c)) { a = c; s = p / 4; } else { s = p / (PI * 2) * asin(c / a); } t = t - 1; return -(a * pow(2, 10 * t) * sin((t * d - s) * (PI * 2) / p)) + b; },
-            "back": function (t, b, c, d, s = null) { if (s == null) s = 1.70158; return c * t * t * ((s + 1) * t - s) + b; }
+            "back": function (t, b, c, d, s = null) { if (s == null) s = 1.70158; return c * t * t * ((s + 1) * t - s) + b; },
+            "bounce": function (ttime, b, c, d) { return c - Animate.penner["out"]["bounce"](d - ttime, 0, c, d) + b; }
         },
         "out": {
             "quad": function (t, b, c, d) { return -c * t * (t - 2) + b; },
@@ -29,7 +30,7 @@ class Animate {
             "circle": function (t, b, c, d) { t = t - 1; return (c * sqrt(1 - pow(t, 2)) + b); },
             "elastic": function (ttime, b, c, d, a = null, p = null) { if (ttime == 0) return b; local t = ttime.tofloat() / d; if (t == 1) return b + c; if (p == null) p = d * 0.37; local s; if (a == null || a < abs(c)) { a = c; s = p / 4; } else { s = p / (PI * 2) * asin(c / a); } return (a * pow(2, -10 * t) * sin((t * d - s) * (PI * 2) / p) + c + b).tofloat(); },
             "back": function (t, b, c, d, s = null) { if (s == null) s = 1.70158; t = t - 1; return c * (t * t * ((s + 1) * t + s) + 1) + b; },
-            "bounce": function (ttime, b, c, d) { local t = ttime.tofloat() / d; if (t < 1 / 2.75) return c * (7.5625 * t * t) + b; if (t < 2 / 2.75) { t = t - (1.5 / 2.75); return c * (7.5625 * t * t + 0.75) + b; } else if (t < 2.5 / 2.75) {t = t - (2.25 / 2.75); return c * (7.5625 * t * t + 0.9375) + b; } else { t = t - (2.625 / 2.75); return c * (7.5625 * t * t + 0.984375) + b; } }
+            "bounce": function (ttime, b, c, d) { local t = ttime.tofloat() / d; if (t < 1 / 2.75) { return c * (7.5625 * t * t) + b; } else if ( t < 2 / 2.75) { return c * (7.5625 * (t -= (1.5/2.75)) * t + 0.75) + b; } else if ( t < 2.5 / 2.75 ) { return c * (7.5625 * (t -= (2.25/2.75)) * t + 0.9375) + b; } else { return c * (7.5625 * (t -= (2.625/2.75)) * t + 0.984375) + b;} }
         },
         "inout": {
             "quad": function (t, b, c, d) { t = t * 2; if (t < 1) return c / 2 * pow(t, 2) + b; return -c / 2 * ((t - 1) * (t - 3) - 1) + b; },
@@ -37,10 +38,11 @@ class Animate {
             "quart": function (t, b, c, d) {  t = t * 2; if (t < 1) return c / 2 * pow(t, 4) + b; t = t - 2; return -c / 2 * (pow(t, 4) - 2) + b; },
             "quint": function (t, b, c, d) { t = t * 2; if (t < 1) return c / 2 * pow(t, 5) + b; t = t - 2; return c / 2 * (pow(t, 5) + 2) + b; },
             "sine": function (t, b, c, d) { return -c / 2 * (cos(PI * t) - 1) + b; },
-            "expo": function (ttime, b, c, d) { if (ttime == 0) return b; if (ttime == d) return b + c; local t = (ttime.tofloat() / d) / 2; if (t < 1) return c / 2 * pow(2, 10 * (t - 1)) + b; t = t - 1; return c / 2 * (-pow(2, -10 * t) + 2) + b; },
+            "expo": function (ttime, b, c, d) { if (ttime == 0) return b; if (ttime == d) return b + c; local t = ttime.tofloat() / d * 2; if (t < 1) return c / 2 * pow(2, 10 * (t - 1)) + b; t = t - 1; return c / 2 * (-pow(2, -10 * t) + 2) + b; },
             "circle": function (t, b, c, d) { t = t * 2; if (t < 1) return -c / 2 * (sqrt(1 - t * t) - 1) + b; t = t - 2; return c / 2 * (sqrt(1 - t * t) + 1) + b; },
             "elastic": function (ttime, b, c, d, a = null, p = null) { if (ttime == 0) return b; local t = (ttime.tofloat() / d) * 2; if (t == 2) return b + c; if (p == null) p = d * (0.3 * 1.5); local s; if (a == null || a < abs(c)) { a = c;  s = p / 4; } else { s = p / (PI * 2) * asin(c / a); } if (t < 1) return -0.5 * (a * pow(2, 10 * (t - 1)) * sin((t * d - s) * (PI * 2) / p)) + b; return a * pow(2, -10 * (t - 1)) * sin((t * d - s) * (PI * 2) / p) * 0.5 + c + b; },
-            "back": function (t, b, c, d, s = null) { if (s == null) s = 1.70158; s = s * 1.525; t = t * 2; if (t < 1) return c / 2 * (t * t * ((s + 1) * t - s)) + b; t = t - 2; return c / 2 * (t * t * ((s + 1) * t + s) + 2) + b; }
+            "back": function (t, b, c, d, s = null) { if (s == null) s = 1.70158; s = s * 1.525; t = t * 2; if (t < 1) return c / 2 * (t * t * ((s + 1) * t - s)) + b; t = t - 2; return c / 2 * (t * t * ((s + 1) * t + s) + 2) + b; },
+            "bounce": function (ttime, b, c, d) { if (ttime < d / 2) return Animate.penner["in"]["bounce"](ttime * 2, 0, c, d) * 0.5 + b; return Animate.penner["out"]["bounce"](ttime * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b; }
         }
     }
     
@@ -305,16 +307,41 @@ class ExtendedAnimation {
     function calculate(easing, tween, ttime, start, end, duration, amp = null, period = null) {
         local t = (ttime.tofloat() / duration).tofloat();
         local change = end - start;
-        switch(tween) {
-            case "bounce":
-            case "expo":
-            case "elastic":
-                //these require ttime
-                return Animate.penner[easing][tween](ttime, start, change, config.duration);
-            case "linear":
-                return Animate.penner["linear"](t, start, change, config.duration);
+        if (tween == "linear") return Animate.penner["linear"](t, start, change, duration);
+        switch(easing) {
+            case "outin":
+                //outin uses existing in and out functions based of the first half or second half of the animation
+                switch(tween) {
+                    case "bounce":
+                    case "expo":
+                    case "elastic":
+                        //these require ttime
+                        if (ttime < duration / 2) {
+                            return Animate.penner["out"][tween](ttime * 2, start, change / 2, duration);
+                        } else {
+                            return Animate.penner["in"][tween]((ttime * 2) - duration, start + change / 2, change / 2, duration);
+                        }
+                    default:
+                        if (ttime < duration / 2) {
+                            t = ((ttime.tofloat() * 2) / duration).tofloat();
+                            return Animate.penner["out"][tween](t, start, change / 2, duration);
+                        } else {
+                            t = (((ttime.tofloat() * 2) - duration) / duration).tofloat();
+                            return Animate.penner["in"][tween](t, start + change / 2, change / 2, duration);
+                        }
+                }
+                break;
             default:
-                return Animate.penner[easing][tween](t, start, change, config.duration);
+                switch(tween) {
+                    case "bounce":
+                    case "expo":
+                    case "elastic":
+                        //these require ttime
+                        return Animate.penner[easing][tween](ttime, start, change, duration);
+                    default:
+                        return Animate.penner[easing][tween](t, start, change, duration);
+                }
+                break;
         }
     }
     //extend these
