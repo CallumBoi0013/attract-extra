@@ -1,3 +1,6 @@
+//The Animate class handles the hooks that allow ExtendedObjects to 
+//animate and processes the animations based on a table of config
+//parameters
 class Animate {
     //  Penner's Easing equations
     //  http://www.robertpenner.com/easing/
@@ -40,18 +43,22 @@ class Animate {
             "back": function (t, b, c, d, s = null) { if (s == null) s = 1.70158; s = s * 1.525; t = t * 2; if (t < 1) return c / 2 * (t * t * ((s + 1) * t - s)) + b; t = t - 2; return c / 2 * (t * t * ((s + 1) * t + s) + 2) + b; }
         }
     }
+    
     function onObjectAdded(params) {
         local o = params.object;
         o.config.animations <- [];
-        o.getclass().newmember("animate_property", function(c = {}) {
-            o.config.animations.append(PropertyAnimation(c));
+        //add the animate function to each object
+        o.getclass().newmember("animate", function(w, c = {}) {
+            if (w in Animation) {
+                o.config.animations.append(Animation[w](c));
+            }
         });
-        o.getclass().newmember("animate_translate", function(c = {}) {
-            o.config.animations.append(TranslateAnimation(c));
-        });
-        o.getclass().newmember("animate_set", function(s) {
-            if (typeof s == "array")
-                foreach(a in s) o.config.animations.append(TranslateAnimation(a));
+        //add the animate_set function to each object
+        o.getclass().newmember("animate_set", function(w, s) {
+            if (w in Animation && s in AnimationSet && typeof AnimationSet[s] == "array") {
+                foreach(c in AnimationSet[s])
+                    o.config.animations.append(Animation[w](c));
+            }
         });
     }
 
@@ -175,6 +182,17 @@ ExtendedObjects.add_callback(Animate, "onObjectAdded");
 ExtendedObjects.add_callback(Animate, "onTransition");
 ExtendedObjects.add_callback(Animate, "onTick");
 
+//A table of animation types that will be available with object.animate(type, cfg)
+Animation <- {
+    "property": function(c) {
+        return PropertyAnimation(c);
+    }
+    "translate": function(c) {
+        return TranslateAnimation(c);
+    }
+}
+
+//A table of predefined sets of animations
 AnimationSet <- {
     "left_center_up": [
         {
@@ -199,7 +217,7 @@ AnimationSet <- {
     "fade_in_out": [
         { 
             when = Transition.ToNewSelection,
-            duration = 200,
+            duration = 500,
             property = "alpha",
             from = 255,
             to = 0,
@@ -208,7 +226,8 @@ AnimationSet <- {
         },
         { 
             when = Transition.FromOldSelection,
-            duration = 200,
+            delay = 500,
+            duration = 500,
             property = "alpha",
             from = 0,
             to = 255,
