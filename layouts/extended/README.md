@@ -21,8 +21,8 @@ Animate is a .nut file that relies on ExtendedObjects to make it easy to add ani
     ExtendedObjects.add_debug();
 
 If you want to use additional objects, you will need to include them currently:
-    fe.do_nut("extended\objects\orbit_wheel.nut");
-    ExtendedObjects.add_wheel("mywheel", 5, 0, 0, fe.layout.width, fe.layout.height);
+    fe.do_nut("extended\objects\orbit\orbit.nut");
+    ExtendedObjects.add_orbit("orbit_wheel", 0, 0, fe.layout.width, fe.layout.height);
 
 ##Animate Usage
 ----------------
@@ -34,10 +34,10 @@ If you want to use additional objects, you will need to include them currently:
     //you can access objects later by the id you provided
     ExtendedObjects.add_image("logo", "logo.png", 0, 0, fe.layout.width, fe.layout.height);
     ExtendedObjects.add_artwork("game", "snap", 0, 0, fe.layout.width, fe.layout.height);
-    //add your animations - object.animate_translate(cfg) or object.animate_property(cfg);
-    ExtendedObjects.getObject("logo").animate_translate();
+    //add your animations - object.animate(type, cfg) - type is currently "translate" or "property";
+    ExtendedObjects.get("logo").animate("translate");
     //you can provide your own configuration options for the animation in a table, options are shown below
-    ExtendedObjects.getObject("game").animate_translate({ duration = 1500, when = Transition.FromOldSelection, easing = "out", tween = "back", from = "offscreenbottom", to = "bottom" });
+    ExtendedObjects.get("game").animate("translate", { duration = 1500, when = Transition.FromOldSelection, easing = "out", tween = "back", from = "offscreenbottom", to = "bottom" });
 ```
 
 ###Animation Parameters
@@ -46,6 +46,8 @@ If you want to use additional objects, you will need to include them currently:
 ###Animation Config variables
     OPTION              DEFAULT                         DESCRIPTION
     when                Transition.FromOldSelection     when to run animation, one of Transition.TYPE provided by Attract-mode
+    kind                transition                      one of transition, loop, yoyo, continuous
+    repeat              1                               number of times to repeat animation
     delay:              0                               delay before the animation starts in ms
     duration:           1000                            length of animation in ms
     easing              out                             easing animation type to use: in, out, inout, outin
@@ -57,7 +59,7 @@ If you want to use additional objects, you will need to include them currently:
                                                       
     reverse             false                           perform animation in reverse (true|false)
 
-###Property Animation (object.animate_property(cfg))
+###Property Animation (object.animate("property", cfg))
     property            alpha                           the property to animate
     from                                                animation starts at this
     to:                                                 animation ends at this
@@ -69,9 +71,16 @@ If you want to use additional objects, you will need to include them currently:
                       height: object current height
                       rotate: 0 to 90
 
-###Translate Animation (object.animate_translate(cfg))
+###Translate Animation (object.animate("translate", cfg))
     from:               offscreenbottom                 animation starts from this position - an array [ x, y ] or position "center"
     to:                 center                          animation goes to this position - an array [ x, y ] or position "bottom"
+
+###Animation Sets
+You can group multiple animations together in a "set". There are a couple examples for now:
+    fade_in_out         fades out (alpha) on Transition.ToNewSelection, fades in on Transition.FromOldSelection
+
+To use it:
+object.animate_set("fade_in_out");
 
 ###Positions
 A nice feature of using ExtendedObjects is you can use positions to easily place objects at certain locations. These positions can also be used for animations 'from' or 'to' variables in your animation config:
@@ -159,11 +168,18 @@ To create a new animation that can be used with ExtendedObjects:
 *create a new folder & file in: layouts\extended\anims\myanim\myanim.nut
 *create a class extending ExtendedAnimation:
 ```Squirrel
+    //push the animation name that users will use to the Animation table
+    Animation["myanim"] <- function(c = {} ) {
+        return MyAnim(c);
+    }
     class MyAnim extends ExtendedAnimation {
         constructor(config) {
             base.constructor(config);
             //add any properties and their defaults to the config that you might want users to change
             if ("my_property" in config == false) config.my_property <- "my_value";
+            //you can modify existing values if you want as well
+            config.easing = "out";
+            config.tween = "sine";
         }
         //return a name for your object type
         function getType() { return "MyAnim"; }
@@ -171,24 +187,15 @@ To create a new animation that can be used with ExtendedObjects:
             base.start(obj);
             //your animation is starting, initialize it
             //obj is an ExtendedObject the animation will run on
-            
-            //add a function to your animation when an ExtendedObject has been added to a layout
-            ExtendedObjects.add_callback(this, "onObjectAdded");
         }
         function frame(obj, ttime) {
             base.frame(obj);
             //run your animated frame
-            //protip: you can use the calculate(time, duration, start, end) to get automated easings from point to point
+            //protip: you can use the calculate(easing, tween, ttime, duration, start, end) to get automated easings from point to point
         }
         function stop(obj) {
             base.stop(obj);
             //finish up
-        }
-        function onObjectAdded(params) {
-            local o = params.object;
-            o.getclass().newmember("animate_myanim", function(c = {}) {
-                o.config.animations.append(MyAnim(c));
-            });
         }
     }
 ```
@@ -196,14 +203,14 @@ To create a new animation that can be used with ExtendedObjects:
 ```Squirrel
     fe.do_nut("extended\extended.nut");
     fe.do_nut("extended\animate.nut");
-    fe.do_nut("extended\anims\myanim\myanim.nut");
+    fe.do_nut("extended\animations\myanim\myanim.nut");
     local obj = ExtendedObjects.add_image("img", "frame.png", 0, 0, 100, 100);
     local cfg = {
                     when = ...
                     ...
                     my_property = ""
                 }
-    obj.my_anim(cfg);
+    obj.animate("my_anim", cfg);
 ```
 
 ### Developing Further
@@ -236,30 +243,32 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 
 ##TODO
 This is my active todo list (bugs and features):
-* add percentage positioning
-* specific transitions with property anim blocking other animations?
-* animations cannot be interrupted
-    Use onTick and onTransitions to handle animations
-    add animation 'kinds' - transition, transitionWait, atStart, atStop, onDemand
-    add animation 'repeat' - yoyo, loop, reverse
-    add animation 'repeatCount' - # or indefinite
+
+* fix these anims: bounce, inout expo, all outin anims
+* may need 'which' in config again for configs to specify which animation it is
+* non-blocking transitions and background (non-transition) animations
+    * blocking transitions means the transition state will not complete until the animation has finished
+    * has to work between onTick and onTransition
+    * do this with animation 'kinds' - indefinite, transition, transitionWait, yoyo, loop, continuous - better naming?
     indefinite animations and loop (reverse, restart, indefinite or set # of times)
     blocking/locked/waitUntilFinished animation config option will not advance to next transition until finished
-* animation position not accurate - t wrong?
-* fix these anims: bounce, inout expo, all outin anims
-* updated methods to add objects or animation classes: add_object("objectname") or add_animation("property")
-* move POSITIONS to user friendly method
-* shadows still showing up when they are supposed to
-* actual debugger lines in debugger
 
 ###Issues
 This is a list of known issues:
 * ExtendedObject must currently add an empty object
 * does not verify availability of ExtendedObjects and Animate library
 * does not validate user entered config variables
+* screen occasionally flashing at the end of animations
+* animation final position not exactly accurate - t wrong?
 
 ###Enhancements
 This is a list of enhancements I am considering adding to the library:
+* onDemand animations
+* move POSITIONS to user friendly method
+* actual debugger lines in debugger
+* updated methods to add objects: add_object("objectname")
+* move object position functions into a method attached to objects instead of POSITIONS
+* need a way to distinguish and run object animations vs. non-object animations
 * reorder objects on draw list - sort?
 * add_clone method - shadows uses clones, but separate images/artwork do not
 * some freakin' cool new objects (wheel, randomwheel, etc)
