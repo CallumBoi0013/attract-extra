@@ -46,6 +46,7 @@ class Animate {
         }
     }
     
+    //injects an animation table and the .animate() and .animate_set() methods into new objects
     function onObjectAdded(params) {
         local o = params.object;
         o.config.animations <- [];
@@ -64,246 +65,105 @@ class Animate {
         });
     }
 
+    //handles transitions
     function onTransition(params) {
+        local ttime = params.ttime;
         local ttype = params.ttype;
         local var = params.var;
-        local ttime = params.ttime;
         local busy = false;
         foreach (o in ExtendedObjects.objects) {
             foreach (a in o.config.animations) {
-                switch (a.config.kind) {
-                    /*
-                    //must continue other animations here to prevent blocking
-                    case "yoyo":
-                    case "loop":
-                    case "continuous":
-                        //run frames for none transition animations
-                        if (a.running) {
-                            ttime = a.currentTime + ttime;
-                            a.currentTime = ttime;
-                            if (ttime < a.config.duration + a.config.delay) {
-                                if (ttime - a.config.delay > 0) {
-                                    //run frame
-                                    a.frame(o, ttime - a.config.delay);
-                                    ExtendedObjects.run_callback("onAnimationFrame", { ttime = ttime, object = o, animation = a } );
-                                }
-                            } else {
-                                //stop animation
-                                //a.running = false;
-                                a.frame(o, a.config.duration);
-                                a.stop(o);
-                                a.reset(o);
-                                ExtendedObjects.run_callback("onAnimationStop", { ttime = ttime, object = o, animation = a } );
-                            }
+                if (ttype == a.config.when && !a.running) startAnimation(ttime, o, a);
+                //execute every running animation, even ones onTick might have started
+                if (a.running) {
+                    local animationTime = ttime;
+                    //is current time less than the duration+delay
+                    if (ttime < a.config.duration + a.config.delay) {
+                        //execute frame
+                        if (ttime - a.config.delay > 0) runFrame(ttime, o, a);
+                        if ("wait" in a.config && a.config.wait == true) busy = true;
+                    } else {
+                        if (a.running) stopAnimation(ttime, o, a);
+                        //reset animations that repeat
+                        /*
+                        switch (a.config.kind) {
+                            case "yoyo":
+                                a.config.reverse = !a.config.reverse;
+                                break;
                         }
-                        break;
-                    */    
-                    case "transition":
-                    default:
-                        if (ttype == a.config.when) {
-                            if (ttime < a.config.duration + a.config.delay) {
-                                if (ttime - a.config.delay > 0) {
-                                    //start animation
-                                    if (!a.running) {
-                                        a.startedAt = ttime;
-                                        a.start(o);
-                                    }
-                                    a.frame(o, ttime - a.config.delay);
-                                    ExtendedObjects.run_callback("onAnimationFrame", { ttime = ttime, object = o, animation = a } );
-                                }
-                                busy = true;
-                            } else {
-                                //stop animation
-                                if (a.running) {
-                                    //a.running = false;
-                                    a.frame(o, a.config.duration);
-                                    a.stop(o);
-                                    a.reset(o);
-                                    ExtendedObjects.run_callback("onAnimationStop", { ttime = ttime, object = o, animation = a } );
-                                }
-                            }
+                        if (a.playCount <= a.config.repeat) {
+                            a.currentTime = 0;
+                            a.playCount += 1;
+                            startAnimation(a.currentTime, o, a);
+                            if ("wait" in a.config && a.config.wait == true) busy = true;
+                            ExtendedDebugger.notice("restart: " + o.id + ": " + a.playCount);
                         }
-                        break;
+                        */
+                    }
                 }
             }
         }
         return busy;
     }
     
+    //handles tick
     function onTick(params) {
-        local a = 0;
-        foreach (o in ExtendedObjects.objects) {
-            foreach (a in o.config.animations) {
-                //determine if the animation should start
-                local start = true;
-                switch ( a.config.kind ) {
-                    case "yoyo": 
-                    case "loop":
-                        if (a.playCount >= a.config.repeat) start = false;
-                        break;
-                    case "continuous":
-                        //continous should start if it isn't already started, default to true
-                        break;
-                    case "transition":
-                        start = false;
-                        break;
-                }
-                
-                local ttime = params.ttime;
-                if (!a.running && start) {
-                    a.startedAt = ttime;
-                    a.start(o);
-                    ExtendedObjects.run_callback("onAnimationStart", { ttime = ttime - a.startedAt, object = o, animation = a } );
-                }
-                if (a.running) {
-                    //convert ttime to animation time based on when it started
-                    ttime -= a.startedAt;
-                    a.currentTime = ttime;
-                    if (ttime < a.config.duration + a.config.delay) {
-                        if (ttime - a.config.delay > 0) {
-                            //run frame
-                            a.frame(o, ttime - a.config.delay);
-                            ExtendedObjects.run_callback("onAnimationFrame", { ttime = ttime, object = o, animation = a } );
-                        }
-                    } else {
-                        //stop animation
-                        //a.running = false;
-                        a.frame(o, a.config.duration);
-                        a.stop(o);
-                        a.reset(o);
-                        ExtendedObjects.run_callback("onAnimationStop", { ttime = ttime, object = o, animation = a } );
-                    }
-                }
-
-            }
-        }
+        //TODO - handle animations that don't "wait" or that don't rely on transitions
     }
-}
 
-ExtendedObjects.add_callback(Animate, "onObjectAdded");
-ExtendedObjects.add_callback(Animate, "onTransition");
-ExtendedObjects.add_callback(Animate, "onTick");
-
-//A table of animation types that will be available with object.animate(type, cfg)
-Animation <- {
-    "property": function(c) {
-        return PropertyAnimation(c);
+    //starts the animation
+    function startAnimation(ttime, o, a) {
+        a.running = true;
+        a.playCount += 1;
+        a.startedAt = ttime;
+        a.start(o);
+        ExtendedObjects.run_callback("onAnimationStart", { ttime = ttime, object = o, animation = a } );
     }
-    "translate": function(c) {
-        return TranslateAnimation(c);
-    }
-}
-
-//A table of predefined sets of animations
-AnimationSet <- {
-    "left_center_up": [
-        {
-            kind = "loop",
-            when = Transition.ToNewSelection,
-            duration = 500,
-            from = "offleft",
-            to = "center",
-            easing = "out",
-            tween = "back"
-        },
-        {
-            kind = "loop",
-            when = Transition.FromOldSelection,
-            duration = 500,
-            from = "current",
-            to = "top",
-            easing = "out",
-            tween = "bounce"
-        }
-    ],
-    "fade_in_out": [
-        { 
-            when = Transition.ToNewSelection,
-            duration = 500,
-            property = "alpha",
-            from = 255,
-            to = 0,
-            easing = "out",
-            tween = "quad"
-        },
-        { 
-            when = Transition.FromOldSelection,
-            delay = 500,
-            duration = 500,
-            property = "alpha",
-            from = 0,
-            to = 255,
-            easing = "out",
-            tween = "quad"
-        }
-    ],
-    "hover": [
-        {
-            kind = "yoyo",
-            when = Transition.StartLayout,
-            property = "x",
-            duration = 2000,
-            from = 200,
-            to = 210,
-            easing = "out",
-            tween = "bounce"
-        },
-        {
-            kind = "yoyo",
-            when = Transition.StartLayout,
-            property = "y",
-            duration = 7000,
-            from = 200,
-            to = 220,
-            easing = "in",
-            tween = "elastic",
-        }
-    ]
-}
-
-class ExtendedAnimationConfig {
-    transition = Transition.FromOldSelection;
-    duration = 500;
-    delay = 0;
-    easing = "out";
-    tween = "linear";
-    from = null;
-    to = null;
-    reverse = false;
-    property = "alpha";
     
-    function copy() { return clone(config); }
-    function create() { return this; }
-    function setDelay(d) { delay = d; return this; }
-    function setDuration(d) { duration = d; return this; }
-    function setEasing(e) { easing = e; return this; }
-    function setFrom(f) { from = f; return this; }
-    function setProperty(p) { property = p; return this; }
-    function setReverse(r) { reverse = r; return this; }
-    function setTo(t) { to = t; return this; }
-    function setTransition(t) { transition = t; return this; }
-    function setTween(t) { tween = t; return this; }
+    //executes an animation frame
+    function runFrame(ttime, o, a) {
+        //execute frame
+        a.frame(o, ttime - a.config.delay);
+        ExtendedObjects.run_callback("onAnimationFrame", { ttime = ttime, object = o, animation = a } );
+    }
+    
+    //stops the animation
+    function stopAnimation(ttime, o, a) {
+        a.running = false;
+        a.startedAt = 0;
+        a.currentTime = 0;
+        a.frame(o, a.config.duration);
+        a.stop(o);
+        ExtendedObjects.run_callback("onAnimationStop", { ttime = ttime, object = o, animation = a } );
+    }
 }
 
+//The ExtendedAnimation class is the base class that will be used to create new animation types.
 class ExtendedAnimation {
     running = false;
     startedAt = 0;
     currentTime = 0;
     playCount = 0;
     config = null;
+    
     constructor(cfg) {
         config = cfg;
         //defaults
-        if ("kind" in config == false) config.kind <- "transition";
-        if ("when" in config == false) config.when <- Transition.FromOldSelection;
-        if ("duration" in config == false) config.duration <- 500;
         if ("delay" in config == false) config.delay <- 0;
-        if ("reverse" in config == false) config.reverse <- false;
+        if ("duration" in config == false) config.duration <- 500;
         if ("easing" in config == false) config.easing <- "out";
-        if ("tween" in config == false) config.tween <- "quad";
+        if ("kind" in config == false) config.kind <- "transition";
         if ("repeat" in config == false) config.repeat <- 1;
+        if ("reverse" in config == false) config.reverse <- false;
+        if ("tween" in config == false) config.tween <- "quad";
+        if ("wait" in config == false) config.wait <- true;
+        if ("when" in config == false) config.when <- Transition.FromOldSelection;
     }
+    
+    //return a user friend name for the animation
     function getType() { return "ExtendedAnimation" };
+    
+    //calculate allows you to use easing and tweens from one point to another in your Animation class
     function calculate(easing, tween, ttime, start, end, duration, amp = null, period = null) {
         local t = (ttime.tofloat() / duration).tofloat();
         local change = end - start;
@@ -344,147 +204,61 @@ class ExtendedAnimation {
                 break;
         }
     }
-    //extend these
-    function start(obj) {
-        running = true;
-        playCount += 1;
-    }
-    function frame(obj, ttime) {  }
-    function stop(obj) { 
-        running = false;
-    }
-    function reset(obj) { 
-        running = false;
-        switch ( config.kind ) {
-            case "yoyo":
-                //yoyo continously go start to end, end to start
-                //reverse will go start to end to start
-                config.reverse = !config.reverse;
-                break;
-            case "loop":
-                //just restarts from beginning
-                break;
-        }
-    }
+    
+    //Animation classes will extend these methods
+    function start(obj) { }
+    function frame(obj, ttime) { }
+    function stop(obj) { }
 }
 
-class PropertyAnimation extends ExtendedAnimation {
-    constructor(config) {
-        base.constructor(config);
-        //set defaults
-        if ("property" in config == false) config.property <- "alpha";
-    }
-    function getType() { return "PropertyAnimation"; }
-    function start(obj) {
-        base.start(obj);
-        local defaults = {
-            "alpha": [ 0, 255 ],
-            "x": [ "offleft", "top" ],
-            "y": [ "offtop", "top" ],
-            "skew_x": [ 0, 10 ],
-            "skew_y": [ 0, 10 ],
-            "pinch_x": [ 0, 10 ],
-            "pinch_y": [ 0, 10 ],
-            "width": [ obj.getWidth(), obj.getWidth() + 50 ],
-            "height": [ obj.getHeight(), obj.getHeight() + 50 ],
-            "rotation": [ 0, 90 ],
-        }
-        if ("from" in config == false) config.from <- defaults[config.property][0];
-        if ("to" in config == false) config.to <- defaults[config.property][1];
-        if (config.property == "x" || config.property == "y") {
-            local point = 0;
-            if (config.property == "y") point = 1;
-            if (typeof config.from == "string") config.start <- POSITIONS[config.from](obj)[point] else config.start <- config.from;
-            if (typeof config.to == "string") config.end <- POSITIONS[config.to](obj)[point] else config.end <- config.to;
-        } else {
-            config.start <- config.from;
-            config.end <- config.to;
-        }
-    }
-    function frame(obj, ttime) {
-        base.frame(obj, ttime);
-        local value;
-        if (config.reverse) value = calculate(config.easing, config.tween, ttime, config.end, config.start, config.duration) else value = calculate(config.easing, config.tween, ttime, config.start, config.end, config.duration);
-        switch (config.property) {
-            case "x":
-                obj.setX(value);
-                break;
-            case "y":
-                obj.setY(value);
-                break;
-            case "skew_x":
-                obj.setSkewX(value);
-                break;
-            case "skew_y":
-                obj.setSkewY(value);
-                break;
-            case "pinch_x":
-                obj.setPinchX(value);
-                break;
-            case "pinch_y":
-                obj.setPinchY(value);
-                break;
-            case "width":
-                obj.setWidth(value);
-                break;
-            case "height":
-                obj.setWidth(value);
-                break;
-            case "rotation":
-                obj.setRotation(value);
-                break;
-            case "alpha":
-                obj.setAlpha(value);
-                break;
-        }
-    }
+//WIP Animation config creator
+class AnimationConfig {
+    delay = 0;
+    duration = 500;
+    easing = "out";
+    from = null;
+    kind = "transition";
+    property = "alpha";
+    repeat = 1;
+    reverse = false;
+    to = null;
+    tween = "linear";
+    wait = true;
+    when = Transition.FromOldSelection;
+    
+    function copy() { return clone(config); }
+    function create() { return this; }
+
+    function setDelay(d) { delay = d; return this; }
+    function setDuration(d) { duration = d; return this; }
+    function setEasing(e) { easing = e; return this; }
+    function setFrom(f) { from = f; return this; }
+    function setKind(k) { kind = k; return this; }
+    function setProperty(p) { property = p; return this; }
+    function setRepeat(r) { repeat = r; return this; }
+    function setReverse(r) { reverse = r; return this; }
+    function setTo(t) { to = t; return this; }
+    function setTween(t) { tween = t; return this; }
+    function setTransition(t) { when = t; return this; }
+    function setWait(w) { wait = w; return this; }
 }
 
-class TranslateAnimation extends ExtendedAnimation {
-    constructor(config) {
-        base.constructor(config);
-    }
-    function getType() { return "TranslateAnimation"; }
-    function start(obj) {
-        base.start(obj);
-        //set defaults
-        local defaults = {
-            "from": "left",
-            "to": "center"
-        }
-        if ("from" in config == false) config.from <- defaults["from"];
-        if ("to" in config == false) config.to <- defaults["to"];
-        //replace string value positions in from and to with correct positions
-        if (typeof config.from == "string") config.start <- POSITIONS[config.from](obj) else config.start <- config.from;
-        if (typeof config.to == "string") config.end <- POSITIONS[config.to](obj) else config.end <- config.to;
-    }
-    function frame(obj, ttime) {
-        base.frame(obj, ttime);
-        local point;
-        if (config.reverse) {
-            if (config.tween == "quadbezier") {
-                local arc = 1.25;
-                local controlpoint = [ (config.end[0] + config.end[1]) / 2 * arc, (config.start[0] + config.start[1]) / 2 * arc ]; 
-                local bezier = quadbezier(config.end[0], config.end[1], controlpoint[0], controlpoint[1], config.start[0], config.start[1], t)
-                point = [ bezier[0], bezier[1] ];
-            } else {
-                point = [   calculate(config.easing, config.tween, ttime, config.end[0], config.start[0], config.duration),
-                            calculate(config.easing, config.tween, ttime, config.end[1], config.start[1], config.duration)
-                        ];
-            }
-        } else {
-            if (config.tween == "quadbezier") {
-                local arc = 1.25;
-                local controlpoint = [ (config.start[0] + config.start[1]) / 2 * arc, (config.end[0] + config.end[1]) / 2 * arc ]; 
-                local bezier = quadbezier(config.start[0], config.start[1], controlpoint[0], controlpoint[1], config.end[0], config.end[1], t);
-                point = [ bezier[0], bezier[1] ];
-            } else {
-                point = [   calculate(config.easing, config.tween, ttime, config.start[0], config.end[0], config.duration),
-                            calculate(config.easing, config.tween, ttime, config.start[1], config.end[1], config.duration)
-                        ];
-            }
-        }
-        //ExtendedDebugger.notice(ttime + "," + config.start[0] + "x" + config.start[1] + " - " + config.end[0] + "x" + config.end[1] + "," + config.duration + " - " + point[0] + "x" + point[1]);
-        obj.setPosition( point );
-    }
-}
+//add our callbacks that we will handle
+ExtendedObjects.add_callback(Animate, "onObjectAdded");
+ExtendedObjects.add_callback(Animate, "onTransition");
+ExtendedObjects.add_callback(Animate, "onTick");
+
+
+//An empty table of animation types that will be available with object.animate(type, cfg)
+Animation <- {}
+
+//Pre-included animations
+fe.do_nut("extended/animations/property/property.nut");
+fe.do_nut("extended/animations/translate/translate.nut");
+
+
+//An empty table of predefined animation sets that will be available with object.animate_set(set)
+AnimationSet <- { }
+
+//Pre-included sets
+fe.do_nut("extended/animations/sets.nut");

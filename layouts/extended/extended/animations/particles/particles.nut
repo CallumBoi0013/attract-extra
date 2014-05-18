@@ -1,4 +1,4 @@
-//push the method that users will use to the Animation table
+//push the animation name that users will use to the Animation table
 Animation["particles"] <- function(c = {} ) {
     return ParticleAnimation(c);
 }
@@ -28,7 +28,6 @@ class ParticleAnimation extends ExtendedAnimation {
     
     function getType() { return "ParticleAnimation"; }
     function start(obj) {
-        base.start(obj);
         foreach (p in particles) {
             p.reset();
             p.visible(true);
@@ -36,7 +35,6 @@ class ParticleAnimation extends ExtendedAnimation {
     }
     
     function frame(obj, ttime) {
-        base.frame(obj, ttime);
         foreach (p in particles) {
             p.set(  calculate(config.easing, config.tween, ttime, p.start[0], p.end[0], config.duration),
                     calculate(config.easing, config.tween, ttime, p.start[1], p.end[1], config.duration)
@@ -45,7 +43,7 @@ class ParticleAnimation extends ExtendedAnimation {
     }
     
     function stop(obj) {
-        base.stop(obj);
+        //we don't need to do anything on stop
     }
 }
 
