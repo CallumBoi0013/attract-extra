@@ -154,6 +154,7 @@ class Animate {
     function update(ttime, o, a) {
         local busy = false;
         ExtendedDebugger.notice("animating " + o.id + " - ttime: " + ttime + ", created: " + a.createdAt + ", current: " + a.currentTime + "end: " + (a.createdAt + a.config.duration + a.config.delay) + ", when: " + Animate.getWhen(a.config.when) + ", count: " + a.playCount);
+        
         //if animation started in transition or has restarted, start it at current ttime
         if (a.createdAt == 0) a.createdAt = ttime;
         a.currentTime = ttime - a.createdAt;
@@ -167,6 +168,7 @@ class Animate {
                     //if (a.currentTime - a.config.delay > 0) runFrame(a.currentTime, o, a);
                     if (a.playCount < a.config.repeat) runFrame(a.currentTime * a.config.repeat, o, a);
                     if (a.currentTime >= a.config.duration / a.config.repeat) { 
+                        //check play count for repeating animations
                         a.playCount += 1;
                         if (a.playCount < a.config.repeat) {
                             //restart repeating animations
