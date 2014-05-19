@@ -3,7 +3,7 @@ Animation["particles"] <- function(c = {} ) {
     return ParticleAnimation(c);
 }
 
-const PCOUNT = 2000;
+const PCOUNT = 512;
 
 class ParticleAnimation extends ExtendedAnimation {
     particles = null;
