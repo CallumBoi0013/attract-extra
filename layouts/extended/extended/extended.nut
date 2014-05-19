@@ -1,8 +1,3 @@
-fe.layout.width = ScreenWidth;
-fe.layout.height = ScreenHeight;
-fe.add_transition_callback( "extended_objects_transition" );
-fe.add_ticks_callback( "extended_objects_tick" );
-
 ExtendedObjects <- {
     VERSION = 1.0,
     callbacks = [],
@@ -10,7 +5,6 @@ ExtendedObjects <- {
     add_callback = function (i, f) { callbacks.append(ExtendedCallback(i, f)); },
     run_callback = function(func, params) { local busy = false; foreach(cb in callbacks) { if (func in cb.i) { if (cb.i[func](params) == true) busy = true; } } return busy; },
     add = function(o) { objects.append(o); run_callback("onObjectAdded", { object = o } ); return o; }
-    add_debug = function() { return ExtendedDebugger(); },
     add_text = function(id, t, x, y, w, h) { return add(ExtendedText(id, t, x, y, w, h)); },
     add_image = function(id, i, x, y, w, h) { return add(ExtendedImage(id, i, x, y, w, h)); },
     add_artwork = function(id, a, x, y, w, h) { return add(ExtendedArtwork(id, a, x, y, w, h)); },
@@ -81,7 +75,6 @@ class ExtendedObject {
         }
     }
     
-    function getType() { return "ExtendedObject"; }
     function getAlpha() { return object.alpha; }
     function getColor() { return [ object.red, object.green, object.blue ]; }
     function getHeight() { return object.height; }
@@ -104,6 +97,8 @@ class ExtendedObject {
     function setX(x) { object.x = x; }
     function setY(y) { object.y = y; }
     
+    //added functions
+    function getType() { return "ExtendedObject"; }
     function setPosition(p) { if (typeof p == "string") p = POSITIONS[p](this); setX(p[0]); setY(p[1]); }
     function setSize(w,h) { setWidth(w); setHeight(h); }
     function toString() { 
@@ -255,72 +250,16 @@ class ExtendedListBox extends ExtendedObject {
     function setStyle(s) { object.style = s; }
 }
 
-class ExtendedDebugger {
-    objects = [];
-    config = {
-        "align": Align.Left,
-        "alpha": 255,
-        "bg": [20, 20, 20],
-        "bg_alpha": 100,
-        "rgb": [255, 255, 255],
-        "charsize": 16,
-        "word_wrap": true
-    }
-    constructor() {
-        foreach(o in ExtendedObjects.objects) {
-            local obj = ExtendedText("debug_" + o.id, o.toString(), o.getX(), o.getY(), o.getWidth(), o.getHeight());
-            setDefaults(obj);
-            objects.append(obj);
-        }
-        
-        local notice = ExtendedText("debug_notice", "notice", 0, 0, fe.layout.width, 100);
-        ExtendedObjects.add_callback(this, "onObjectAdded");
-        ExtendedObjects.add_callback(this, "onTransition");
-        ExtendedObjects.add_callback(this, "onTick");
-        ExtendedObjects.add_callback(this, "onAnimationFrame");
-        objects.append(notice);
-        setDefaults(notice);
-    }
-    
-    function onAnimationFrame(params) {
-        onAnimationStop(params);
-    }
-    
-    function onAnimationStop(params) {
-        foreach(o in ExtendedObjects.objects) {
-            local dobj = get(o.id);
-            dobj.setPosition( [ o.getX(), o.getY() ]);
-            dobj.setText(o.toString());
-        }
-    }
-    
-    function onTick(params) {
-        //notice(params.ttime);
-    }
-    
-    function onTransition(params) {
-        local ttype = params.ttype;
-        local var = params.var;
-        local ttime = params.ttime;
-        //ExtendedDebugger.get("notice").setText("Transition: " + ttype);
-        return false;
-    }
-    
-    function setDefaults(obj) {
-        obj.setAlign(config.align);
-        obj.setAlpha(config.alpha);
-        obj.setColor(config.rgb[0], config.rgb[1], config.rgb[2]);
-        obj.setBGColor(config.bg[0], config.bg[1], config.bg[2]);
-        obj.setBGAlpha(config.bg_alpha);
-        obj.setCharSize(config.charsize);
-        obj.setWordWrap(config.word_wrap);
-    }
-    function notice(text) {
-        local notice = get("notice");
-        if (notice != null) notice.setText(text);
-    }
-    
-    function get(id) { foreach (o in objects) { if ("debug_" + id == o.id) return o; } return null; }
-    function setVisible(v) { foreach(o in objects) o.setVisible(v); }
-}
+//init
+fe.layout.width = ScreenWidth;
+fe.layout.height = ScreenHeight;
+fe.add_transition_callback( "extended_objects_transition" );
+fe.add_ticks_callback( "extended_objects_tick" );
+
+//pre-included extensions
+fe.do_nut("extended/extensions/scale/scale.nut");
+fe.do_nut("extended/extensions/debugger/debugger.nut");
+
+//pre-included objects
+
 
