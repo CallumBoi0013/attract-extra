@@ -248,15 +248,13 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 
 ##TODO
 This is my active todo list (bugs and features):
-
-* fix these anims: bounce, inout expo, all outin anims
-* may need 'which' in config again for configs to specify which animation it is
-* non-blocking transitions and background (non-transition) animations
-    * blocking transitions means the transition state will not complete until the animation has finished
-    * has to work between onTick and onTransition
-    * do this with animation 'kinds' - indefinite, transition, transitionWait, yoyo, loop, continuous - better naming?
-    indefinite animations and loop (reverse, restart, indefinite or set # of times)
-    blocking/locked/waitUntilFinished animation config option will not advance to next transition until finished
+* waiting (transition) animations vs non-waiting animations
+    * fix DELAYS
+    * run update code from onTransition
+    * add update example layout for changes
+* add objects the same way we add animations, move objects into the objects folder (add_object)(
+* scaling
+* may need 'which' back in configs, mainly so sets know which animation to use
 
 ###Issues
 This is a list of known issues:
@@ -264,15 +262,13 @@ This is a list of known issues:
 * does not verify availability of ExtendedObjects and Animate library
 * does not validate user entered config variables
 * screen occasionally flashing at the end of animations
-* animation final position not exactly accurate - t wrong?
 
 ###Enhancements
 This is a list of enhancements I am considering adding to the library:
 * onDemand animations
 * move POSITIONS to user friendly method
 * actual debugger lines in debugger
-* updated methods to add objects: add_object("objectname")
-* move object position functions into a method attached to objects instead of POSITIONS
+* move object position functions into a method attached to objects instead of POSITIONS?
 * need a way to distinguish and run object animations vs. non-object animations
 * reorder objects on draw list - sort?
 * add_clone method - shadows uses clones, but separate images/artwork do not
