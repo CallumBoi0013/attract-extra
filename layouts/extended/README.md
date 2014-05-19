@@ -46,8 +46,10 @@ If you want to use additional objects, you will need to include them currently:
 
 ###.animate() config variables
     OPTION              DEFAULT                         DESCRIPTION
-    when                Transition.FromOldSelection     when to run animation, one of Transition.TYPE provided by Attract-mode
-    kind                transition                      one of transition, loop, yoyo, continuous
+    when                When.FromOldSelection           when to run animation, a transition type (When.TYPE) or When.Always
+    wait                true                            wait until the animation is finished before the next transition starts
+    restart             true                            if an animation is still running and transition state occurs again, restart it
+    kind                transition                      one of transition, loop, yoyo
     repeat              1                               number of times to repeat animation
     delay:              0                               delay before the animation starts in ms
     duration:           1000                            length of animation in ms
@@ -250,6 +252,7 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 This is my active todo list (bugs and features):
 * waiting (transition) animations vs non-waiting animations
     * fix DELAYS
+    * small twitch (not completing animation) at end of repeating animations
     * run update code from onTransition
     * add update example layout for changes
 * add objects the same way we add animations, move objects into the objects folder (add_object)(
