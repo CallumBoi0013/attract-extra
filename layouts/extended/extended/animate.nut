@@ -46,6 +46,29 @@ class Animate {
         }
     }
     
+    function getWhen(w) {
+        switch (w) {
+            case 0:
+                return "StartLayout";
+            case 1:
+                return "EndLayout";
+            case 2:
+                return "ToNewSelection";
+            case 3:
+                return "FromOldSelection";
+            case 4:
+                return "ToGame";
+            case 5:
+                return "FromGame";
+            case 6:
+                return "ToNewList";
+            case 100:
+                return "OnDemand";
+            case 101:
+                return "Always";
+        }
+    }
+    
     //injects an animation table and the .animate() and .animate_set() methods into new objects
     function onObjectAdded(params) {
         local o = params.object;
@@ -73,32 +96,31 @@ class Animate {
         local busy = false;
         foreach (o in ExtendedObjects.objects) {
             foreach (a in o.config.animations) {
-                if (ttype == a.config.when && !a.running) startAnimation(ttime, o, a);
-                //execute every running animation, even ones onTick might have started
+                //start waiting transitions
+                if (!a.running && ttype == a.config.when) startAnimation(ttime, o, a);
                 if (a.running) {
-                    local animationTime = ttime;
-                    //is current time less than the duration+delay
-                    if (ttime < a.config.duration + a.config.delay) {
-                        //execute frame
-                        if (ttime - a.config.delay > 0) runFrame(ttime, o, a);
-                        if ("wait" in a.config && a.config.wait == true) busy = true;
-                    } else {
-                        if (a.running) stopAnimation(ttime, o, a);
-                        //reset animations that repeat
-                        /*
-                        switch (a.config.kind) {
-                            case "yoyo":
-                                a.config.reverse = !a.config.reverse;
-                                break;
+                    if (ttype == a.config.when) {
+                        if (a.config.wait) {
+                            //execute waiting transitions
+                            //TODO - this needs code to handle different kinds..
+                            if (ttime < a.config.duration + a.config.delay) {
+                                if (ttime - a.config.delay > 0) runFrame(ttime, o, a);
+                                busy = true;
+                            } else {
+                                if (a.running) stopAnimation(ttime, o, a);
+                            }
+                            //CAN WE USE THIS INSTEAD?
+                            //busy = update(ttime, o, a);
                         }
-                        if (a.playCount <= a.config.repeat) {
-                            a.currentTime = 0;
-                            a.playCount += 1;
-                            startAnimation(a.currentTime, o, a);
-                            if ("wait" in a.config && a.config.wait == true) busy = true;
-                            ExtendedDebugger.notice("restart: " + o.id + ": " + a.playCount);
+                        if (!a.config.wait && a.config.restart) {
+                            //restart transition animations if restart option is enabled
+                            a.createdAt = 0;
+                            a.playCount = 0;
                         }
-                        */
+                    }
+                    //continue executing non-waiting animations (even if there are waiting animations)
+                    if (!a.config.wait) {
+                        update(ttime, o, a);
                     }
                 }
             }
@@ -109,13 +131,68 @@ class Animate {
     //handles tick
     function onTick(params) {
         //TODO - handle animations that don't "wait" or that don't rely on transitions
+        local ttime = params.ttime;
+        foreach (o in ExtendedObjects.objects) {
+            foreach (a in o.config.animations) {
+                //TODO - what needs to be done with this?
+                //       look for non-running animations and see if we should start them
+                if (!a.running) {
+                    switch (a.config.when) {
+                        case When.OnDemand:
+                            break;
+                        case When.Always:
+                            startAnimation(ttime, o, a);
+                            break;
+                    }
+                }
+                //handle any running animations
+                if (a.running) update(ttime, o, a);
+            }
+        }
     }
 
+    function update(ttime, o, a) {
+        local busy = false;
+        ExtendedDebugger.notice("animating " + o.id + " - ttime: " + ttime + ", created: " + a.createdAt + ", current: " + a.currentTime + "end: " + (a.createdAt + a.config.duration + a.config.delay) + ", when: " + Animate.getWhen(a.config.when) + ", count: " + a.playCount);
+        //if animation started in transition or has restarted, start it at current ttime
+        if (a.createdAt == 0) a.createdAt = ttime;
+        a.currentTime = ttime - a.createdAt;
+        
+        //only run this for the delay + the duration
+        if (a.currentTime < a.config.delay + a.config.duration) {
+            //handle repeating animation kinds
+            switch (a.config.kind) {
+                case "yoyo":
+                case "loop":
+                    //if (a.currentTime - a.config.delay > 0) runFrame(a.currentTime, o, a);
+                    if (a.playCount < a.config.repeat) runFrame(a.currentTime * a.config.repeat, o, a);
+                    if (a.currentTime >= a.config.duration / a.config.repeat) { 
+                        a.playCount += 1;
+                        if (a.playCount < a.config.repeat) {
+                            //restart repeating animations
+                            if (a.config.kind == "yoyo" && a.playCount >=1 ) a.config.reverse = !a.config.reverse;
+                            a.createdAt = 0;
+                        } else {
+                            stopAnimation(a.currentTime, o, a);
+                        }
+                    }
+                    break;
+                default:
+                    if (a.currentTime - a.config.delay > 0) runFrame(a.currentTime, o, a);
+                    break;
+            }
+            busy = true;
+        } else {
+            if (a.running) stopAnimation(a.currentTime, o, a);
+        }
+        return busy;
+    }
+    
     //starts the animation
     function startAnimation(ttime, o, a) {
+        //if (a.config.restart) stopAnimation(ttime, o, a);
+        a.createdAt = 0;
         a.running = true;
-        a.playCount += 1;
-        a.startedAt = ttime;
         a.start(o);
         ExtendedObjects.run_callback("onAnimationStart", { ttime = ttime, object = o, animation = a } );
     }
@@ -130,8 +207,9 @@ class Animate {
     //stops the animation
     function stopAnimation(ttime, o, a) {
         a.running = false;
-        a.startedAt = 0;
+        a.createdAt = 0;
         a.currentTime = 0;
+        a.playCount = 0;
         a.frame(o, a.config.duration);
         a.stop(o);
         ExtendedObjects.run_callback("onAnimationStop", { ttime = ttime, object = o, animation = a } );
@@ -141,7 +219,7 @@ class Animate {
 //The ExtendedAnimation class is the base class that will be used to create new animation types.
 class ExtendedAnimation {
     running = false;
-    startedAt = 0;
+    createdAt = 0;
     currentTime = 0;
     playCount = 0;
     config = null;
@@ -154,6 +232,7 @@ class ExtendedAnimation {
         if ("easing" in config == false) config.easing <- "out";
         if ("kind" in config == false) config.kind <- "transition";
         if ("repeat" in config == false) config.repeat <- 1;
+        if ("restart" in config == false) config.restart <- false;
         if ("reverse" in config == false) config.reverse <- false;
         if ("tween" in config == false) config.tween <- "quad";
         if ("wait" in config == false) config.wait <- true;
@@ -241,6 +320,18 @@ class AnimationConfig {
     function setTween(t) { tween = t; return this; }
     function setTransition(t) { when = t; return this; }
     function setWait(w) { wait = w; return this; }
+}
+
+When <- {
+    StartLayout = 0,
+    EndLayout = 1,
+    ToNewSelection = 2,
+    FromOldSelection = 3,
+    ToGame = 4,
+    FromGame = 5,
+    ToNewList = 6,
+    OnDemand = 100,
+    Always = 101
 }
 
 //add our callbacks that we will handle
