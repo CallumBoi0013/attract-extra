@@ -44,13 +44,14 @@ local list = ExtendedObjects.add_listbox("list", fe.layout.width / 2, 0, fe.layo
     
 //add a property animation that moves the list from off right to the start position
 local listAnim =    {
-                        when = Transition.StartLayout,
+                        which = "property",
+                        when = When.StartLayout,
                         property = "x",
                         delay = 750,
                         from = "offright",
                         to = "start"
                     }
-list.animate("property", listAnim);
+list.animate(listAnim);
 
 //Add a logo image
 local logo = ExtendedObjects.add_image("logo", "logo.png", 0, 0, 262, 72);
@@ -58,7 +59,8 @@ local logo = ExtendedObjects.add_image("logo", "logo.png", 0, 0, 262, 72);
 
 //add a translate animation that goes from the current position to the top of the screen and bounces
 local logoAnim =  {
-                        when = Transition.StartLayout,
+                        which = "translate",
+                        when = When.StartLayout,
                         delay = 750,
                         duration = 1000,
                         from = "current",
@@ -66,7 +68,7 @@ local logoAnim =  {
                         easing = "out",
                         tween = "bounce"
                     };
-logo.animate("translate", logoAnim);
+logo.animate(logoAnim);
 
                     
 local marquee = ExtendedObjects.add_artwork("marquee", "marquee", 0, 0, 500, 156);
@@ -76,7 +78,9 @@ local marquee = ExtendedObjects.add_artwork("marquee", "marquee", 0, 0, 500, 156
 //You can delay animations to get a step1, step2 approach
 //step 1: move from offscreen left to center using the out/back tween
 local marqueeAnim1 =  {
-                        when = Transition.FromOldSelection,
+                        which = "translate",
+                        when = When.FromOldSelection,
+                        wait = true,
                         duration = 750,
                         from = "offleft",
                         to = "center",
@@ -85,23 +89,25 @@ local marqueeAnim1 =  {
                     };
 //step 2: move from current position to bottomleft after an 800ms delay using the out/bounce tween
 local marqueeAnim2 =  {
-                        when = Transition.FromOldSelection,
-                        delay = 800,
+                        which = "translate",
+                        when = When.FromOldSelection,
+                        wait = true,
+                        delay = 900,
                         duration = 750,
                         from = "current",
                         to = "bottom",
                         easing = "out",
                         tween = "bounce"
                     };
-marquee.animate("translate", marqueeAnim1);
-marquee.animate("translate", marqueeAnim2);
+marquee.animate(marqueeAnim1);
+marquee.animate(marqueeAnim2);
 
 local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360);
     snap.setPosition( [ 100, (fe.layout.height / 2) - 180 ]);
     snap.setShadow(false);
 
 //You can use predefined animation sets (a group of animations)
-snap.animate_set( "property", "fade_in_out" );
+snap.animate_set("fade_in_out" );
 
 //The debugger adds debug text ontop of every object, helpful for... debugging
 local debug = ExtendedObjects.add_debug();

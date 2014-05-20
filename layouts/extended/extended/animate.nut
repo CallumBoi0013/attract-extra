@@ -1,3 +1,54 @@
+//An empty table of animation types that will be available with object.animate(type, cfg)
+Animation <- {}
+
+//An empty table of predefined animation sets that will be available with object.animate_set(set)
+AnimationSet <- { }
+
+When <- {
+    StartLayout = 0,
+    EndLayout = 1,
+    ToNewSelection = 2,
+    FromOldSelection = 3,
+    ToGame = 4,
+    FromGame = 5,
+    ToNewList = 6,
+    OnDemand = 100,
+    Always = 101
+}
+
+
+//WIP Animation config creator
+class AnimationConfig {
+    when = When.FromOldSelection;
+    delay = 0;
+    duration = 500;
+    easing = "out";
+    from = null;
+    kind = "transition";
+    property = "alpha";
+    repeat = 1;
+    reverse = false;
+    to = null;
+    tween = "linear";
+    wait = true;
+    
+    function copy() { return clone(config); }
+    function create() { return this; }
+
+    function setDelay(d) { delay = d; return this; }
+    function setDuration(d) { duration = d; return this; }
+    function setEasing(e) { easing = e; return this; }
+    function setFrom(f) { from = f; return this; }
+    function setKind(k) { kind = k; return this; }
+    function setProperty(p) { property = p; return this; }
+    function setRepeat(r) { repeat = r; return this; }
+    function setReverse(r) { reverse = r; return this; }
+    function setTo(t) { to = t; return this; }
+    function setTween(t) { tween = t; return this; }
+    function setTransition(t) { when = t; return this; }
+    function setWait(w) { wait = w; return this; }
+}
+
 //The Animate class handles the hooks that allow ExtendedObjects to 
 //animate and processes the animations based on a table of config
 //parameters
@@ -74,16 +125,20 @@ class Animate {
         local o = params.object;
         o.config.animations <- [];
         //add the animate function to each object
-        o.getclass().newmember("animate", function(w, c = {}) {
-            if (w in Animation) {
-                o.config.animations.append(Animation[w](c));
+        o.getclass().newmember("animate", function(c = {}) {
+            if ("which" in c) {
+                o.config.animations.append(Animation[c.which](c));
+            } else {
+                //add default animation
+                o.config.animations.append(Animation["translate"]());
             }
         });
         //add the animate_set function to each object
-        o.getclass().newmember("animate_set", function(w, s) {
-            if (w in Animation && s in AnimationSet && typeof AnimationSet[s] == "array") {
-                foreach(c in AnimationSet[s])
-                    o.config.animations.append(Animation[w](c));
+        o.getclass().newmember("animate_set", function(s) {
+            if (s in AnimationSet && typeof AnimationSet[s] == "array") {
+                foreach(c in AnimationSet[s]) {
+                    if (c.which in Animation ) o.config.animations.append(Animation[c.which](c));
+                }
             }
         });
     }
@@ -161,28 +216,30 @@ class Animate {
         
         //only run this for the delay + the duration
         if (a.currentTime < a.config.delay + a.config.duration) {
-            //handle repeating animation kinds
-            switch (a.config.kind) {
-                case "yoyo":
-                case "loop":
-                    //if (a.currentTime - a.config.delay > 0) runFrame(a.currentTime, o, a);
-                    if (a.playCount < a.config.repeat) runFrame(a.currentTime * a.config.repeat, o, a);
-                    if (a.currentTime >= a.config.duration / a.config.repeat) { 
-                        //check play count for repeating animations
-                        a.playCount += 1;
-                        if (a.playCount < a.config.repeat) {
-                            //restart repeating animations
-                            if (a.config.kind == "yoyo" && a.playCount >=1 ) a.config.reverse = !a.config.reverse;
-                            a.createdAt = 0;
-                        } else {
-                            stopAnimation(a.currentTime, o, a);
+            //if (a.currentTime > a.config.delay) {
+                //handle repeating animation kinds
+                switch (a.config.kind) {
+                    case "yoyo":
+                    case "loop":
+                        //if (a.currentTime - a.config.delay > 0) runFrame(a.currentTime, o, a);
+                        if (a.playCount < a.config.repeat) runFrame(a.currentTime * a.config.repeat, o, a);
+                        if (a.currentTime >= a.config.duration / a.config.repeat) { 
+                            //check play count for repeating animations
+                            a.playCount += 1;
+                            if (a.playCount < a.config.repeat) {
+                                //restart repeating animations
+                                if (a.config.kind == "yoyo" && a.playCount >=1 ) a.config.reverse = !a.config.reverse;
+                                a.createdAt = 0;
+                            } else {
+                                stopAnimation(a.currentTime, o, a);
+                            }
                         }
-                    }
-                    break;
-                default:
-                    if (a.currentTime - a.config.delay > 0) runFrame(a.currentTime, o, a);
-                    break;
-            }
+                        break;
+                    default:
+                        if (a.currentTime - a.config.delay > 0) runFrame(a.currentTime, o, a);
+                        break;
+                }
+            //}
             busy = true;
         } else {
             if (a.running) stopAnimation(a.currentTime, o, a);
@@ -234,11 +291,12 @@ class ExtendedAnimation {
         if ("easing" in config == false) config.easing <- "out";
         if ("kind" in config == false) config.kind <- "transition";
         if ("repeat" in config == false) config.repeat <- 1;
-        if ("restart" in config == false) config.restart <- false;
+        if ("restart" in config == false) config.restart <- true;
         if ("reverse" in config == false) config.reverse <- false;
         if ("tween" in config == false) config.tween <- "quad";
         if ("wait" in config == false) config.wait <- true;
-        if ("when" in config == false) config.when <- Transition.FromOldSelection;
+        if ("which" in config == false) config.which <- "translate";
+        if ("when" in config == false) config.when <- When.FromOldSelection;
     }
     
     //return a user friend name for the animation
@@ -292,66 +350,15 @@ class ExtendedAnimation {
     function stop(obj) { }
 }
 
-//WIP Animation config creator
-class AnimationConfig {
-    delay = 0;
-    duration = 500;
-    easing = "out";
-    from = null;
-    kind = "transition";
-    property = "alpha";
-    repeat = 1;
-    reverse = false;
-    to = null;
-    tween = "linear";
-    wait = true;
-    when = Transition.FromOldSelection;
-    
-    function copy() { return clone(config); }
-    function create() { return this; }
-
-    function setDelay(d) { delay = d; return this; }
-    function setDuration(d) { duration = d; return this; }
-    function setEasing(e) { easing = e; return this; }
-    function setFrom(f) { from = f; return this; }
-    function setKind(k) { kind = k; return this; }
-    function setProperty(p) { property = p; return this; }
-    function setRepeat(r) { repeat = r; return this; }
-    function setReverse(r) { reverse = r; return this; }
-    function setTo(t) { to = t; return this; }
-    function setTween(t) { tween = t; return this; }
-    function setTransition(t) { when = t; return this; }
-    function setWait(w) { wait = w; return this; }
-}
-
-When <- {
-    StartLayout = 0,
-    EndLayout = 1,
-    ToNewSelection = 2,
-    FromOldSelection = 3,
-    ToGame = 4,
-    FromGame = 5,
-    ToNewList = 6,
-    OnDemand = 100,
-    Always = 101
-}
-
 //add our callbacks that we will handle
 ExtendedObjects.add_callback(Animate, "onObjectAdded");
 ExtendedObjects.add_callback(Animate, "onTransition");
 ExtendedObjects.add_callback(Animate, "onTick");
 
-
-//An empty table of animation types that will be available with object.animate(type, cfg)
-Animation <- {}
-
 //Pre-included animations
 fe.do_nut("extended/animations/property/property.nut");
 fe.do_nut("extended/animations/translate/translate.nut");
 
-
-//An empty table of predefined animation sets that will be available with object.animate_set(set)
-AnimationSet <- { }
-
 //Pre-included sets
 fe.do_nut("extended/animations/sets.nut");
+

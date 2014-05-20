@@ -257,7 +257,6 @@ fe.add_transition_callback( "extended_objects_transition" );
 fe.add_ticks_callback( "extended_objects_tick" );
 
 //pre-included extensions
-fe.do_nut("extended/extensions/scale/scale.nut");
 fe.do_nut("extended/extensions/debugger/debugger.nut");
 
 //pre-included objects

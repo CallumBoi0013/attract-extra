@@ -34,18 +34,32 @@ If you want to use additional objects, you will need to include them currently:
     //you can access objects later by the id you provided
     ExtendedObjects.add_image("logo", "logo.png", 0, 0, fe.layout.width, fe.layout.height);
     ExtendedObjects.add_artwork("game", "snap", 0, 0, fe.layout.width, fe.layout.height);
-    //add your animations - object.animate(type, cfg) - type is currently "translate" or "property";
-    ExtendedObjects.get("logo").animate("translate");
-    //you can provide your own configuration options for the animation in a table, options are shown below
-    ExtendedObjects.get("game").animate("translate", { duration = 1500, when = Transition.FromOldSelection, easing = "out", tween = "back", from = "offscreenbottom", to = "bottom" });
+    //add your animations - object.animate(cfg)
+    local move = {
+        which = "translate",
+        from = "offtopright",
+        to = "top"
+    }
+    ExtendedObjects.get("logo").animate(move);
+    //you can provide many options for the animation in a table, options are shown below
+    local offscreen = {
+        which = "translate",
+        duration = 1500,
+        when = When.FromOldSelection,
+        easing = "out",
+        tween = "back",
+        from = "offscreenbottom",
+        to = "bottom"
+    }
+    ExtendedObjects.get("game").animate(offscreen);
 ```
 
 ###.animate() parameters
-    type:               "translate" or "property" (or others if you include a file from extended\animations\..)
-    cfg:                optional table (surround with { } ) that contains your animation config options
+    cfg:                table (surround with { } ) that contains your animation config options
 
 ###.animate() config variables
     OPTION              DEFAULT                         DESCRIPTION
+    which               translate                       type of animation: "translate" or "property" (or others if you include a file from extended\animations\..)
     when                When.FromOldSelection           when to run animation, a transition type (When.TYPE) or When.Always
     wait                true                            wait until the animation is finished before the next transition starts
     restart             true                            if an animation is still running and transition state occurs again, restart it
@@ -55,14 +69,14 @@ If you want to use additional objects, you will need to include them currently:
     duration:           1000                            length of animation in ms
     easing              out                             easing animation type to use: in, out, inout, outin
     tween               quad                            tween animation to use:
-                                                      You can use one of the following: (See: http:easings.net/# for more info)
-                                                      back, bounce, circle, cubic, elastic
-                                                      expo, linear, quad, quart, quint, sine
-                                                      quadbezier (an arc - WIP)
-                                                      
+                                                          You can use one of the following: (See: http:easings.net/# for more info)
+                                                          back, bounce, circle, cubic, elastic
+                                                          expo, linear, quad, quart, quint, sine
+                                                          quadbezier (an arc - WIP)
+                                                          
     reverse             false                           perform animation in reverse (true|false)
 
-###Property config variables (object.animate("property", cfg))
+###Property config variables (which = "property")
     property            alpha                           the property to animate
     from                                                animation starts at this
     to:                                                 animation ends at this
@@ -78,7 +92,7 @@ If you want to use additional objects, you will need to include them currently:
                       pinch_y: 0 to 10
                       rotate: 0 to 90
 
-###Translate config variables (object.animate("translate", cfg))
+###Translate config variables (which = "translate")
     from:               offscreenbottom                 animation starts from this position - an array [ x, y ] or position "center"
     to:                 center                          animation goes to this position - an array [ x, y ] or position "bottom"
 
@@ -90,7 +104,21 @@ To use it:
 object.animate_set("fade_in_out");
 
 ###Positions
-A nice feature of using ExtendedObjects is you can use positions to easily place objects at certain locations. These positions can also be used for animations 'from' or 'to' variables in your animation config:
+A nice feature of using ExtendedObjects is you can use positions to easily place objects at certain locations:
+```
+object.setPosition("center");
+```
+
+These positions can also be used for animations 'from' or 'to' variables in your animation config:
+```
+    local anim = {
+        which = "translate",
+        from = "offright",
+        to = "right",
+        ...
+    }
+```
+
 **object positions**
 ```
     start|last|current
@@ -114,7 +142,6 @@ A nice feature of using ExtendedObjects is you can use positions to easily place
 * from = "current" to = wherever would be a one-time animation since on the next animation the from location would be the same as where its already at
 * from = "last" might be tricky to use, but if one animation finishes before the other starts, it might be useful
 * certain 'easing' and 'tween' options might be odd in some situations
-* easing 'out' animations probably aren't what you expect, these would be best used if you are 
 
 ##Developers
 *** WIP ***
@@ -188,7 +215,7 @@ To create a new animation that can be used with ExtendedObjects:
             config.easing = "out";
             config.tween = "sine";
         }
-        //return a name for your object type
+        //return a friendly name for your object type
         function getType() { return "MyAnim"; }
         function start(obj) {
             base.start(obj);
@@ -213,11 +240,12 @@ To create a new animation that can be used with ExtendedObjects:
     fe.do_nut("extended\animations\myanim\myanim.nut");
     local obj = ExtendedObjects.add_image("img", "frame.png", 0, 0, 100, 100);
     local cfg = {
+                    which = "my_anim",
                     when = ...
                     ...
                     my_property = ""
                 }
-    obj.animate("my_anim", cfg);
+    obj.animate(cfg);
 ```
 
 ### Developing Further
@@ -251,13 +279,14 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 ##TODO
 This is my active todo list (bugs and features):
 * waiting (transition) animations vs non-waiting animations
-    * fix DELAYS
-    * small twitch (not completing animation) at end of repeating animations
+    * dont start animation until after delay
+    * fix delays for non-wait animations
+    * current doesn't work with chained animations, since current is set before the first animation finishes
     * run update code from onTransition
+    * small twitch (not completing animation) at end of repeating animations
     * add update example layout for changes
-* add objects the same way we add animations, move objects into the objects folder (add_object)(
 * scaling
-* may need 'which' back in configs, mainly so sets know which animation to use
+* need 'which' back in configs, mainly so sets know which animation to use
 
 ###Issues
 This is a list of known issues:
@@ -268,17 +297,18 @@ This is a list of known issues:
 
 ###Enhancements
 This is a list of enhancements I am considering adding to the library:
-* onDemand animations
+* method chaining config creator
+    use AnimationConfig class instead of table to allow for proper method chaining
+* improve method and property naming - base it on other animation libraries (flash or android)
 * move POSITIONS to user friendly method
-* actual debugger lines in debugger
+* add objects the same way we add animations, move objects into the objects folder (add_object)(
 * move object position functions into a method attached to objects instead of POSITIONS?
-* need a way to distinguish and run object animations vs. non-object animations
+* actual debugger lines in debugger
+* onDemand animations
+* need a way to distinguish and run object animations vs. non-object animations (not attach animations to objects)
 * reorder objects on draw list - sort?
 * add_clone method - shadows uses clones, but separate images/artwork do not
 * some freakin' cool new objects (wheel, randomwheel, etc)
-* improve method and property naming - base it on other animation libraries (flash or android)
-* method chaining config creator
-    use AnimationConfig class instead of table to allow for proper method chaining
 * transform - scale + rotate from center
     setCenterAlign option for objects? If enabled, modify X/Y/W/H with -width / 2 and -height / 2
 * color - from rgb to rgb
@@ -289,7 +319,6 @@ This is a list of enhancements I am considering adding to the library:
 * clones (use weakrefs?)    
 * new objects (marquee wheel, etc)
 * quad bezier improvements (control point, arc option)
-* animation chains - chain multiple animations together (without needing multiple and delays)
 * animation paths - multiple points animations
 * screen transitions - move all objects on screen (ex. everything at top of screen slides up, everything at bottom slides down)
 * work with shaders, sound, plugin_command
@@ -299,3 +328,4 @@ This is a list of enhancements I am considering adding to the library:
 * other animations: Fade, Fly In, Float In, Split, Wipe, Shape, Wheel, Random Bars, Grow & Turn, Zoom, Swivel, Bounce, Pulse, Color Pulse, Teeter, Spin, Grow/Shrink,  Desaturate, Darken, Lighten, Transparency, Object Color,   Cut, Fade, Push, Wipe, Split, Reveal, Random bars, Shape, Uncover, Flash Fall Over, Drape, Curtains, Wind, Prestige, Fracture, Crush, Peel off Page Curl
 * resting animations: Hover, Pulse, Rock, Spin
 * Modified Orbit with options (# of slots, horizontal/vertical, spacing)
+* animation chains - chain multiple animations together (without needing multiple and delays)
