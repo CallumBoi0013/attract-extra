@@ -110,5 +110,5 @@ local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360);
 snap.animate_set("fade_in_out" );
 
 //The debugger adds debug text ontop of every object, helpful for... debugging
-local debug = ExtendedObjects.add_debug();
+local debug = ExtendedObjects.debugger();
 debug.setVisible(false);
