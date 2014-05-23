@@ -86,7 +86,7 @@ local marquee = ExtendedObjects.add_artwork("marquee", "marquee", 0, 0, 500, 156
 
 
 //You can delay animations to get a step1, step2 approach
-//step 1: move from offscreen left to center using the out/back tween
+//step 1: move from offscreen left to center using the out/bounce tween
 local marqueeAnim1 =  {
                         which = "translate",
                         when = When.ToNewSelection,
@@ -97,7 +97,7 @@ local marqueeAnim1 =  {
                         easing = "out",
                         tween = "bounce"
                     };
-//step 2: move from current position to bottomleft after an 800ms delay using the out/bounce tween
+//step 2: move from center position to bottom after a delay using the out/bounce tween
 local marqueeAnim2 =  {
                         which = "translate",
                         when = When.FromOldSelection,
