@@ -108,6 +108,8 @@ A nice feature of using ExtendedObjects is you can use positions to easily place
 ```
 object.setPosition("center");
 ```
+You can see a full list of positions here:
+[positions.png](https://raw.githubusercontent.com/liquid8d/attract-extra/master/layouts/extended/extras/positions.png)
 
 These positions can also be used for animations 'from' or 'to' variables in your animation config:
 ```
@@ -278,6 +280,8 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 
 ##TODO
 This is my active todo list (bugs and features):
+
+* still a bug with waiting and non-waiting transitions
 
 
 
