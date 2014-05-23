@@ -162,9 +162,9 @@ class Animate {
        local busy = false;
        local current = tick;
        
-       local updatesPer;
-       if (runCount > 0 && current > 0) updatesPer = (runCount / (current / 1000).tofloat());
-       runCount += 1;
+       //local updatesPer;
+       //if (runCount > 0 && current > 0) updatesPer = (runCount / (current / 1000).tofloat());
+       //runCount += 1;
        
         foreach (o in ExtendedObjects.objects) {
             foreach (a in o.config.animations) {
@@ -179,7 +179,7 @@ class Animate {
                 }
                 if (a.running) {
                     a.currentTime = current - a.createdAt - a.config.delay;
-                    if (a.currentTime < a.config.duration) {
+                    if (a.currentTime <= a.config.duration) {
                         if (a.currentTime >= 0) frame(o, a);
                         if (a.config.wait) busy = true;
                     } else {
@@ -195,7 +195,7 @@ class Animate {
                 }
             }
         }
-        ExtendedDebugger.notice("busy: " + busy + " lastTick: " + lastTick + " time: " + current + " (" + runCount + " updates at " + updatesPer + "/s)");
+        //ExtendedDebugger.notice("busy: " + busy + " lastTick: " + lastTick + " time: " + current + " (" + runCount + " updates at " + updatesPer + "/s)");
        return busy;
     }
 
