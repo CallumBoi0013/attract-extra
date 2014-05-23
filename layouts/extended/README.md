@@ -278,15 +278,10 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 
 ##TODO
 This is my active todo list (bugs and features):
-* waiting (transition) animations vs non-waiting animations
-    * dont start animation until after delay
-    * fix delays for non-wait animations
-    * current doesn't work with chained animations, since current is set before the first animation finishes
-    * run update code from onTransition
-    * small twitch (not completing animation) at end of repeating animations
-    * add update example layout for changes
-* scaling
-* need 'which' back in configs, mainly so sets know which animation to use
+
+
+
+
 
 ###Issues
 This is a list of known issues:
@@ -294,17 +289,24 @@ This is a list of known issues:
 * does not verify availability of ExtendedObjects and Animate library
 * does not validate user entered config variables
 * screen occasionally flashing at the end of animations
+* from/to = "current" won't work on a delayed animation if the position has changed (because it gets the current coordinates immediately instead of waiting until the delay is done)
+* dont start animation until after delay?
+    * current won't work with chained animations, since current is set before the first animation finishes
 
 ###Enhancements
 This is a list of enhancements I am considering adding to the library:
 * method chaining config creator
     use AnimationConfig class instead of table to allow for proper method chaining
+* new positions? mid (topleft/bottomleft/topright/bottomright) 
+* scaling
+* animated sprite set?
+
 * improve method and property naming - base it on other animation libraries (flash or android)
 * move POSITIONS to user friendly method
 * add objects the same way we add animations, move objects into the objects folder (add_object)(
 * move object position functions into a method attached to objects instead of POSITIONS?
 * actual debugger lines in debugger
-* onDemand animations
+* adjust animation speed for vertical layouts (should slow them down based on the aspect)
 * need a way to distinguish and run object animations vs. non-object animations (not attach animations to objects)
 * reorder objects on draw list - sort?
 * add_clone method - shadows uses clones, but separate images/artwork do not
@@ -329,3 +331,4 @@ This is a list of enhancements I am considering adding to the library:
 * resting animations: Hover, Pulse, Rock, Spin
 * Modified Orbit with options (# of slots, horizontal/vertical, spacing)
 * animation chains - chain multiple animations together (without needing multiple and delays)
+* onDemand animations?

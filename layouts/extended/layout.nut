@@ -2,6 +2,7 @@
 fe.do_nut("extended/extended.nut");
 //animate is only required if you want to use animations
 fe.do_nut("extended/animate.nut");
+fe.do_nut("extended/animations/particles/particles.nut");
 
 /*
 ExtendedObjects works similar to the standard fe functions, but can
@@ -9,10 +10,11 @@ provide additional functionality
 */
 
 //You must pass an 'id' as the first argument, otherwise add_ functions mirror attract-mode defaults
-ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height);
+local bg = ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height);
 
 //objects can be retrieved by their id
-ExtendedObjects.get("bg").setPreserveAspectRatio(false);
+bg.setPreserveAspectRatio(false);
+bg.animate({ which = "particles", when = When.Always, duration = 20000 } );
 
 //but you can still keep a variable
 local title = ExtendedObjects.add_text("title", "[Title]", 0, 80, fe.layout.width / 2, 60);
@@ -70,37 +72,6 @@ local logoAnim =  {
                     };
 logo.animate(logoAnim);
 
-                    
-local marquee = ExtendedObjects.add_artwork("marquee", "marquee", 0, 0, 500, 156);
-    marquee.setPosition("offleft");
-
-
-//You can delay animations to get a step1, step2 approach
-//step 1: move from offscreen left to center using the out/back tween
-local marqueeAnim1 =  {
-                        which = "translate",
-                        when = When.FromOldSelection,
-                        wait = true,
-                        duration = 750,
-                        from = "offleft",
-                        to = "center",
-                        easing = "out",
-                        tween = "back"
-                    };
-//step 2: move from current position to bottomleft after an 800ms delay using the out/bounce tween
-local marqueeAnim2 =  {
-                        which = "translate",
-                        when = When.FromOldSelection,
-                        wait = true,
-                        delay = 900,
-                        duration = 750,
-                        from = "current",
-                        to = "bottom",
-                        easing = "out",
-                        tween = "bounce"
-                    };
-marquee.animate(marqueeAnim1);
-marquee.animate(marqueeAnim2);
 
 local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360);
     snap.setPosition( [ 100, (fe.layout.height / 2) - 180 ]);
@@ -109,6 +80,38 @@ local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360);
 //You can use predefined animation sets (a group of animations)
 snap.animate_set("fade_in_out" );
 
+                    
+local marquee = ExtendedObjects.add_artwork("marquee", "marquee", 0, 0, 500, 156);
+    marquee.setPosition("left");
+
+
+//You can delay animations to get a step1, step2 approach
+//step 1: move from offscreen left to center using the out/back tween
+local marqueeAnim1 =  {
+                        which = "translate",
+                        when = When.FromOldSelection,
+                        wait = false,
+                        duration = 750,
+                        from = "left",
+                        to = "center",
+                        easing = "out",
+                        tween = "bounce"
+                    };
+//step 2: move from current position to bottomleft after an 800ms delay using the out/bounce tween
+local marqueeAnim2 =  {
+                        which = "translate",
+                        when = When.FromOldSelection,
+                        wait = true,
+                        delay = 1000,
+                        duration = 750,
+                        from = "center",
+                        to = "bottom",
+                        easing = "out",
+                        tween = "bounce"
+                    };
+marquee.animate(marqueeAnim1);
+//marquee.animate(marqueeAnim2);
+
 //The debugger adds debug text ontop of every object, helpful for... debugging
 local debug = ExtendedObjects.debugger();
-debug.setVisible(false);
+debug.setVisible(true);

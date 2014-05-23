@@ -12,7 +12,7 @@ class ParticleAnimation extends ExtendedAnimation {
     constructor(config) {
         base.constructor(config);
         particles = array(PCOUNT);
-        local image = "extended/animations/particles/star.png";
+        local image = "extended/animations/particles/invader.png";
         if ("particle" in config == true) image = config.particle; 
         object = fe.add_image(image, -32, -32, 32, 32);
         object.set_rgb(255, 0, 0);

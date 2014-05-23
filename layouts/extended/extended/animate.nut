@@ -163,7 +163,7 @@ class Animate {
        local current = tick;
        
        local updatesPer;
-       if (runCount > 0 && current > 0) updatesPer = (runCount.tofloat() / (current.tofloat() / 1000).tofloat()).tofloat();
+       if (runCount > 0 && current > 0) updatesPer = (runCount / (current / 1000).tofloat());
        runCount += 1;
        
         foreach (o in ExtendedObjects.objects) {
@@ -195,6 +195,7 @@ class Animate {
                 }
             }
         }
+        ExtendedDebugger.notice("busy: " + busy + " lastTick: " + lastTick + " time: " + current + " (" + runCount + " updates at " + updatesPer + "/s)");
        return busy;
     }
 
