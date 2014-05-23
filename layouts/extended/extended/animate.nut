@@ -130,7 +130,7 @@ class Animate {
         o.config.animations <- [];
         //add the animate function to each object
         o.getclass().newmember("animate", function(c = {}) {
-            if ("which" in c) {
+            if ("which" in c && c.which in Animation) {
                 o.config.animations.append(Animation[c.which](c));
             } else {
                 //add default animation
