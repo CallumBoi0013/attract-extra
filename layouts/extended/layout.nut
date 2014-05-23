@@ -113,4 +113,4 @@ marquee.animate(marqueeAnim2);
 
 //The debugger adds debug text ontop of every object, helpful for... debugging
 local debug = ExtendedObjects.debugger();
-debug.setVisible(false);
+debug.setVisible(true);
