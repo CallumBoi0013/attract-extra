@@ -82,17 +82,17 @@ snap.animate_set("fade_in_out" );
 
                     
 local marquee = ExtendedObjects.add_artwork("marquee", "marquee", 0, 0, 500, 156);
-    marquee.setPosition("left");
+    marquee.setPosition("offleft");
 
 
 //You can delay animations to get a step1, step2 approach
 //step 1: move from offscreen left to center using the out/back tween
 local marqueeAnim1 =  {
                         which = "translate",
-                        when = When.FromOldSelection,
+                        when = When.ToNewSelection,
                         wait = false,
                         duration = 750,
-                        from = "left",
+                        from = "offleft",
                         to = "center",
                         easing = "out",
                         tween = "bounce"
@@ -101,7 +101,6 @@ local marqueeAnim1 =  {
 local marqueeAnim2 =  {
                         which = "translate",
                         when = When.FromOldSelection,
-                        wait = true,
                         delay = 1000,
                         duration = 750,
                         from = "center",
@@ -110,8 +109,8 @@ local marqueeAnim2 =  {
                         tween = "bounce"
                     };
 marquee.animate(marqueeAnim1);
-//marquee.animate(marqueeAnim2);
+marquee.animate(marqueeAnim2);
 
 //The debugger adds debug text ontop of every object, helpful for... debugging
 local debug = ExtendedObjects.debugger();
-debug.setVisible(true);
+debug.setVisible(false);
