@@ -142,7 +142,7 @@ class ShadowedObject extends ExtendedObject {
     function getShadowOffset() { return config.shadowOffset; }
 
     function setShadow(e) { config.shadowEnabled = shadow.visible = e; }
-    function setShadowAlpha(a) { if (a < 0) a = 0; if (a > 255) a = 255; config.shadowAlpha = a; }
+    function setShadowAlpha(a) { if (a < 0) a = 0; if (a > 255) a = 255; config.shadowAlpha = shadow.alpha = a; }
     function setShadowColor(r, g, b) { config.shadowColor = [r, g, b]; shadow.set_rgb(r, g, b); }
     function setShadowOffset(o) { config.shadowOffset = o; setX(getX()); setY(getY()); }
 

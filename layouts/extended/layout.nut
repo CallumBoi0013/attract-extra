@@ -24,7 +24,7 @@ local title = ExtendedObjects.add_text("title", "[Title]", 0, 80, fe.layout.widt
     //ExtendedTexts and ExtendedImages can make use of a shadow
     title.setShadow(true);
     title.setShadowColor(240, 240, 20);
-    title.setShadowAlpha(225);
+    title.setShadowAlpha(75);
     title.setShadowOffset(4);
 
 //Add a list at a custom position
