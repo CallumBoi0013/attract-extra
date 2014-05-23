@@ -3,30 +3,29 @@ Animation["particles"] <- function(c = {} ) {
     return ParticleAnimation(c);
 }
 
-const PCOUNT = 512;
+const PCOUNT = 256;
 
 class ParticleAnimation extends ExtendedAnimation {
     particles = null;
-    object = null;
     
     constructor(config) {
         base.constructor(config);
         particles = array(PCOUNT);
-        local image = "extended/animations/particles/invader.png";
-        if ("particle" in config == true) image = config.particle; 
-        object = fe.add_image(image, -32, -32, 32, 32);
-        object.set_rgb(255, 0, 0);
-        //local resource = fe.add_image(image, 20, 20, 32, 32);
+        local resources = [];
+        resources.append(fe.add_image("extended/animations/particles/invader.png", -32, -32, 32, 32));
+        resources.append(fe.add_image("extended/animations/particles/invader2.png", -32, -32, 32, 32));
+        resources.append(fe.add_image("extended/animations/particles/invader3.png", -32, -32, 32, 32));
         for (local i = 0; i < PCOUNT; i++) {
-            particles[i] = Particle(i, object, 0, 0, fe.layout.width, fe.layout.height);
+            particles[i] = Particle(i, resources[random(0,3)], 0, 0, fe.layout.width, fe.layout.height);
         }
-        particles[0].setColor(255, 0, 0);
-        particles[1].setColor(0, 255, 0);
-        particles[2].setColor(0, 0, 255);
-        
     }
     
     function getType() { return "ParticleAnimation"; }
+    
+    function random(minNum, maxNum) {
+        return floor(((rand() % 1000 ) / 1000.0) * (maxNum - minNum) + minNum);
+    }
+
     function start(obj) {
         foreach (p in particles) {
             p.reset();
@@ -77,7 +76,7 @@ class Particle {
                         random(minY, maxY) ];
             object.alpha = random(25, 255);
             object.set_rgb(random(0,255), random(0,255), random(0,255));
-            object.width = object.height = random(16, 32);
+            object.width = object.height = random(24, 36);
         } else {
             start = end;
         }
