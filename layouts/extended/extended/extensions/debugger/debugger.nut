@@ -33,18 +33,18 @@ class ExtendedDebugger {
     }
     
     function onObjectAdded(params) {
-        ExtendedDebugger.notice("object added: " + params.object.id);
+        //ExtendedDebugger.notice("object added: " + params.object.id);
     }
     function onAnimationFrame(params) {
-        
+        //ExtendedDebugger.notice("animating: " + params.object.id);        
     }
     
     function onAnimationStart(params) {
-        ExtendedDebugger.notice("animation started: " + params.object.id);
+        //ExtendedDebugger.notice("animation started: " + params.object.id);
     }
     
     function onAnimationStop(params) {
-        ExtendedDebugger.notice("animation stopped: " + params.object.id);
+        //ExtendedDebugger.notice("animation stopped: " + params.object.id);
     }
     
     function onTick(params) {
@@ -66,8 +66,7 @@ class ExtendedDebugger {
         local ttype = params.ttype;
         local var = params.var;
         local ttime = params.ttime;
-        //ExtendedDebugger.notice("animating: " + params.ttime);
-        //ExtendedDebugger.get("notice").setText("Transition: " + TRANSITIONS[ttype]);
+        //ExtendedDebugger.notice("Transition: " + Animate.getWhen(ttype));
         updateObjects();
         if (ttype == Transition.StartLayout) {
             local msg = "Found objects: ";
