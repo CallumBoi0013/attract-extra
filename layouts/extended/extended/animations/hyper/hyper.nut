@@ -1,5 +1,14 @@
+//load the preset configs as animation names that users can use
+fe.do_nut("extended/animations/hyper/presets/presets.nut");
+
 //push the animation name that users will use to the Animation table
 Animation["hyper"] <- function(c = {} ) {
+    if ("preset" in c) {
+        c = Animation.hyperPresets[c.preset];
+        c.which <- "hyper";
+        c.when <- When.Always;
+        c.duration <- 120000;
+    }
     return HyperParticle(c);
 }
 
@@ -9,7 +18,7 @@ Animation["hyper"] <- function(c = {} ) {
 // gravity is properly implemented
 
 class HyperParticle extends ExtendedAnimation {
-    debug = true;
+    debug = false;
     resources = null;
     emitter = null;
     particles = null;
@@ -26,18 +35,18 @@ class HyperParticle extends ExtendedAnimation {
         base.constructor(config);
         
         //get config and set defaults
-        if ("resource" in config == false) config.resource <- "default.png";
+        if ("resources" in config == false) config.resources <- [ "default.png" ];
         //emitter variables
         if ("ppm" in config == false) config.ppm <- 60;
         if ("x" in config == false) config.x <- fe.layout.width / 2;
         if ("y" in config == false) config.y <- fe.layout.height / 2;
-        if ("width" in config == false) config.width <- 100;
-        if ("height" in config == false) config.height <- 20;
+        if ("width" in config == false) config.width <- 1;
+        if ("height" in config == false) config.height <- 1;
         if ("limit" in config == false) config.limit <- 0;
         //particle variables
         if ("movement" in config == false) config.movement <- true;
-        if ("angle" in config == false) config.angle <- [ 45, 135 ];
-        if ("speed" in config == false) config.speed <- [ 100, 1000 ];
+        if ("angle" in config == false) config.angle <- [ 0, 0 ];
+        if ("speed" in config == false) config.speed <- [ 150, 150 ];
         if ("scale" in config == false) config.scale <- [ 1.0, 1.0 ];       //scale over time
         if ("startScale" in config == false) config.startScale <- [ 1.0, 1.0 ];  //random scale
         if ("rotate" in config == false) config.rotate <- [ 0, 0 ];
@@ -72,13 +81,15 @@ class HyperParticle extends ExtendedAnimation {
 
         //setup resources
         resources = [];
-        local img = fe.add_image("extended/animations/hyper/" + config.resource, -1, -1, 1, 1);
-            img.x = -img.texture_width;
-            img.y = -img.texture_height;
-            img.width = img.texture_width;
-            img.height = img.texture_height;
-        resources.append(img);
-
+        foreach (r in config.resources) {
+            local img = fe.add_image("extended/animations/hyper/" + r, -1, -1, 1, 1);
+                img.x = -img.texture_width;
+                img.y = -img.texture_height;
+                img.width = img.texture_width;
+                img.height = img.texture_height;
+            resources.append(img);
+        }
+        
         timePerParticle = (60 / config.ppm.tofloat()) * 1000;
 
         //setup emitter
@@ -86,10 +97,10 @@ class HyperParticle extends ExtendedAnimation {
         emitter.ppm <- config.ppm;
         emitter.width <- config.width;
         emitter.height <- config.height;
-        emitter.x <- config.x - (emitter.width / 2);
-        emitter.y <- config.y - (emitter.height / 2);
+        emitter.x <- config.x; // - (emitter.width / 2);
+        emitter.y <- config.y; // - (emitter.height / 2);
         emitter.limit <- config.limit;
-        
+
         //setup particles
         particles = [];
 
@@ -99,9 +110,11 @@ class HyperParticle extends ExtendedAnimation {
     
     function setupDebug(config) {
         debug_emitter = fe.add_image("extended/animations/hyper/pixel.png", -1, -1, 1, 1);
-        debug_emitter.set_rgb(255, 255, 0);
-        debug_emitter.x = emitter.x - (emitter.width / 2);
-        debug_emitter.y = emitter.y - (emitter.height / 2);
+        debug_emitter.set_rgb(0, 255, 0);
+        debug_emitter.x = emitter.x; // - (emitter.width / 2);
+        debug_emitter.y = emitter.y; //- (emitter.height / 2);
+        //debug_emitter.x = emitter.x - (emitter.width / 2);
+        //debug_emitter.y = emitter.y - (emitter.height / 2);
         debug_emitter.width = emitter.width;
         debug_emitter.height = emitter.height;
         
@@ -109,7 +122,7 @@ class HyperParticle extends ExtendedAnimation {
         debug_angle_min.set_rgb(255, 209, 24);
         debug_angle_min.x = emitter.x;
         debug_angle_min.y = emitter.y;
-        debug_angle_min.width = 50;
+        debug_angle_min.width = 1;
         debug_angle_min.height = 1;
         debug_angle_min.rotation = config.angle[0];
         debug_angle_max = fe.add_clone(debug_angle_min);
@@ -132,7 +145,7 @@ class HyperParticle extends ExtendedAnimation {
         current = ttime;
         
         //when to start new particles
-        if (elapsed >= timePerParticle) {
+        if (particles.len() == 0 || elapsed >= timePerParticle) {
             //create one
             if (emitter.limit == 0 || particles.len() < emitter.limit) create(ttime);
             //reset elapsed
