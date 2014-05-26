@@ -84,5 +84,36 @@ Animation.hyperPresets <- {
         fade = 500,
         rotate = [ 1, 10 ],
         lifespan = 500
+    },
+    "invaders": {
+        resources = [ "presets/invader.png", "presets/invader2.png", "presets/invader3.png" ],
+        ppm = 100,
+        x = 0,
+        y = 0,
+        width = fe.layout.width,
+        height = fe.layout.height,
+        speed = [ 0, 0 ],
+        scale = [ 1, 1.5 ],
+        rotate = [ -3, 3 ],
+        fade = 1500,
+        lifespan = 1500
+    },
+    "testing": {
+        resources = [ "default.png" ],
+        ppm = 24,
+        x = 0,
+        y = 768,
+        width = 1,
+        height = 1,
+        angle = [ 270, 270 ],
+        speed = [ 150, 150 ],
+        accel = 0,
+        rotate = [ 0, 0 ],
+        rotateToAngle = false,
+        scale = [ 1, 1 ],
+        startScale = [ 1, 1 ],
+        gravity = 0,
+        lifespan = 6000,
+        fade = 0
     }
 }

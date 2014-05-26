@@ -119,14 +119,15 @@ class HyperParticle extends ExtendedAnimation {
         debug_emitter.height = emitter.height;
         
         debug_angle_min = fe.add_clone(debug_emitter);
-        debug_angle_min.set_rgb(255, 209, 24);
+        debug_angle_min.set_rgb(255, 0, 0);
         debug_angle_min.x = emitter.x;
         debug_angle_min.y = emitter.y;
-        debug_angle_min.width = 1;
-        debug_angle_min.height = 1;
+        debug_angle_min.width = 100;
+        debug_angle_min.height = 2;
         debug_angle_min.rotation = config.angle[0];
+
         debug_angle_max = fe.add_clone(debug_angle_min);
-        debug_angle_max.set_rgb(255, 84, 24);
+        debug_angle_max.set_rgb(0, 0, 255);
         debug_angle_max.rotation = config.angle[1];
         
     }
@@ -258,20 +259,23 @@ class Particle {
         ttime  = ttime - createdAt;
         lifespan = lifetime - (ttime - createdAt);
         
-        //the 1000 numbers below might need to be adjusted just to match the speed of HyperTheme
+        //the ttime/ numbers below are adjustments to attempt to match the speed of HyperTheme
         if (movement) {
             //gravity
             if (gravity != 0) {
                 local gBase = 9.78;
-                local gVariation = (gravity / 75).tofloat();
-                currentGravity = pow((ttime / 1000.0) * (gBase + gVariation), 2);
+                //local gVariation = (gravity / 75.0);
+                local gVariation = gravity.tofloat();
+                local gAccel = (ttime / 2000.0) * (gBase + gVariation);
+                currentGravity = pow(gAccel, 2);
+                if (gVariation < 0) currentGravity = -currentGravity;
             }
             
             //speed and acceleration
             currentAccel = (ttime.tofloat() / 1000.0) * accel;
             currentSpeed = speed * (1 + currentAccel);
 
-            local dist = ((ttime.tofloat() / 1000.0) * currentSpeed);
+            local dist = ((ttime.tofloat() / 1200.0) * currentSpeed);
             //local dist = ((ttime.tofloat() / 1000.0) * speed);
             local ang = [ (anglePoint[0] - startx) / 300.0, (anglePoint[1] - starty) / 300.0 ];
             resource.x = startx + dist * ang[0];
