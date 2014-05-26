@@ -37,15 +37,15 @@ class HyperParticle extends ExtendedAnimation {
         if ("movement" in config == false) config.movement <- true;
         if ("angle" in config == false) config.angle <- [ 45, 135 ];
         if ("speed" in config == false) config.speed <- [ 100, 1000 ];
-        if ("scale" in config == false) config.scale <- [ 3.0, 3.0 ];       //random scale
-        if ("startScale" in config == false) config.startScale <- [ 1, 1 ];  //scale over time
+        if ("scale" in config == false) config.scale <- [ 1.0, 1.0 ];       //random scale
+        if ("startScale" in config == false) config.startScale <- [ 1.0, 1.0 ];  //scale over time
         if ("rotate" in config == false) config.rotate <- [ 0, 0 ];
-        //todo
-        if ("lifespan" in config == false) config.lifespan <- 5000;
-        if ("particlesontop" in config == false) config.particlesontop <- true;
         if ("fade" in config == false) config.fade <- 0;
+        //todo
         if ("gravity" in config == false) config.gravity <- 0;
         if ("accel" in config == false) config.accel <- 0;
+        if ("lifespan" in config == false) config.lifespan <- 5000;
+        if ("particlesontop" in config == false) config.particlesontop <- true;
         if ("rotateToAngle" in config == false) config.rotateToAngle <- false;
         if ("pointSwarm" in config == false) config.pointSwarm <- [ 0, 0 ];
         if ("xOscillate" in config == false) config.xOscillate <- false;
@@ -54,12 +54,18 @@ class HyperParticle extends ExtendedAnimation {
         if ("randomFrame" in config == false) config.randomFrame <- false;
 
         //set limitations
+        config.lifespan = minmax(config.lifespan, 500, 20000);
         config.angle[0] = minmax(config.angle[0], 0, 360);
         config.angle[1] = minmax(config.angle[1], 0, 360);
         config.speed[0] = minmax(config.speed[0], 0, 2000);
         config.speed[1] = minmax(config.speed[1], 0, 2000);
         config.rotate[0] = minmax(config.rotate[0], -50, 50);
         config.rotate[1] = minmax(config.rotate[1], -50, 50);
+        config.scale[0] = minmax(config.scale[0], 0.1, 3.0);
+        config.scale[1] = minmax(config.scale[1], 0.1, 3.0);
+        config.startScale[0] = minmax(config.startScale[0], 0.1, 3.0);
+        config.startScale[1] = minmax(config.startScale[1], 0.1, 3.0);
+        config.fade = minmax(config.fade, 0, 10000);
 
         //setup resources
         resources = [];
@@ -89,7 +95,7 @@ class HyperParticle extends ExtendedAnimation {
         debug_emitter.y = emitter.y - (emitter.height / 2);
         debug_emitter.width = emitter.width;
         debug_emitter.height = emitter.height;
-        /*
+        
         debug_angle_min = fe.add_clone(debug_emitter);
         debug_angle_min.set_rgb(255, 209, 24);
         debug_angle_min.x = emitter.x;
@@ -100,7 +106,7 @@ class HyperParticle extends ExtendedAnimation {
         debug_angle_max = fe.add_clone(debug_angle_min);
         debug_angle_max.set_rgb(255, 84, 24);
         debug_angle_max.rotation = config.angle[1];
-        */
+        
     }
 
     function start(obj) {
@@ -139,6 +145,7 @@ class HyperParticle extends ExtendedAnimation {
                 msg += "p" + i + " [" + particles[i].x + "," + particles[i].y + "] angle=" + particles[i].angle + " speed: " + particles[i].speed + " scale: " + particles[i].scale  + "\n";
             }
         }
+        //if (particles.len() >= 1) ExtendedDebugger.notice(particles[0].toString());
         //ExtendedDebugger.notice("time: " + current + " elapsed: " + elapsed + " particles: " + particles.len() + " ppm: " + emitter.ppm + " (" + timePerParticle + "mspp)" + "\n" + msg);
     }
     
@@ -183,6 +190,7 @@ class Particle {
     scale = 1.0;
     startScale = [ 1, 1 ];
     rotate = [ 0, 0 ];
+    fade = 0;
 
     //not fully implmented
     lifespan = 0;
@@ -192,6 +200,7 @@ class Particle {
     anglePoint = null;      //one-time store an angle point to the radius calculated before doing updates
     currentScale = 1.0;     //store the current scale
     currentRotation = 0;    //store the current rotation    
+    currentFade = 0;        //store the current fade alpha
     
     constructor(createdAt, resource, emitter, config) {
         this.createdAt = createdAt;
@@ -210,6 +219,7 @@ class Particle {
         this.scale = HyperParticle.randomf(config.scale[0], config.scale[1]);
         this.startScale = config.startScale;
         this.rotate = HyperParticle.random(config.rotate[0], config.rotate[1]);
+        this.fade = config.fade;
     }
     
     function isDead() { if (lifespan <= 0) return true; return false; }
@@ -228,6 +238,13 @@ class Particle {
             resource.y = starty;
         }
 
+        //fade
+        if (fade > 0 && currentFade >= 0) {
+            currentFade = 255 - (ttime / fade.tofloat()) * 255;
+            if (currentFade < 0) currentFade = 0;
+            resource.alpha = currentFade;
+        }
+        
         //scale
         if (startScale[0] != 1 || startScale[1] != 1) {
             //scale particle over time
@@ -254,11 +271,10 @@ class Particle {
         //resource.y = (ttime.tofloat() / abs(speed - 2050)).tofloat() * (anglePoint[1] - starty) + starty;
         //resource.x = HyperParticle.calculate("in", "linear", ttime, startx, angle[0], 2000);
         //resource.y = HyperParticle.calculate("in", "linear", ttime, starty, angle[1], 2000);
-        ExtendedDebugger.notice(toString());
     }
     function setAlpha(a) { resource.alpha = HyperParticle.minmax(a, 0, 255); }
     function setColor(r, g, b) { resource.set_rgb(HyperParticle.minmax(r, 0, 255), HyperParticle.minmax(g, 0, 255), HyperParticle.minmax(b, 0, 255)); }
     function visible(v) { resource.visible = v; }
-    function toString() { return "[" + x + "," + y + "] angle=" + angle + " speed: " + speed + " scale: " + currentScale + " rotate: " + currentRotation + "\n"; }
+    function toString() { return "[" + x + "," + y + "] angle=" + angle + " speed: " + speed + " scale: " + currentScale + " rotate: " + currentRotation + " fade: " + currentFade + "\n"; }
 }
 
