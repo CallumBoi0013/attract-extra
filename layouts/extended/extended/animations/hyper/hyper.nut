@@ -4,8 +4,9 @@ Animation["hyper"] <- function(c = {} ) {
 }
 
 //TODO
-// speed is still not quite right, hacked in a bit
-// movement variable not being used properly
+// speed-acceleration seem off, hacked in a bit
+// cannot get it to center object with rotation
+// gravity is properly implemented
 
 class HyperParticle extends ExtendedAnimation {
     debug = true;
@@ -37,16 +38,16 @@ class HyperParticle extends ExtendedAnimation {
         if ("movement" in config == false) config.movement <- true;
         if ("angle" in config == false) config.angle <- [ 45, 135 ];
         if ("speed" in config == false) config.speed <- [ 100, 1000 ];
-        if ("scale" in config == false) config.scale <- [ 1.0, 1.0 ];       //random scale
-        if ("startScale" in config == false) config.startScale <- [ 1.0, 1.0 ];  //scale over time
+        if ("scale" in config == false) config.scale <- [ 1.0, 1.0 ];       //scale over time
+        if ("startScale" in config == false) config.startScale <- [ 1.0, 1.0 ];  //random scale
         if ("rotate" in config == false) config.rotate <- [ 0, 0 ];
+        if ("rotateToAngle" in config == false) config.rotateToAngle <- false;
         if ("fade" in config == false) config.fade <- 0;
-        //todo
         if ("gravity" in config == false) config.gravity <- 0;
         if ("accel" in config == false) config.accel <- 0;
+        //todo
         if ("lifespan" in config == false) config.lifespan <- 5000;
         if ("particlesontop" in config == false) config.particlesontop <- true;
-        if ("rotateToAngle" in config == false) config.rotateToAngle <- false;
         if ("pointSwarm" in config == false) config.pointSwarm <- [ 0, 0 ];
         if ("xOscillate" in config == false) config.xOscillate <- false;
         if ("bound" in config == false) config.bound <- false;
@@ -66,10 +67,18 @@ class HyperParticle extends ExtendedAnimation {
         config.startScale[0] = minmax(config.startScale[0], 0.1, 3.0);
         config.startScale[1] = minmax(config.startScale[1], 0.1, 3.0);
         config.fade = minmax(config.fade, 0, 10000);
+        config.accel = minmax(config.accel, 0, 20);
+        config.gravity = minmax(config.gravity, -75, 75);
 
         //setup resources
         resources = [];
-        resources.append(fe.add_image("extended/animations/hyper/" + config.resource, -65, -65, 65, 65));
+        local img = fe.add_image("extended/animations/hyper/" + config.resource, -1, -1, 1, 1);
+            img.x = -img.texture_width;
+            img.y = -img.texture_height;
+            img.width = img.texture_width;
+            img.height = img.texture_height;
+        resources.append(img);
+
         timePerParticle = (60 / config.ppm.tofloat()) * 1000;
 
         //setup emitter
@@ -142,11 +151,11 @@ class HyperParticle extends ExtendedAnimation {
             }
             //give us some debug info
             if (i > particles.len() - 4) {
-                msg += "p" + i + " [" + particles[i].x + "," + particles[i].y + "] angle=" + particles[i].angle + " speed: " + particles[i].speed + " scale: " + particles[i].scale  + "\n";
+                msg += "p" + i + " " + particles[i].toString();
             }
         }
         //if (particles.len() >= 1) ExtendedDebugger.notice(particles[0].toString());
-        //ExtendedDebugger.notice("time: " + current + " elapsed: " + elapsed + " particles: " + particles.len() + " ppm: " + emitter.ppm + " (" + timePerParticle + "mspp)" + "\n" + msg);
+        ExtendedDebugger.notice("time: " + current + " elapsed: " + elapsed + " particles: " + particles.len() + " ppm: " + emitter.ppm + " (" + timePerParticle + "mspp)" + "\n" + msg);
     }
     
     function random(minNum, maxNum) {
@@ -190,7 +199,10 @@ class Particle {
     scale = 1.0;
     startScale = [ 1, 1 ];
     rotate = [ 0, 0 ];
+    rotateToAngle = false;
     fade = 0;
+    accel = 0;
+    gravity = 0;
 
     //not fully implmented
     lifespan = 0;
@@ -201,7 +213,9 @@ class Particle {
     currentScale = 1.0;     //store the current scale
     currentRotation = 0;    //store the current rotation    
     currentFade = 0;        //store the current fade alpha
-    
+    currentAccel = 0;       //store the current acceleration
+    currentGravity = 0;     //store the gravity
+    currentSpeed = 0;       //store the current speed
     constructor(createdAt, resource, emitter, config) {
         this.createdAt = createdAt;
         this.resource = fe.add_clone(resource);
@@ -216,10 +230,13 @@ class Particle {
         this.speed = HyperParticle.random(config.speed[0], config.speed[1]);
         this.angle = HyperParticle.random(config.angle[0], config.angle[1]);
         anglePoint = HyperParticle.angle(angle, 300, startx, starty);
-        this.scale = HyperParticle.randomf(config.scale[0], config.scale[1]);
-        this.startScale = config.startScale;
+        this.scale = config.scale;
+        this.startScale = HyperParticle.randomf(config.startScale[0], config.startScale[1]);
         this.rotate = HyperParticle.random(config.rotate[0], config.rotate[1]);
+        this.rotateToAngle = config.rotateToAngle;
         this.fade = config.fade;
+        this.gravity = config.gravity;
+        this.accel = config.accel;
     }
     
     function isDead() { if (lifespan <= 0) return true; return false; }
@@ -228,11 +245,24 @@ class Particle {
         ttime  = ttime - createdAt;
         lifespan = lifetime - (ttime - createdAt);
         
+        //the 1000 numbers below might need to be adjusted just to match the speed of HyperTheme
         if (movement) {
-            local dist = ((ttime.tofloat() / 1000.0) * speed);
+            //gravity
+            if (gravity != 0) {
+                local gBase = 9.78;
+                local gVariation = (gravity / 75).tofloat();
+                currentGravity = pow((ttime / 1000.0) * (gBase + gVariation), 2);
+            }
+            
+            //speed and acceleration
+            currentAccel = (ttime.tofloat() / 1000.0) * accel;
+            currentSpeed = speed * (1 + currentAccel);
+
+            local dist = ((ttime.tofloat() / 1000.0) * currentSpeed);
+            //local dist = ((ttime.tofloat() / 1000.0) * speed);
             local ang = [ (anglePoint[0] - startx) / 300.0, (anglePoint[1] - starty) / 300.0 ];
             resource.x = startx + dist * ang[0];
-            resource.y = starty + dist * ang[1];
+            resource.y = starty + dist * ang[1] + currentGravity;
         } else {
             resource.x = startx;
             resource.y = starty;
@@ -246,21 +276,25 @@ class Particle {
         }
         
         //scale
-        if (startScale[0] != 1 || startScale[1] != 1) {
-            //scale particle over time
+        if (scale[0] != 1 || scale[1] != 1) {
+            //scale (scale over time)
             //change * (time / duration) + start;
-            currentScale = (startScale[1] - startScale[0]) * (ttime / lifetime.tofloat()) + startScale[0] ;
+            currentScale = (scale[1] - scale[0]) * (ttime / lifetime.tofloat()) + scale[0];
         } else {
-            //random scale size
-            currentScale = scale;
+            //startScale (random scale)
+            currentScale = startScale;
         }
+
         resource.width = w * currentScale;
         resource.height = h * currentScale;
 
         //rotate
-        currentRotation = (rotate * (ttime.tofloat() / 1000.0)) * 10;
-        resource.rotation = currentRotation;
-        
+        if (rotateToAngle) {
+            resource.rotation = angle;
+        } else {
+            currentRotation = (rotate * (ttime.tofloat() / 1000.0)) * 10;
+            resource.rotation = currentRotation;
+        }
         //center on point
         //how to center on scale and rotation??
         resource.x -= resource.width / 2;
@@ -275,6 +309,6 @@ class Particle {
     function setAlpha(a) { resource.alpha = HyperParticle.minmax(a, 0, 255); }
     function setColor(r, g, b) { resource.set_rgb(HyperParticle.minmax(r, 0, 255), HyperParticle.minmax(g, 0, 255), HyperParticle.minmax(b, 0, 255)); }
     function visible(v) { resource.visible = v; }
-    function toString() { return "[" + x + "," + y + "] angle=" + angle + " speed: " + speed + " scale: " + currentScale + " rotate: " + currentRotation + " fade: " + currentFade + "\n"; }
+    function toString() { return ": " + x + "," + y + " a=" + angle + " sp: " + currentSpeed + " sca: " + currentScale + " rot: " + currentRotation + " fa: " + currentFade + " gr: " + currentGravity + " ac: " + currentAccel + "\n"; }
 }
 
