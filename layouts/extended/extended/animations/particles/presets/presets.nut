@@ -1,4 +1,4 @@
-Animation.hyperPresets <- {
+Animation.particlePresets <- {
     "arc1": {
         resources = [ "presets/ball.png" ],
         ppm = 1,
