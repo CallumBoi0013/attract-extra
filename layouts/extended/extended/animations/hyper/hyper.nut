@@ -25,7 +25,7 @@ class HyperParticle extends ExtendedAnimation {
     elapsed = 0;
     current = 0;
     timePerParticle = 0;
-
+    
     //used for debugging
     debug_emitter = null;
     debug_angle_min = null;
@@ -54,12 +54,11 @@ class HyperParticle extends ExtendedAnimation {
         if ("fade" in config == false) config.fade <- 0;
         if ("gravity" in config == false) config.gravity <- 0;
         if ("accel" in config == false) config.accel <- 0;
+        if ("xOscillate" in config == false) config.xOscillate <- [ 0, 0 ];
         //todo
         if ("lifespan" in config == false) config.lifespan <- 5000;
         if ("particlesontop" in config == false) config.particlesontop <- true;
         if ("pointSwarm" in config == false) config.pointSwarm <- [ 0, 0 ];
-        if ("xOscillate" in config == false) config.xOscillate <- false;
-        if ("bound" in config == false) config.bound <- false;
         if ("blendmode" in config == false) config.blendmode <- "none";
         if ("randomFrame" in config == false) config.randomFrame <- false;
 
@@ -78,7 +77,9 @@ class HyperParticle extends ExtendedAnimation {
         config.fade = minmax(config.fade, 0, 10000);
         config.accel = minmax(config.accel, 0, 20);
         config.gravity = minmax(config.gravity, -75, 75);
-
+        config.xOscillate[0] = minmax(config.xOscillate[0], 0, 50);
+        config.xOscillate[1] = minmax(config.xOscillate[1], 0, 1000);
+        
         //setup resources
         resources = [];
         foreach (r in config.resources) {
@@ -169,7 +170,7 @@ class HyperParticle extends ExtendedAnimation {
             }
         }
         //if (particles.len() >= 1) ExtendedDebugger.notice(particles[0].toString());
-        ExtendedDebugger.notice("time: " + current + " elapsed: " + elapsed + " particles: " + particles.len() + " ppm: " + emitter.ppm + " (" + timePerParticle + "mspp)" + "\n" + msg);
+        //ExtendedDebugger.notice("time: " + current + " elapsed: " + elapsed + " particles: " + particles.len() + " ppm: " + emitter.ppm + " (" + timePerParticle + "mspp)" + "\n" + msg);
     }
     
     function random(minNum, maxNum) {
@@ -217,6 +218,7 @@ class Particle {
     fade = 0;
     accel = 0;
     gravity = 0;
+    xOscillate = null;
 
     //not fully implmented
     lifespan = 0;
@@ -251,6 +253,7 @@ class Particle {
         this.fade = config.fade;
         this.gravity = config.gravity;
         this.accel = config.accel;
+        this.xOscillate = config.xOscillate;
     }
     
     function isDead() { if (lifespan <= 0) return true; return false; }
@@ -258,7 +261,7 @@ class Particle {
     function update(ttime) {
         ttime  = ttime - createdAt;
         lifespan = lifetime - (ttime - createdAt);
-        
+                
         //the ttime/ numbers below are adjustments to attempt to match the speed of HyperTheme
         if (movement) {
             //gravity
@@ -280,6 +283,14 @@ class Particle {
             local ang = [ (anglePoint[0] - startx) / 300.0, (anglePoint[1] - starty) / 300.0 ];
             resource.x = startx + dist * ang[0];
             resource.y = starty + dist * ang[1] + currentGravity;
+            
+            //xOscillate
+            if (xOscillate[0] > 0 && xOscillate[1] > 0) {
+                local amp = xOscillate[0].tofloat();
+                local freq = xOscillate[1].tofloat();
+                resource.x += sin((ttime.tofloat() / freq)) * amp;
+                //resource.x += sin((ttime.tofloat() / 7000.0)) * 500;
+            }
         } else {
             resource.x = startx;
             resource.y = starty;
@@ -323,9 +334,9 @@ class Particle {
         //resource.x = HyperParticle.calculate("in", "linear", ttime, startx, angle[0], 2000);
         //resource.y = HyperParticle.calculate("in", "linear", ttime, starty, angle[1], 2000);
     }
+    
     function setAlpha(a) { resource.alpha = HyperParticle.minmax(a, 0, 255); }
     function setColor(r, g, b) { resource.set_rgb(HyperParticle.minmax(r, 0, 255), HyperParticle.minmax(g, 0, 255), HyperParticle.minmax(b, 0, 255)); }
     function visible(v) { resource.visible = v; }
     function toString() { return ": " + x + "," + y + " a=" + angle + " sp: " + currentSpeed + " sca: " + currentScale + " rot: " + currentRotation + " fa: " + currentFade + " gr: " + currentGravity + " ac: " + currentAccel + "\n"; }
 }
-

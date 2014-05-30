@@ -98,14 +98,14 @@ Animation.hyperPresets <- {
         fade = 1500,
         lifespan = 1500
     },
-    "testing": {
-        resources = [ "default.png" ],
-        ppm = 24,
-        x = 0,
-        y = 768,
+    "test": {
+        resources = [ "presets/default.png" ],
+        ppm = 60,
+        x = fe.layout.width / 2,
+        y = 0,
         width = 1,
         height = 1,
-        angle = [ 270, 270 ],
+        angle = [ 90, 90 ],
         speed = [ 150, 150 ],
         accel = 0,
         rotate = [ 0, 0 ],
@@ -114,6 +114,7 @@ Animation.hyperPresets <- {
         startScale = [ 1, 1 ],
         gravity = 0,
         lifespan = 6000,
-        fade = 0
+        fade = 0,
+        xOscillate = [ 10, 250 ]
     }
 }
