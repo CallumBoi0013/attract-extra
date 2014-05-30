@@ -251,6 +251,7 @@ class ExtendedListBox extends ExtendedObject {
     function getSelectionAlpha() { return object.sel_alpha; }
     function getSelectionBGColor() { return [ object.selbg_red, object.selbg_green, object.selbg_blue ]; }
     function getSelectionBGAlpha() { return object.sel_bgalpha; }
+    function getSelectionStyle() { return object.sel_style; }
     function getStyle() { return object.style; }
     
     function setAlign(a) { object.align = a; }
@@ -263,6 +264,7 @@ class ExtendedListBox extends ExtendedObject {
     function setSelectionAlpha(a) { object.sel_alpha = a; }
     function setSelectionBGColor(r, g, b) { object.set_selbg_rgb(r, g, b); }
     function setSelectionBGAlpha(a) { object.selbg_alpha = a; }   
+    function setSelectionStyle(s) { object.sel_style = s; }
     function setStyle(s) { object.style = s; }
 }
 
