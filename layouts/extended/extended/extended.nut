@@ -1,15 +1,23 @@
 ExtendedObjects <- {
     VERSION = 1.0,
     callbacks = [],
+    layers = [],
     objects = [],
     add_callback = function (i, f) { callbacks.append(ExtendedCallback(i, f)); },
     run_callback = function(func, params) { local busy = false; foreach(cb in callbacks) { if (func in cb.i) { if (cb.i[func](params) == true) busy = true; } } return busy; },
     add = function(o) { objects.append(o); run_callback("onObjectAdded", { object = o } ); return o; }
-    add_text = function(id, t, x, y, w, h) { return add(ExtendedText(id, t, x, y, w, h)); },
-    add_image = function(id, i, x, y, w, h) { return add(ExtendedImage(id, i, x, y, w, h)); },
-    add_artwork = function(id, a, x, y, w, h) { return add(ExtendedArtwork(id, a, x, y, w, h)); },
-    add_listbox = function(id, x, y, w, h) { return add(ExtendedListBox(id, x, y, w, h)); },
+    add_text = function(id, t, x, y, w, h, layer = null) { return add(ExtendedText(id, t, x, y, w, h, layer)); },
+    add_image = function(id, i, x, y, w, h, layer = null) { return add(ExtendedImage(id, i, x, y, w, h, layer)); },
+    add_artwork = function(id, a, x, y, w, h, layer = null) { return add(ExtendedArtwork(id, a, x, y, w, h, layer)); },
+    add_listbox = function(id, x, y, w, h, layer = null) { return add(ExtendedListBox(id, x, y, w, h, layer)); },
     get = function(id) { foreach (o in objects) { if (o.id == id) return o; } return null; },
+}
+
+//create surface layers we will draw on
+if (FeVersionNum >= 130) {
+    for (local i = 0; i < 3; i++) {
+        ExtendedObjects.layers.append(fe.add_surface(fe.layout.width, fe.layout.height));
+    }
 }
 
 const OFFSCREEN = 20;
@@ -83,8 +91,10 @@ class ExtendedObject {
     id = null;
     config = null;
     object = null;
-    constructor(id, x, y) {
+    layer = null;
+    constructor(id, x, y, layer) {
         this.id = id;
+        this.layer = layer;
         this.config = {
             start_x = x,
             start_y = y
@@ -95,6 +105,7 @@ class ExtendedObject {
     function getColor() { return [ object.red, object.green, object.blue ]; }
     function getHeight() { return object.height; }
     function getIndexOffset() { return object.index_offset; }
+    function getLayer() { return this.layer; }
     function getRotation() { return object.rotation; }
     function getShader() { return object.shader; }
     function getVisible() { return object.visible; }
@@ -127,8 +138,8 @@ class ExtendedObject {
 
 class ShadowedObject extends ExtendedObject {
     shadow = null;
-    constructor(id, x, y) {
-        base.constructor(id, x, y);
+    constructor(id, x, y, layer) {
+        base.constructor(id, x, y, layer);
         config.shadowEnabled <- true;
         config.shadowAlpha <- 150;
         config.shadowColor <- [ 20, 20, 20 ];
@@ -136,15 +147,30 @@ class ShadowedObject extends ExtendedObject {
     }
 
     function createTextShadow(t, x, y, w, h) { 
-        shadow = fe.add_text(t, x, y, w, h); object = fe.add_text(t, x, y, w, h);
+        if (FeVersionNum >= 130) {
+            if (layer == null || layer > ExtendedObjects.layers.len() - 1) layer = ExtendedObjects.layers.len() - 1;
+            if (layer < 0) layer = 0;
+            shadow = ExtendedObjects.layers[layer].add_text(t, x, y, w, h);
+            object = ExtendedObjects.layers[layer].add_text(t, x, y, w, h);
+        } else {
+            shadow = fe.add_text(t, x, y, w, h);
+            object = fe.add_text(t, x, y, w, h);
+        }
         setShadow(config.shadowEnabled);
         setShadowOffset(config.shadowOffset);
         setShadowColor(config.shadowColor[0], config.shadowColor[1] ,config.shadowColor[2]);
         setShadowAlpha(config.shadowAlpha);
     }
     function createImageShadow(i, x, y, w, h, a = null) {
-        if (a == null) shadow = fe.add_image(i, x, y, w, h) else shadow = fe.add_artwork(i, x, y, w, h);
-        object = fe.add_clone(shadow);
+        if (FeVersionNum >= 130) {
+            if (layer == null || layer > ExtendedObjects.layers.len() - 1) layer = ExtendedObjects.layers.len() - 1;
+            if (layer < 0) layer = 0;
+            if (a == null) shadow = ExtendedObjects.layers[layer].add_image(i, x, y, w, h) else shadow = ExtendedObjects.layers[layer].add_artwork(i, x, y, w, h);
+            object = ExtendedObjects.layers[layer].add_clone(shadow);
+        } else {
+            if (a == null) shadow = fe.add_image(i, x, y, w, h) else shadow = fe.add_artwork(i, x, y, w, h);
+            object = fe.add_clone(shadow);
+        }
         //config.shadowEnabled = false;
         setShadow(config.shadowEnabled);
         setShadowOffset(config.shadowOffset);
@@ -175,8 +201,8 @@ class ShadowedObject extends ExtendedObject {
 
 class ExtendedText extends ShadowedObject {
     
-    constructor(id, t, x, y, w, h) {
-        base.constructor(id, x, y);
+    constructor(id, t, x, y, w, h, layer) {
+        base.constructor(id, x, y, layer);
         createTextShadow(t, x, y, w, h);
     }
     function getType() { return "ExtendedText"; }
@@ -201,10 +227,10 @@ class ExtendedText extends ShadowedObject {
 }
 
 class ExtendedImage extends ShadowedObject {
-    constructor(id, i, x, y, w, h, img = null) {
-        base.constructor(id, x, y);
-        //if (img == "artwork") object = fe.add_artwork(i, x, y, w, h) else object = fe.add_image(i, x, y, w, h);
-        createImageShadow(i, x, y, w, h, img);
+    imgType = null;
+    constructor(id, i, x, y, w, h, layer) {
+        base.constructor(id, x, y, layer);
+        createImageShadow(i, x, y, w, h, imgType);
     }
     function getType() { return "ExtendedImage"; }
 
@@ -229,16 +255,23 @@ class ExtendedImage extends ShadowedObject {
 }
 
 class ExtendedArtwork extends ExtendedImage {
-    constructor(id, i, x, y, w, h) {
-        base.constructor(id, i, x, y, w, h, "artwork");
+    constructor(id, i, x, y, w, h, layer) {
+        imgType = "artwork";
+        base.constructor(id, i, x, y, w, h, layer);
     }
     function getType() { return "ExtendedArtwork"; }
 }
 
 class ExtendedListBox extends ExtendedObject {
-    constructor(id, x, y, w, h) {
-        base.constructor(id, x, y);
-        object = fe.add_listbox(x, y, w, h);
+    constructor(id, x, y, w, h, layer) {
+        base.constructor(id, x, y, layer);
+        if (FeVersionNum >= 130) {
+            if (layer == null || layer > ExtendedObjects.layers.len() - 1) layer = ExtendedObjects.layers.len() - 1;
+            if (layer < 0) layer = 0;
+            object = ExtendedObjects.layers[layer].add_listbox(x, y, w, h);
+        } else {
+            object = fe.add_listbox(x, y, w, h);
+        }
     }
     function getType() { return "ExtendedListBox"; }
     function getAlign() { return object.align; }
