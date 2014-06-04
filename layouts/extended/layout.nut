@@ -27,7 +27,7 @@ ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.heigh
 ExtendedObjects.get("bg").setPreserveAspectRatio(false);
 
 //various animations can be added to objects
-if (config.enable_particles == "Yes") bg.animate({ which = "particles", preset = "sparkle", layer = 0 } );
+if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "sparkle", layer = 0 } );
 
 local title = ExtendedObjects.add_text("title", "", 0, 80, fe.layout.width / 2, 60);
     //property functions follow a setFunction or getFunction standard
