@@ -1,3 +1,14 @@
+class UserConfig {
+	</ label="Enable Debug", help="Enable/Disable debug info", options="Yes,No" />
+	enable_debug="No";
+	</ label="Enable Animations", help="Enable/Disable animations", options="Yes,No" />
+	enable_anims="Yes";
+	</ label="Enable Particles", help="Enable/Disable particle effects", options="Yes,No" />
+	enable_particles="Yes";
+}
+
+local config = fe.get_config();
+
 //load required files
 fe.do_nut("extended/extended.nut");
 //animate is only required if you want to use animations
@@ -10,14 +21,15 @@ provide additional functionality
 */
 
 //You must pass an 'id' as the first argument, otherwise add_ functions mirror attract-mode defaults
-local bg = ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height);
+ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height);
 
 //objects can be retrieved by their id
-bg.setPreserveAspectRatio(false);
-bg.animate({ which = "particles", when = When.Always, duration = 20000 } );
+ExtendedObjects.get("bg").setPreserveAspectRatio(false);
 
-//but you can still keep a variable
-local title = ExtendedObjects.add_text("title", "[Title]", 0, 80, fe.layout.width / 2, 60);
+//various animations can be added to objects
+if (config.enable_particles == "Yes") bg.animate({ which = "particles", preset = "sparkle", layer = 0 } );
+
+local title = ExtendedObjects.add_text("title", "", 0, 80, fe.layout.width / 2, 60);
     //property functions follow a setFunction or getFunction standard
     title.setColor(220, 220, 220);
     title.setCharSize(36);
@@ -40,7 +52,7 @@ local list = ExtendedObjects.add_listbox("list", fe.layout.width / 2, 0, fe.layo
 
 /*
  Animations are as simple as creating a config with properties and using
- object.animate(animType, config)
+ object.animate(config)
  The config is a table of properties (any combination or none can be used)
 */
     
@@ -51,9 +63,9 @@ local listAnim =    {
                         property = "x",
                         delay = 750,
                         from = "offright",
-                        to = "start"
+                        to = "right"
                     }
-list.animate(listAnim);
+if (config.enable_anims == "Yes") list.animate(listAnim) else list.setPosition("right");
 
 //Add a logo image
 local logo = ExtendedObjects.add_image("logo", "logo.png", 0, 0, 262, 72);
@@ -70,15 +82,15 @@ local logoAnim =  {
                         easing = "out",
                         tween = "bounce"
                     };
-logo.animate(logoAnim);
+if (config.enable_anims == "Yes") logo.animate(logoAnim) else logo.setPosition("top");
 
 
-local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360);
+local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360, 2);
     snap.setPosition( [ 100, (fe.layout.height / 2) - 180 ]);
     snap.setShadow(false);
 
 //You can use predefined animation sets (a group of animations)
-snap.animate_set("fade_in_out" );
+if (config.enable_anims == "Yes") snap.animate_set("fade_in_out" );
 
                     
 local marquee = ExtendedObjects.add_artwork("marquee", "marquee", 0, 0, 500, 156);
@@ -108,9 +120,15 @@ local marqueeAnim2 =  {
                         easing = "out",
                         tween = "bounce"
                     };
-marquee.animate(marqueeAnim1);
-marquee.animate(marqueeAnim2);
+if (config.enable_anims == "Yes") {
+    marquee.animate(marqueeAnim1);
+    marquee.animate(marqueeAnim2);
+} else {
+    marquee.setPosition("bottom");
+}
 
 //The debugger adds debug text ontop of every object, helpful for... debugging
-local debug = ExtendedObjects.debugger();
-debug.setVisible(false);
+if (config.enable_debug == "Yes") {
+    local debug = ExtendedObjects.debugger();
+    debug.setVisible(true);
+}
