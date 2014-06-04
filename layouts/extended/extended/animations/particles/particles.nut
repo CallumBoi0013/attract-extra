@@ -4,10 +4,15 @@ fe.do_nut("extended/animations/particles/presets/presets.nut");
 //push the animation name that users will use to the Animation table
 Animation["particles"] <- function(c = {} ) {
     if ("preset" in c) {
-        c = Animation.particlePresets[c.preset];
+        //fixed settings for presets
         c.which <- "particles";
         c.when <- When.Always;
         c.duration <- 120000;
+        //load preset config settings
+        local preset = Animation.particlePresets[c.preset];
+        foreach (key, val in preset) {
+            c[key] <- val;
+        }
     }
     return ParticlesAnimation(c);
 }
@@ -35,6 +40,7 @@ class ParticlesAnimation extends ExtendedAnimation {
         base.constructor(config);
         
         //get config and set defaults
+        if ("layer" in config == false) config.layer <- ExtendedObjects.layers.len() - 1;
         if ("resources" in config == false) config.resources <- [ "default.png" ];
         //emitter variables
         if ("ppm" in config == false) config.ppm <- 60;
@@ -79,11 +85,11 @@ class ParticlesAnimation extends ExtendedAnimation {
         config.gravity = minmax(config.gravity, -75, 75);
         config.xOscillate[0] = minmax(config.xOscillate[0], 0, 50);
         config.xOscillate[1] = minmax(config.xOscillate[1], 0, 1000);
-        
+                
         //setup resources
         resources = [];
         foreach (r in config.resources) {
-            local img = fe.add_image("extended/animations/particles/" + r, -1, -1, 1, 1);
+            local img = ExtendedObjects.layers[config.layer].add_image("extended/animations/particles/" + r, -1, -1, 1, 1);
                 img.x = -img.texture_width;
                 img.y = -img.texture_height;
                 img.width = img.texture_width;
@@ -236,7 +242,7 @@ class Particle {
     currentSpeed = 0;       //store the current speed
     constructor(createdAt, resource, emitter, config) {
         this.createdAt = createdAt;
-        this.resource = fe.add_clone(resource);
+        this.resource = ExtendedObjects.layers[config.layer].add_clone(resource);
 
         this.x = this.startx = ParticlesAnimation.random(emitter.x, emitter.x + emitter.width);
         this.y = this.starty = ParticlesAnimation.random(emitter.y, emitter.y + emitter.height);
