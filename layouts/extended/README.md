@@ -281,58 +281,56 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 ##TODO
 This is my active todo list (bugs and features):
 
-* still a bug with waiting and non-waiting transitions
-
-
-
-
+* particle bug (wigs out)
+* check on waiting and non-waiting transitions now using clock()
+* start/current position not working?
+* add new object methods from 1.3
 
 ###Issues
 This is a list of known issues:
+* still need add_clone, do we need add_surface?
 * ExtendedObject must currently add an empty object
 * does not verify availability of ExtendedObjects and Animate library
 * does not validate user entered config variables
-* screen occasionally flashing at the end of animations
 * from/to = "current" won't work on a delayed animation if the position has changed (because it gets the current coordinates immediately instead of waiting until the delay is done)
 * dont start animation until after delay?
     * current won't work with chained animations, since current is set before the first animation finishes
+* possible variable/config naming conflicts
 
 ###Enhancements
 This is a list of enhancements I am considering adding to the library:
-* method chaining config creator
-    use AnimationConfig class instead of table to allow for proper method chaining
-* new positions? mid (topleft/bottomleft/topright/bottomright) 
-* scaling
-* animated sprite set?
-
-* improve method and property naming - base it on other animation libraries (flash or android)
-* move POSITIONS to user friendly method
-* add objects the same way we add animations, move objects into the objects folder (add_object)(
-* move object position functions into a method attached to objects instead of POSITIONS?
-* actual debugger lines in debugger
-* adjust animation speed for vertical layouts (should slow them down based on the aspect)
-* need a way to distinguish and run object animations vs. non-object animations (not attach animations to objects)
-* reorder objects on draw list - sort?
-* add_clone method - shadows uses clones, but separate images/artwork do not
-* some freakin' cool new objects (wheel, randomwheel, etc)
 * transform - scale + rotate from center
     setCenterAlign option for objects? If enabled, modify X/Y/W/H with -width / 2 and -height / 2
+* add objects the same way we add animations, move objects into the objects folder (add_object)(
+* need a way to distinguish and run object animations vs. non-object animations (not attach animations to objects)
+* make POSITIONS a more user friendly method
+* move position functions into a method attached to objects instead of POSITIONS?
+* method chaining config creator
+    use AnimationConfig class instead of table to allow for proper method chaining
+* improve debugger
+* work to make vertical+horizontal layouts work properly
+    adjust animation speed for vertical layouts (should slow them down based on the aspect)
+* changeFrom changeTo? Allow us to do value + or - amounts
+* animated sprite sets with subimg?
+* improve method and property naming - base it on other animation libraries (flash or android)
+* add_clone method - shadows uses clones, but separate images/artwork do not
+* some freakin' cool new objects (wheel, randomwheel, etc)
 * color - from rgb to rgb
 * allow positions when adding objects
 * multiple transitions in animation config
 * provide config values for animations like back, expo, elastic for p, a or s
 * reorder objects on the draw list
-* clones (use weakrefs?)    
 * new objects (marquee wheel, etc)
+    Modified Orbit with options (# of slots, horizontal/vertical, spacing)
 * quad bezier improvements (control point, arc option)
 * animation paths - multiple points animations
 * screen transitions - move all objects on screen (ex. everything at top of screen slides up, everything at bottom slides down)
 * work with shaders, sound, plugin_command
 * utilities library? (user friendly string handling for game_info)
 * animation presets
-* other animations: Arc Grow, Blur, Bounce, Bounce Around 3D, Bounce Random, Chase Ease, Elastic, Elastic Bounce, Fade, Flag, Flip, Grow, Grow Blur Grow Bounce, Grow Center Shrink, Grow X, Grow Y, Pendulum Pixelate, Pixelate Zoom out, Rain Float, Scroll, Stripes, Stripes 2 Strobe, Sweep Left, Sweep Right
-* other animations: Fade, Fly In, Float In, Split, Wipe, Shape, Wheel, Random Bars, Grow & Turn, Zoom, Swivel, Bounce, Pulse, Color Pulse, Teeter, Spin, Grow/Shrink,  Desaturate, Darken, Lighten, Transparency, Object Color,   Cut, Fade, Push, Wipe, Split, Reveal, Random bars, Shape, Uncover, Flash Fall Over, Drape, Curtains, Wind, Prestige, Fracture, Crush, Peel off Page Curl
-* resting animations: Hover, Pulse, Rock, Spin
-* Modified Orbit with options (# of slots, horizontal/vertical, spacing)
+    Arc Grow, Blur, Bounce, Bounce Around 3D, Bounce Random, Chase Ease, Elastic, Elastic Bounce, Fade, Flag, Flip, Grow, Grow Blur Grow Bounce, Grow Center Shrink, Grow X, Grow Y, Pendulum Pixelate, Pixelate Zoom out, Rain Float, Scroll, Stripes, Stripes 2 Strobe, Sweep Left, Sweep Right
+    Fade, Fly In, Float In, Split, Wipe, Shape, Wheel, Random Bars, Grow & Turn, Zoom, Swivel, Bounce, Pulse, Color Pulse, Teeter, Spin, Grow/Shrink,  Desaturate, Darken, Lighten, Transparency, Object Color,   Cut, Fade, Push, Wipe, Split, Reveal, Random bars, Shape, Uncover, Flash Fall Over, Drape, Curtains, Wind, Prestige, Fracture, Crush, Peel off Page Curl
+    Resting animations: Hover, Pulse, Rock, Spin
 * animation chains - chain multiple animations together (without needing multiple and delays)
 * onDemand animations?
+* reorder objects on draw list - sort?
