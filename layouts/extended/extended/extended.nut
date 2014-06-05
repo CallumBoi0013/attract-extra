@@ -1,5 +1,5 @@
 ExtendedObjects <- {
-    VERSION = 1.0,
+    VERSION = 1.3,
     callbacks = [],
     layers = [],
     objects = [],
@@ -14,6 +14,7 @@ ExtendedObjects <- {
 }
 
 //create surface layers we will draw on
+Layer <- { Back = 0, Middle = 1, Front = 2 }
 if (FeVersionNum >= 130) {
     for (local i = 0; i < 3; i++) {
         ExtendedObjects.layers.append(fe.add_surface(fe.layout.width, fe.layout.height));
@@ -129,7 +130,7 @@ class ExtendedObject {
     function setPosition(p) { if (typeof p == "string") p = POSITIONS[p](this); setX(p[0]); setY(p[1]); }
     function setSize(w,h) { setWidth(w); setHeight(h); }
     function toString() { 
-        local str = getType() + " (" + id + "): " + getX() + "," + getY() + " " + getWidth() + "x" + getHeight();
+        local str = getType() + " (" + id + "): " + getX() + "," + getY() + " " + getWidth() + "x" + getHeight() + " layer:" + this.layer;
         if ("animations" in config) str += " a: " + config.animations.len();
         return str;
     }
@@ -161,14 +162,32 @@ class ShadowedObject extends ExtendedObject {
         setShadowColor(config.shadowColor[0], config.shadowColor[1] ,config.shadowColor[2]);
         setShadowAlpha(config.shadowAlpha);
     }
-    function createImageShadow(i, x, y, w, h, a = null) {
+    
+    function createImageShadow(i, x, y, w, h, imgtype = null) {
         if (FeVersionNum >= 130) {
             if (layer == null || layer > ExtendedObjects.layers.len() - 1) layer = ExtendedObjects.layers.len() - 1;
             if (layer < 0) layer = 0;
-            if (a == null) shadow = ExtendedObjects.layers[layer].add_image(i, x, y, w, h) else shadow = ExtendedObjects.layers[layer].add_artwork(i, x, y, w, h);
+            if (imgtype == null) shadow = ExtendedObjects.layers[layer].add_image(i, x, y, w, h) else shadow = ExtendedObjects.layers[layer].add_artwork(i, x, y, w, h);
             object = ExtendedObjects.layers[layer].add_clone(shadow);
         } else {
-            if (a == null) shadow = fe.add_image(i, x, y, w, h) else shadow = fe.add_artwork(i, x, y, w, h);
+            if (imgtype == null) shadow = fe.add_image(i, x, y, w, h) else shadow = fe.add_artwork(i, x, y, w, h);
+            object = fe.add_clone(shadow);
+        }
+        //config.shadowEnabled = false;
+        setShadow(config.shadowEnabled);
+        setShadowOffset(config.shadowOffset);
+        setShadowColor(config.shadowColor[0], config.shadowColor[1] ,config.shadowColor[2]);
+        setShadowAlpha(config.shadowAlpha);
+    }
+    
+    function createCloneShadow(img) {
+        if (FeVersionNum >= 130) {
+            if (layer == null || layer > ExtendedObjects.layers.len() - 1) layer = ExtendedObjects.layers.len() - 1;
+            if (layer < 0) layer = 0;
+            shadow = ExtendedObjects.layers[layer].add_clone(img.object);
+            object = ExtendedObjects.layers[layer].add_clone(img.object);
+        } else {
+            shadow = fe.add_clone(img);
             object = fe.add_clone(shadow);
         }
         //config.shadowEnabled = false;
@@ -260,6 +279,15 @@ class ExtendedArtwork extends ExtendedImage {
         base.constructor(id, i, x, y, w, h, layer);
     }
     function getType() { return "ExtendedArtwork"; }
+}
+
+class ExtendedClone extends ShadowedObject {
+    constructor(id, img, layer) {
+        base.constructor(id, x, y, layer);
+        createCloneShadow(img);
+        //clone properties
+        
+    }
 }
 
 class ExtendedListBox extends ExtendedObject {

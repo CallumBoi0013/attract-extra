@@ -21,15 +21,15 @@ provide additional functionality
 */
 
 //You must pass an 'id' as the first argument, otherwise add_ functions mirror attract-mode defaults
-ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height);
+ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height, Layer.Back);
 
 //objects can be retrieved by their id
 ExtendedObjects.get("bg").setPreserveAspectRatio(false);
 
 //various animations can be added to objects
-if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "sparkle", layer = 0 } );
+if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "snow", layer = Layer.Middle } );
 
-local title = ExtendedObjects.add_text("title", "", 0, 80, fe.layout.width / 2, 60);
+local title = ExtendedObjects.add_text("title", "[Title]", 0, 80, fe.layout.width / 2, 60);
     //property functions follow a setFunction or getFunction standard
     title.setColor(220, 220, 220);
     title.setCharSize(36);
