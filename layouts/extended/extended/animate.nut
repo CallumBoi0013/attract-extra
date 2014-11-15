@@ -1,3 +1,4 @@
+
 //we keep track of ticks to convert onTransition ttime to onTick ttime
 local lastTick = 0;
 local runCount = 0;
@@ -148,13 +149,15 @@ class Animate {
     }
     
     function onTransition(params) {
+       if (params.ttime == 0) lastTick = clock() * 1000.0;
        local current = lastTick + params.ttime;
        if (update(current, params.ttype)) return true;
        return false;
     }
 
     function onTick(params) {
-       lastTick = params.ttime;
+       //lastTick = params.ttime;
+       lastTick = clock() * 1000.0;
        update(lastTick);
     }
 
