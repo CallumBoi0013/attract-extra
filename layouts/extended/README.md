@@ -3,24 +3,23 @@
 The extended objects library extends the capabilities of the existing Attract-Mode objects.
 
 **ExtendedObjects**
-ExtendedObjects is a .nut file you can include with your Attract-Mode layout to provide more functionality. It is also designed for expandibility, allowing developers to create new objects made from multiple other objects or add new animations to be used in your layout.
+ExtendedObjects is a .nut file you can include with your Attract-Mode layout to provide more functionality. It is also designed for expandability, allowing developers to create their own unique objects from multiple objects that can be reused in ExtendedObjects.
 
 **Animate**
-Animate is a .nut file that relies on ExtendedObjects to make it easy to add animations to objects in your Attract-Mode layout.
-
+Animate is a .nut file that relies on ExtendedObjects to make it easy to add animations to objects in your Attract-Mode layout. It is also designed for expandability, allowing developers to create their own custom animations and animation configurations.
 
 ##ExtendedObjects Usage
 ----------------
     //load required file
     fe.do_nut("extended\extended.nut");
-    //add objects (note the addition of an id before the standard parameters)
-    //you can access objects later by the id you provided
-    ExtendedObjects.add_artwork("screenshot", "snap", 0, 0, fe.layout.width, fe.layout.height);
-    ExtendedObjects.get("screenshot").setShadow(true);
+    //add your objects (note the addition of an id before the standard AttractMode parameters)
+    ExtendedObjects.add_artwork("mainScreenshot", "snap", 0, 0, fe.layout.width, fe.layout.height);
+    //the id allows you to later access your objects by the id you provided
+    ExtendedObjects.get("mainScreenshot").setShadow(true);
     //add the debug overlay
     ExtendedObjects.add_debug();
 
-If you want to use additional objects, you will need to include them currently:
+If you want to use additional objects, you will need to include them manually:
     fe.do_nut("extended\objects\orbit\orbit.nut");
     ExtendedObjects.add_orbit("orbit_wheel", 0, 0, fe.layout.width, fe.layout.height);
 
@@ -30,18 +29,18 @@ If you want to use additional objects, you will need to include them currently:
     //load required files
     fe.do_nut("extended\extended.nut");
     fe.do_nut("extended\animate.nut");
-    //add objects (note the addition of an id before the standard parameters)
-    //you can access objects later by the id you provided
+    //add your objects (note the addition of an id before the standard parameters)
     ExtendedObjects.add_image("logo", "logo.png", 0, 0, fe.layout.width, fe.layout.height);
     ExtendedObjects.add_artwork("game", "snap", 0, 0, fe.layout.width, fe.layout.height);
-    //add your animations - object.animate(cfg)
-    local move = {
+    //add your animations
+	//here we create an animation config that will be passed onto the object describing which animation, where to animate from and where to animate to
+	local moveLogo = {
         which = "translate",
         from = "offtopright",
         to = "top"
     }
-    ExtendedObjects.get("logo").animate(move);
-    //you can provide many options for the animation in a table, options are shown below
+    ExtendedObjects.get("logo").animate(moveLogo);
+    //you can provide many options for the animation in the config table, options are shown below:
     local offscreen = {
         which = "translate",
         duration = 1500,
@@ -63,7 +62,7 @@ If you want to use additional objects, you will need to include them currently:
     when                When.FromOldSelection           when to run animation, a transition type (When.TYPE) or When.Always
     wait                true                            wait until the animation is finished before the next transition starts
     restart             true                            if an animation is still running and transition state occurs again, restart it
-    kind                transition                      one of transition, loop, yoyo
+    kind                transition                      one of transition (start to finish), loop (repeat start to finish) or yoyo (forward, then backward)
     repeat              1                               number of times to repeat animation
     delay:              0                               delay before the animation starts in ms
     duration:           1000                            length of animation in ms
@@ -78,8 +77,8 @@ If you want to use additional objects, you will need to include them currently:
 
 ###Property config variables (which = "property")
     property            alpha                           the property to animate
-    from                                                animation starts at this
-    to:                                                 animation ends at this
+    from                                                animation starts at this value
+    to:                                                 animation ends at this value
     Default 'from' and 'to' differ depending on property
                       alpha: 0 to 255
                       x: offleft to start
@@ -97,11 +96,35 @@ If you want to use additional objects, you will need to include them currently:
     to:                 center                          animation goes to this position - an array [ x, y ] or position "bottom"
 
 ###Animation Sets
-You can group multiple animations together in a "set". There are a couple examples for now:
-    fade_in_out         fades out (alpha) on Transition.ToNewSelection, fades in on Transition.FromOldSelection
+You can group multiple animations together in a "set". A set is an array of tables, or configs. To use it:
 
-To use it:
-object.animate_set("fade_in_out");
+object.animate_set(set);
+
+You can use some existing presets:
+    fade_in_out         fades out (alpha) on Transition.ToNewSelection, fades in on Transition.FromOldSelection
+	hover				simulate a floating object
+	
+Or you can create your own:
+```Squirrel
+local myAnimationSet = [
+	{
+		which = "translate",
+        duration = 1500,
+        when = When.FromOldSelection,
+        easing = "out",
+        tween = "back",
+        from = "offscreenbottom",
+        to = "bottom"
+	},
+	{
+		which = "property",
+        duration = 1500,
+		property = "alpha",
+		from = 0,
+		to = 255
+	}
+];
+```
 
 ###Positions
 A nice feature of using ExtendedObjects is you can use positions to easily place objects at certain locations:
@@ -182,10 +205,10 @@ To create a new object that can be used with ExtendedObjects:
         }
     }
 ```
-*add a hook so users can add your object:
+*add a hook function so users can add your object:
 ```Squirrel
     ExtendedObjects.add_myobject <- function(id, x, y, w, h) {
-        return ExtendedObjects.add(Wheel(id, x, y, w, h));
+        return ExtendedObjects.add(MyObject(id, x, y, w, h));
     }
 ```
 *In your layout.nut file, add your includes and object:
@@ -193,7 +216,7 @@ To create a new object that can be used with ExtendedObjects:
     fe.do_nut("extended\extended.nut");
     fe.do_nut("extended\animate.nut");
     fe.do_nut("extended\objects\myobject\myobject.nut");
-    ExtendedObjects.add_myobject("cool", 0, 0, 100, 100);
+    ExtendedObjects.add_myobject("coolObject", 0, 0, 100, 100);
 ```
 
 ###Creating Animations
@@ -212,7 +235,7 @@ To create a new animation that can be used with ExtendedObjects:
         constructor(config) {
             base.constructor(config);
             //add any properties and their defaults to the config that you might want users to change
-            if ("my_property" in config == false) config.my_property <- "my_value";
+            if ("my_property" in config == false) config.my_property <- "default_value";
             //you can modify existing values if you want as well
             config.easing = "out";
             config.tween = "sine";
@@ -281,6 +304,9 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 ##TODO
 This is my active todo list (bugs and features):
 
+* convert to module(s)
+	* can/should these be separate modules (objects, layers, positions, animations)
+	* this may rely on support of subdirectories for modules
 * particle bug (wigs out)
 * check on waiting and non-waiting transitions now using clock()
 * start/current position not working?
@@ -288,14 +314,24 @@ This is my active todo list (bugs and features):
 
 ###Issues
 This is a list of known issues:
-* still need add_clone, do we need add_surface?
-* ExtendedObject must currently add an empty object
-* does not verify availability of ExtendedObjects and Animate library
-* does not validate user entered config variables
-* from/to = "current" won't work on a delayed animation if the position has changed (because it gets the current coordinates immediately instead of waiting until the delay is done)
-* dont start animation until after delay?
-    * current won't work with chained animations, since current is set before the first animation finishes
-* possible variable/config naming conflicts
+* Core
+	* add_clone not implemented
+	* add_surface not implemented
+	* add_shader not implemented - not sure what we will do with this yet
+	* add_sound not implemented - not sure what we will do with this yet
+	* does not verify availability of ExtendedObjects and Animate library
+	* does not validate user entered config variables
+	* possible variable/config naming conflicts
+	* can/should text shadow be a clone?
+* Objects
+	* objects that extend ExtendedObject must currently add an empty object
+* Animations
+	* are we converted to using clock for tick and transitions?
+	* from/to = "current" won't work on a delayed animation if the position has changed (because it gets the current coordinates immediately instead of waiting until the delay is done)
+	* dont start animation until after delay?
+		* current won't work with chained animations, since current is set before the first animation finishes
+* Particles
+
 
 ###Enhancements
 This is a list of enhancements I am considering adding to the library:
