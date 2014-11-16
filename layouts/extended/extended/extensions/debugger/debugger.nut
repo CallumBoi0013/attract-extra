@@ -6,7 +6,7 @@ class ExtendedDebugger {
     objects = [];
     config = {
         "max_lines": 3,
-        "align": Align.Centre,
+        "align": Align.Left,
         "alpha": 255,
         "bg": [60, 60, 60],
         "bg_alpha": 50,
@@ -16,12 +16,12 @@ class ExtendedDebugger {
     }
     constructor() {
         foreach(o in ExtendedObjects.objects) {
-            local obj = ExtendedText("debug_" + o.id, o.toString(), o.getX(), o.getY(), o.getWidth(), o.getHeight());
+            local obj = ExtendedText("debug_" + o.id, o.toString(), o.getX(), o.getY(), o.getWidth(), o.getHeight(), 2);
             setDefaults(obj);
             objects.append(obj);
         }
         
-        local notice = ExtendedText("debug_notice", "", 0, 0, fe.layout.width, 20);
+        local notice = ExtendedText("debug_notice", "", 0, 0, fe.layout.width, 20, 2);
         ExtendedObjects.add_callback(this, "onObjectAdded");
         ExtendedObjects.add_callback(this, "onTransition");
         ExtendedObjects.add_callback(this, "onTick");
@@ -69,7 +69,7 @@ class ExtendedDebugger {
         //ExtendedDebugger.notice("Transition: " + Animate.getWhen(ttype));
         updateObjects();
         if (ttype == Transition.StartLayout) {
-            local msg = "Found objects: ";
+            local msg = "Found " + ExtendedObjects.objects.len() + " objects: ";
             foreach(o in ExtendedObjects.objects) {
                 msg += o.id + "-";
             }
