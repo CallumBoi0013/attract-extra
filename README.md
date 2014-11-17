@@ -15,15 +15,10 @@ Animate is a module that relies on ExtendedObjects to make it easy to add animat
     //add your objects (note the addition of an id before the standard AttractMode parameters)
     ExtendedObjects.add_artwork("mainScreenshot", "snap", 0, 0, fe.layout.width, fe.layout.height);
     //the id allows you to later access your objects by the id you provided
+	//note all object variables are now methods - set_shadow = true is now setShadow(true)
     ExtendedObjects.get("mainScreenshot").setShadow(true);
-    //add the debug overlay
-    ExtendedObjects.add_debug();
 ```
-If you want to use additional objects, you will need to include them manually:
-```Squirrel
-    fe.load_module("extended\objects\orbit\orbit.nut");
-    ExtendedObjects.add_orbit("orbit_wheel", 0, 0, fe.layout.width, fe.layout.height);
-```
+For more on using ExtendedObjects, check out the [Tutorial Layouts](https://github.com/liquid8d/attract-extra/tree/master/layouts).
 
 ##Animate Usage
 ----------------
@@ -134,7 +129,7 @@ A nice feature of using ExtendedObjects is you can use positions to easily place
 object.setPosition("center");
 ```
 You can see a full list of positions here:
-[positions.png](https://raw.githubusercontent.com/liquid8d/attract-extra/master/layouts/extended/extras/positions.png)
+[positions.png](https://raw.githubusercontent.com/liquid8d/attract-extra/master/extras/positions.png)
 
 These positions can also be used for animations 'from' or 'to' variables in your animation config:
 ```
