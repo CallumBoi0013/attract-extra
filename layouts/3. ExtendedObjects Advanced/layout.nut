@@ -19,7 +19,7 @@ ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.heigh
 ExtendedObjects.get("bg").setPreserveAspectRatio(false);
 
 //we're going to attach the particles animation to our background, but it will be on the front layer (surface)
-if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "snow", layer = Layer.Front } );
+if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "snow" } );
 
 
 local title = ExtendedObjects.add_text("title", "[Title]", 0, 80, fe.layout.width / 2, 60);
@@ -68,7 +68,7 @@ local logoAnim =  {
 if (config.enable_anims == "Yes") logo.animate(logoAnim) else logo.setPosition("top");
 
 
-local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360, 2);
+local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360);
     snap.setPosition( [ 100, (fe.layout.height / 2) - 180 ]);
     snap.setShadow(false);
 
