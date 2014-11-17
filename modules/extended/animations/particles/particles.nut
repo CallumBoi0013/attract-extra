@@ -40,7 +40,7 @@ class ParticlesAnimation extends ExtendedAnimation {
         base.constructor(config);
         
         //get config and set defaults
-        if ("layer" in config == false) config.layer <- ExtendedObjects.layers.len() - 1;
+        if ("layer" in config == false) config.layer <- Layer.Primary;
         if ("resources" in config == false) config.resources <- [ "default.png" ];
         //emitter variables
         if ("ppm" in config == false) config.ppm <- 60;
@@ -90,7 +90,7 @@ class ParticlesAnimation extends ExtendedAnimation {
         resources = [];
 		local d = FeConfigDirectory + "modules/extended/animations/particles/";
         foreach (r in config.resources) {
-            local img = ExtendedObjects.layers[config.layer].add_image(d + r, -1, -1, 1, 1);
+            local img = config.layer.add_image(d + r, -1, -1, 1, 1);
                 img.x = -img.texture_width;
                 img.y = -img.texture_height;
                 img.width = img.texture_width;
@@ -243,7 +243,7 @@ class Particle {
     currentSpeed = 0;       //store the current speed
     constructor(createdAt, resource, emitter, config) {
         this.createdAt = createdAt;
-        this.resource = ExtendedObjects.layers[config.layer].add_clone(resource);
+        this.resource = config.layer.add_clone(resource);
 
         this.x = this.startx = ParticlesAnimation.random(emitter.x, emitter.x + emitter.width);
         this.y = this.starty = ParticlesAnimation.random(emitter.y, emitter.y + emitter.height);
