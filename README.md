@@ -11,7 +11,7 @@ Animate is a .nut file that relies on ExtendedObjects to make it easy to add ani
 ##ExtendedObjects Usage
 ----------------
     //load required file
-    fe.do_nut("extended\extended.nut");
+    fe.load_module("extended\extended.nut");
     //add your objects (note the addition of an id before the standard AttractMode parameters)
     ExtendedObjects.add_artwork("mainScreenshot", "snap", 0, 0, fe.layout.width, fe.layout.height);
     //the id allows you to later access your objects by the id you provided
@@ -20,15 +20,15 @@ Animate is a .nut file that relies on ExtendedObjects to make it easy to add ani
     ExtendedObjects.add_debug();
 
 If you want to use additional objects, you will need to include them manually:
-    fe.do_nut("extended\objects\orbit\orbit.nut");
+    fe.load_module("extended\objects\orbit\orbit.nut");
     ExtendedObjects.add_orbit("orbit_wheel", 0, 0, fe.layout.width, fe.layout.height);
 
 ##Animate Usage
 ----------------
 ```Squirrel
     //load required files
-    fe.do_nut("extended\extended.nut");
-    fe.do_nut("extended\animate.nut");
+    fe.load_module("extended\extended.nut");
+    fe.load_module("extended\animate.nut");
     //add your objects (note the addition of an id before the standard parameters)
     ExtendedObjects.add_image("logo", "logo.png", 0, 0, fe.layout.width, fe.layout.height);
     ExtendedObjects.add_artwork("game", "snap", 0, 0, fe.layout.width, fe.layout.height);
@@ -213,9 +213,9 @@ To create a new object that can be used with ExtendedObjects:
 ```
 *In your layout.nut file, add your includes and object:
 ```Squirrel
-    fe.do_nut("extended\extended.nut");
-    fe.do_nut("extended\animate.nut");
-    fe.do_nut("extended\objects\myobject\myobject.nut");
+    fe.load_module("extended\extended.nut");
+    fe.load_module("extended\animate.nut");
+    fe.load_module("extended\objects\myobject\myobject.nut");
     ExtendedObjects.add_myobject("coolObject", 0, 0, 100, 100);
 ```
 
@@ -260,9 +260,9 @@ To create a new animation that can be used with ExtendedObjects:
 ```
 *In your layout.nut file, add your includes and object:
 ```Squirrel
-    fe.do_nut("extended\extended.nut");
-    fe.do_nut("extended\animate.nut");
-    fe.do_nut("extended\animations\myanim\myanim.nut");
+    fe.load_module("extended\extended.nut");
+    fe.load_module("extended\animate.nut");
+    fe.load_module("extended\animations\myanim\myanim.nut");
     local obj = ExtendedObjects.add_image("img", "frame.png", 0, 0, 100, 100);
     local cfg = {
                     which = "my_anim",
@@ -301,29 +301,56 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 ```
 * Other interested classes can now listen for your callbacks using ExtendedObjects.add_callback("onMyThingInitialized");
 
+
+##Recently Added
+* convert to module(s) - check
+* add_surface not implemented  - check
+* add_clone not implemented - check
+* layer changes - check
+* new tutorial layouts - check
+* updates to new object methods for 1.3/1.4
+	* Image
+		* video_flags = getVideoFlags()/setVideoFlags()
+		* video_playing = getVideoPlaying()/setVideoPlaying()
+		* video_duration = getVideoDuration()
+		* video_time = getVideoTime()
+		* file_name = getFilename()/setFilename()
+		* set_rgb = setColor() - already exists
+		* set_pos = setPosition()/setSize() already exist
+	* Listbox
+		* format_string = getFormatString()/setFormatString()
+		* set_rgb = setColor() - already exists
+		* set_bg_rgb = getBGColor()/setBGColor() already exist
+		* set_sel_rgb = getSelectionColor()/setSelectionColor() already exist
+		* set_selbg_rgb = getSelectionBGColor()/setSelectionBGColor() already exist
+		* set_pos = setPosition()/setSize() already exist
+	* Text
+		* set_rgb = setColor() - already exists
+		* set_bg_rgb = getBGColor()/setBGColor() already exist
+		* set_pos = setPosition()/setSize() already exist
+
 ##TODO
 This is my active todo list (bugs and features):
-
-* convert to module(s)
-	* can/should these be separate modules (objects, layers, positions, animations)
-	* this may rely on support of subdirectories for modules
-* particle bug (wigs out)
-* check on waiting and non-waiting transitions now using clock()
-* start/current position not working?
-* add new object methods from 1.3
+* Add Image swap method
+* Can all overload method be used (non-required arguments)
+* Debug text not working/following objects (images only? related to animations it seems?)
+* Animations
+	* check on waiting and non-waiting transition animations now using clock()
+	* start/current position not working?
+* Particles
+	* create particle objects immediately, don't wait to draw or there will be layer/surface issues
+	* particle bug (wigs out - suddenly snow goes up or default comes from left of screen instead of center)
 
 ###Issues
 This is a list of known issues:
 * Core
-	* Debug text not working/following objects (images only? related to animations it seems?)
-	* add_clone not implemented
-	* add_surface not implemented
+	* fe.overlay not implemented - not sure what we will do with this yet
+	* fe.signal not implemented - nor sure what we will do with this yet
 	* add_shader not implemented - not sure what we will do with this yet
 	* add_sound not implemented - not sure what we will do with this yet
 	* does not verify availability of ExtendedObjects and Animate library
 	* does not validate user entered config variables
-	* possible variable/config naming conflicts
-	* can/should text shadow be a clone?
+	* possible variable/config naming conflicts?
 * Objects
 	* objects that extend ExtendedObject must currently add an empty object
 * Animations
@@ -337,6 +364,7 @@ This is a list of known issues:
 
 ###Enhancements
 This is a list of enhancements I am considering adding to the library:
+* should the module be separate modules (objects, layers, positions, animations)
 * surface enhancements - users create named layers that they can add objects to
 * transform - scale + rotate from center
     setCenterAlign option for objects? If enabled, modify X/Y/W/H with -width / 2 and -height / 2
