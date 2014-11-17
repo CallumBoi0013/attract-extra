@@ -15,7 +15,7 @@ fe.load_module("extended/animate");
 //we can add additional animation modules, we'll try the particules module
 fe.load_module("extended/animations/particles/particles.nut");
 
-ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height, Layer.Back);
+ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height);
 ExtendedObjects.get("bg").setPreserveAspectRatio(false);
 
 //we're going to attach the particles animation to our background, but it will be on the front layer (surface)

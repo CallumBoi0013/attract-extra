@@ -3,9 +3,8 @@ fe.load_module("extended/extended");
 
 //When adding objects, use ExtendedObjects instead
 //You must pass an 'id' as the first argument
-//You can optionally tell ExtendedObjects which layer (surface) you want to draw on, one of Layer.Back, Layer.Middle, or Layer.Front)
 //Otherwise add_ functions mirror attract-mode defaults
-ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height, Layer.Back);
+ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height);
 
 //objects can be retrieved at anytime by their id
 //all object settings are get/set using functions, instead of variables
@@ -35,7 +34,7 @@ local list = ExtendedObjects.add_listbox("list", fe.layout.width / 2, 0, fe.layo
     list.setSelectionBGAlpha(100);
     list.setPosition("right");
 
-local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360, 2);
+local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360);
     snap.setPosition( [ 100, (fe.layout.height / 2) - 180 ]);
     snap.setShadow(false);
 

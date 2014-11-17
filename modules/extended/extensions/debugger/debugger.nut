@@ -16,12 +16,12 @@ class ExtendedDebugger {
     }
     constructor() {
         foreach(o in ExtendedObjects.objects) {
-            local obj = ExtendedText("debug_" + o.id, o.toString(), o.getX(), o.getY(), o.getWidth(), o.getHeight(), 2);
+            local obj = ExtendedText("debug_" + o.id, o.toString(), o.getX(), o.getY(), o.getWidth(), o.getHeight(), Layer.Foreground);
             setDefaults(obj);
             objects.append(obj);
         }
         
-        local notice = ExtendedText("debug_notice", "", 0, 0, fe.layout.width, 20, 2);
+        local notice = ExtendedText("debug_notice", "", 0, 0, fe.layout.width, 20, Layer.Foreground);
         ExtendedObjects.add_callback(this, "onObjectAdded");
         ExtendedObjects.add_callback(this, "onTransition");
         ExtendedObjects.add_callback(this, "onTick");

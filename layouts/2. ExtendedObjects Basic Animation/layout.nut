@@ -2,7 +2,7 @@ fe.load_module("extended/extended");
 //To use animations, just add the animate module
 fe.load_module("extended/animate");
 
-ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height, Layer.Back);
+ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height);
 ExtendedObjects.get("bg").setPreserveAspectRatio(false);
 
 local title = ExtendedObjects.add_text("title", "[Title]", 0, 80, fe.layout.width / 2, 60);
@@ -58,7 +58,7 @@ local listAnim =    {
                     }
 list.animate(listAnim);
 
-local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360, 2);
+local snap = ExtendedObjects.add_artwork("snap", "snap", 100, 100, 480, 360);
     snap.setPosition( [ 100, (fe.layout.height / 2) - 180 ]);
     snap.setShadow(false);
 
