@@ -3,13 +3,13 @@
 The extended objects library extends the capabilities of the existing Attract-Mode objects.
 
 **ExtendedObjects**
-ExtendedObjects is a .nut file you can include with your Attract-Mode layout to provide more functionality. It is also designed for expandability, allowing developers to create their own unique objects from multiple objects that can be reused in ExtendedObjects.
+ExtendedObjects is a module you can include with your Attract-Mode layout to provide more functionality. It is also designed for expandability, allowing developers to create their own unique objects that can be reused in ExtendedObjects.
 
 **Animate**
-Animate is a .nut file that relies on ExtendedObjects to make it easy to add animations to objects in your Attract-Mode layout. It is also designed for expandability, allowing developers to create their own custom animations and animation configurations.
+Animate is a module that relies on ExtendedObjects to make it easy to add animations to objects in your Attract-Mode layout. It is also designed for expandability, allowing developers to create their own custom animations and animation configurations.
 
 ##ExtendedObjects Usage
-----------------
+```Squirrel
     //load required file
     fe.load_module("extended\extended.nut");
     //add your objects (note the addition of an id before the standard AttractMode parameters)
@@ -18,10 +18,12 @@ Animate is a .nut file that relies on ExtendedObjects to make it easy to add ani
     ExtendedObjects.get("mainScreenshot").setShadow(true);
     //add the debug overlay
     ExtendedObjects.add_debug();
-
+```
 If you want to use additional objects, you will need to include them manually:
+```Squirrel
     fe.load_module("extended\objects\orbit\orbit.nut");
     ExtendedObjects.add_orbit("orbit_wheel", 0, 0, fe.layout.width, fe.layout.height);
+```
 
 ##Animate Usage
 ----------------
