@@ -88,7 +88,7 @@ class ParticlesAnimation extends ExtendedAnimation {
                 
         //setup resources
         resources = [];
-		local d = FeConfigDirectory + "modules/extended/animations/particles/";
+        local d = FeConfigDirectory + "modules/extended/animations/particles/";
         foreach (r in config.resources) {
             local img = config.layer.add_image(d + r, -1, -1, 1, 1);
                 img.x = -img.texture_width;
@@ -117,8 +117,10 @@ class ParticlesAnimation extends ExtendedAnimation {
     }
     
     function setupDebug(config) {
-        debug_emitter = fe.add_image("extended/animations/particles/pixel.png", -1, -1, 1, 1);
+        local d = FeConfigDirectory + "modules/extended/animations/particles/";
+        debug_emitter = fe.add_image(d + "pixel.png", -1, -1, 1, 1);
         debug_emitter.set_rgb(0, 255, 0);
+        debug_emitter.alpha = 75;
         debug_emitter.x = emitter.x; // - (emitter.width / 2);
         debug_emitter.y = emitter.y; //- (emitter.height / 2);
         //debug_emitter.x = emitter.x - (emitter.width / 2);
