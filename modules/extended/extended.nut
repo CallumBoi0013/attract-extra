@@ -1,18 +1,19 @@
 //create surface layers we will draw on
 Layer <- {
-	Background = fe.add_surface(fe.layout.width, fe.layout.height),
-	Primary = fe.add_surface(fe.layout.width, fe.layout.height),
-	Foreground = fe.add_surface(fe.layout.width, fe.layout.height)
+    Background = fe.add_surface(fe.layout.width, fe.layout.height),
+    Primary = fe.add_surface(fe.layout.width, fe.layout.height),
+    Foreground = fe.add_surface(fe.layout.width, fe.layout.height)
 }
 
+//Can we do a class instead to allow for overloads?
 ExtendedObjects <- {
-    VERSION = 1.3,
+    VERSION = 1.4,
     callbacks = [],
     objects = [],
     add_callback = function (i, f) { callbacks.append(ExtendedCallback(i, f)); },
-    run_callback = function(func, params) { local busy = false; foreach(cb in callbacks) { if (func in cb.i) { if (cb.i[func](params) == true) busy = true; break; } } return busy; },
+    run_callback = function(func, params) { local busy = false; foreach(cb in callbacks) { if (func in cb.i) { if (cb.i[func](params) == true) busy = true; } } return busy; },
     add = function(o) { objects.append(o); run_callback("onObjectAdded", { object = o } ); return o; }
-	add_clone = function(id, img, layer = Layer.Primary) { return add(ExtendedClone(id, img, layer)); },
+    add_clone = function(id, img, layer = Layer.Primary) { return add(ExtendedClone(id, img, layer)); },
     add_text = function(id, t, x, y, w, h, layer = Layer.Primary) { return add(ExtendedText(id, t, x, y, w, h, layer)); },
     add_image = function(id, i, x, y, w, h, layer = Layer.Primary) { return add(ExtendedImage(id, i, x, y, w, h, layer)); },
     add_artwork = function(id, a, x, y, w, h, layer = Layer.Primary) { return add(ExtendedArtwork(id, a, x, y, w, h, layer)); },
@@ -131,9 +132,10 @@ class ExtendedObject {
     function getType() { return "ExtendedObject"; }
     function setPosition(p) { if (typeof p == "string") p = POSITIONS[p](this); setX(p[0]); setY(p[1]); }
     function setSize(w,h) { setWidth(w); setHeight(h); }
-    function toString() { 
-        local str = getType() + " (" + id + "): " + getX() + "," + getY() + " " + getWidth() + "x" + getHeight() + " layer:" + this.layer;
-        if ("animations" in config) str += " a: " + config.animations.len();
+    function toString() {
+        local layerStr = (layer == Layer.Background) ? "Background" : (layer == Layer.Primary) ? "Primary" : (layer == Layer.Foreground) ? "Foreground" : layer;
+        local str = getType() + " (" + id + "): " + getX() + "," + getY() + " " + getWidth() + "x" + getHeight() + " layer:" + layerStr;
+        if ("animations" in config) str += " anims: " + config.animations.len();
         return str;
     }
 
@@ -150,22 +152,6 @@ class ShadowedObject extends ExtendedObject {
         config.shadowAlpha <- 150;
         config.shadowColor <- [ 20, 20, 20 ];
         config.shadowOffset <- 2;
-    }
-    function createCloneShadow(img) {
-        if (FeVersionNum >= 130) {
-            if (layer == null || layer > ExtendedObjects.layers.len() - 1) layer = ExtendedObjects.layers.len() - 1;
-            if (layer < 0) layer = 0;
-            shadow = ExtendedObjects.layers[layer].add_clone(img.object);
-            object = ExtendedObjects.layers[layer].add_clone(img.object);
-        } else {
-            shadow = fe.add_clone(img);
-            object = fe.add_clone(shadow);
-        }
-        //config.shadowEnabled = false;
-        setShadow(config.shadowEnabled);
-        setShadowOffset(config.shadowOffset);
-        setShadowColor(config.shadowColor[0], config.shadowColor[1] ,config.shadowColor[2]);
-        setShadowAlpha(config.shadowAlpha);
     }
     
     function getShadow() { return config.shadowEnabled; }
@@ -195,13 +181,12 @@ class ExtendedText extends ShadowedObject {
     constructor(id, t, x, y, w, h, layer) {
         base.constructor(id, x, y, layer);
         if (FeVersionNum >= 130) {
-			if (getType() in layer) print ("layerType: " + layer.getType());
-			//use surfaces if we can
+            if (getType() in layer) print ("layerType: " + layer.getType());
+            //use surfaces if we can
             shadow = layer.add_text(t, x, y, w, h);
             object = layer.add_text(t, x, y, w, h);
-			print("drawing " + id + " on layer\n");
         } else {
-			//just add the objects
+            //just add the objects
             shadow = fe.add_text(t, x, y, w, h);
             object = fe.add_text(t, x, y, w, h);
         }
@@ -232,35 +217,34 @@ class ExtendedText extends ShadowedObject {
 
 //this class extends the capabilities of the base image object
 class ExtendedImage extends ShadowedObject {
-	imgType = null;
+    imgType = null;
     constructor(id, i, x, y, w, h, layer) {
         base.constructor(id, x, y, layer);
         if (FeVersionNum >= 130) {
-			//use surfaces if we can
+            //use surfaces if we can
             switch (imgType) {
-				case "artwork":
-					shadow = layer.add_artwork(i, x, y, w, h);
-            		break;
-				case "surface":
-					shadow = layer.add_surface(w, h);
-					break;
-				default:
-					shadow = layer.add_image(i, x, y, w, h)
-			}
-			object = layer.add_clone(shadow);
-			print("drawing " + id + " on layer\n");
+                case "artwork":
+                    shadow = layer.add_artwork(i, x, y, w, h);
+                    break;
+                case "surface":
+                    shadow = layer.add_surface(w, h);
+                    break;
+                default:
+                    shadow = layer.add_image(i, x, y, w, h)
+            }
+            object = layer.add_clone(shadow);
         } else {
-			//just add the object
+            //just add the object
             switch (imgType) {
-				case "artwork":
-					shadow = fe.add_artwork(i, x, y, w, h);
-            		break;
-				case "surface":
-					shadow = fe.add_surface(w, h);
-					break;
-				default:
-					shadow = fe.add_image(i, x, y, w, h)
-			}
+                case "artwork":
+                    shadow = fe.add_artwork(i, x, y, w, h);
+                    break;
+                case "surface":
+                    shadow = fe.add_surface(w, h);
+                    break;
+                default:
+                    shadow = fe.add_image(i, x, y, w, h)
+            }
             object = fe.add_clone(shadow);
         }
         //config.shadowEnabled = false;
@@ -278,12 +262,12 @@ class ExtendedImage extends ShadowedObject {
     function getSubImagePosition() { return [ object.subimg_x, object.subimg_y ]; }
     function getSubImageSize() { return [ object.subimg_width, object.subimg_height ]; }
     function getTextureSize() { return [ object.texture_width, object.texture_height ]; }
-	//new for 1.3/1.4
-	function getVideoFlags() { return object.video_flags; }
-	function getVideoPlaying() { return object.video_playing; }
-	function getVideoDuration() { return object.video_duration; }
-	function getVideoTime() { return object.video_time; }
-	function getFilename() { return object.file_name; }
+    //new for 1.3/1.4
+    function getVideoFlags() { return object.video_flags; }
+    function getVideoPlaying() { return object.video_playing; }
+    function getVideoDuration() { return object.video_duration; }
+    function getVideoTime() { return object.video_time; }
+    function getFilename() { return object.file_name; }
     
     function setMovieEnabled(e) { object.movie_enabled = shadow.movie_enabled = e; }
     function setPinch(x, y) { setPinchX(x); setPinchY(y); }
@@ -295,10 +279,11 @@ class ExtendedImage extends ShadowedObject {
     function setSkewY(y) { object.skew_y = shadow.skew_y = y; }
     function setSubImagePosition(x, y) { object.subimg_x = x; shadow.subimg_x = x; object.subimg_y = shadow.subimg_y = y; }
     function setSubImageSize(w, h) { object.subimg_width = shadow.subimg_width = w; object.subimg_height = shadow.subimg_height = h; }
-	//new for 1.3/1.4
-	function setVideoFlags(f) { object.video_flags = shadow.video_flags = f; }
-	function setVideoPlaying(p) { object.video_playing = shadow.video_playing = p; }
-	function setFilename(f) { object.file_name = shadow.file_name = f; }
+    //new for 1.3/1.4
+    function setVideoFlags(f) { object.video_flags = shadow.video_flags = f; }
+    function setVideoPlaying(p) { object.video_playing = shadow.video_playing = p; }
+    function setFilename(f) { object.file_name = shadow.file_name = f; }
+    function swap(i) { print("swapped\n"); object.swap(i.object); }
 }
 
 //this class extends the capabilities of the base artwork object
@@ -316,9 +301,9 @@ class ExtendedSurface extends ExtendedImage {
         base.constructor(id, null, null, null, w, h, layer);
     }
     function getType() { return "ExtendedSurface"; }
-	function add_text(id, t, x, y, w, h) { return ExtendedObjects.add(ExtendedText(id, t, x, y, w, h, this.object)); }
-	function add_image(id, i, x, y, w, h) { return ExtendedObjects.add(ExtendedImage(id, i, x, y, w, h, this.object)); }
-	function add_artwork(id, a, x, y, w, h) { return ExtendedObjects.add(ExtendedArtwork(id, a, x, y, w, h, this.object)); }
+    function add_text(id, t, x, y, w, h) { return ExtendedObjects.add(ExtendedText(id, t, x, y, w, h, this.object)); }
+    function add_image(id, i, x, y, w, h) { return ExtendedObjects.add(ExtendedImage(id, i, x, y, w, h, this.object)); }
+    function add_artwork(id, a, x, y, w, h) { return ExtendedObjects.add(ExtendedArtwork(id, a, x, y, w, h, this.object)); }
 }
 
 //this class extends the capabilities of the base listbox object
@@ -326,11 +311,10 @@ class ExtendedListBox extends ExtendedObject {
     constructor(id, x, y, w, h, layer) {
         base.constructor(id, x, y, layer);
         if (FeVersionNum >= 130) {
-			//use surfaces if we can
+            //use surfaces if we can
             object = layer.add_listbox(x, y, w, h);
-			print("drawing " + id + " on layer\n");
         } else {
-			//just add the objects
+            //just add the objects
             object = fe.add_listbox(x, y, w, h);
         }
     }
@@ -347,8 +331,8 @@ class ExtendedListBox extends ExtendedObject {
     function getSelectionBGAlpha() { return object.sel_bgalpha; }
     function getSelectionStyle() { return object.sel_style; }
     function getStyle() { return object.style; }
-	//new for 1.3/1.4
-	function getFormatString() { return object.format_string; }
+    //new for 1.3/1.4
+    function getFormatString() { return object.format_string; }
     
     function setAlign(a) { object.align = a; }
     function setBGColor(r, g, b) { object.set_bg_rgb(r, g, b); }
@@ -362,8 +346,8 @@ class ExtendedListBox extends ExtendedObject {
     function setSelectionBGAlpha(a) { object.selbg_alpha = a; }   
     function setSelectionStyle(s) { object.sel_style = s; }
     function setStyle(s) { object.style = s; }
-	//new for 1.3/1.4
-	function setFormatString(s) { object.format_string = s; }
+    //new for 1.3/1.4
+    function setFormatString(s) { object.format_string = s; }
 }
 
 //WIP - this class extends the capabilities of the base clone object
@@ -371,12 +355,11 @@ class ExtendedClone extends ShadowedObject {
     constructor(id, img, layer) {
         base.constructor(id, img.object.x, img.object.y, layer);
         if (FeVersionNum >= 130) {
-			//use surfaces if we can
+            //use surfaces if we can
             shadow = layer.add_clone(img.shadow);
             object = layer.add_clone(img.object);
-			print("drawing " + id + " on layer\n");
         } else {
-			//just add the objects
+            //just add the objects
             shadow = fe.add_clone(img);
             object = fe.add_clone(shadow);
         }
