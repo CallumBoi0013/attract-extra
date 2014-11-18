@@ -69,3 +69,6 @@ local surfaceAnim =  {
                     };
 mySurface.animate(surfaceAnim);
 
+//The debugger adds debug text ontop of every object, helpful for... debugging
+local debug = ExtendedObjects.debugger();
+debug.setVisible(false);

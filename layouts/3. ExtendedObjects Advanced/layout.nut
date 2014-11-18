@@ -1,11 +1,11 @@
 //we will add some user config options
 class UserConfig {
-	</ label="Enable Debug", help="Enable/Disable debug info", options="Yes,No" />
-	enable_debug="No";
-	</ label="Enable Animations", help="Enable/Disable animations", options="Yes,No" />
-	enable_anims="Yes";
-	</ label="Enable Particles", help="Enable/Disable particle effects", options="Yes,No" />
-	enable_particles="Yes";
+    </ label="Enable Debug", help="Enable/Disable debug info", options="Yes,No" />
+    enable_debug="No";
+    </ label="Enable Animations", help="Enable/Disable animations", options="Yes,No" />
+    enable_anims="Yes";
+    </ label="Enable Particles", help="Enable/Disable particle effects", options="Yes,No" />
+    enable_particles="Yes";
 }
 
 local config = fe.get_config();
@@ -14,12 +14,30 @@ fe.load_module("extended/extended");
 fe.load_module("extended/animate");
 //we can add additional animation modules, we'll try the particules module
 fe.load_module("extended/animations/particles/particles.nut");
+fe.load_module("extended/animations/example/example.nut");
 
 ExtendedObjects.add_image("bg", "bg.png", 0, 0, fe.layout.width, fe.layout.height);
 ExtendedObjects.get("bg").setPreserveAspectRatio(false);
 
-//we're going to attach the particles animation to our background, but it will be on the front layer (surface)
-if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "snow" } );
+//we'll attach a particles animation to our background
+
+//uncomment others to see them
+if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "sparkle" } );
+//if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "snow" } );
+//if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "default" } );
+//if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "test" } );
+//if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "cloudstoon" } );
+//if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "bubbles1" } );
+//if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "arc1" } );
+//if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "invaders" } );
+//if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "cloudstoon2" } );
+
+//Here we'll use a custom animation
+//if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "example", when = When.Always, duration = 20000 } );
+
+//DOESN'T WORK - haven't implemented bounding rectangles
+//if (config.enable_particles == "Yes") ExtendedObjects.get("bg").animate({ which = "particles", preset = "bounce1" } );
+
 
 
 local title = ExtendedObjects.add_text("title", "[Title]", 0, 80, fe.layout.width / 2, 60);
