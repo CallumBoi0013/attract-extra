@@ -15,7 +15,7 @@ Animate is a module that relies on ExtendedObjects to make it easy to add animat
     //add your objects (note the addition of an id before the standard AttractMode parameters)
     ExtendedObjects.add_artwork("mainScreenshot", "snap", 0, 0, fe.layout.width, fe.layout.height);
     //the id allows you to later access your objects by the id you provided
-	//note all object variables are now methods - set_shadow = true is now setShadow(true)
+    //note all object variables are now methods - set_shadow = true is now setShadow(true)
     ExtendedObjects.get("mainScreenshot").setShadow(true);
 ```
 For more on using ExtendedObjects, check out the [Tutorial Layouts](https://github.com/liquid8d/attract-extra/tree/master/layouts).
@@ -30,8 +30,8 @@ For more on using ExtendedObjects, check out the [Tutorial Layouts](https://gith
     ExtendedObjects.add_image("logo", "logo.png", 0, 0, fe.layout.width, fe.layout.height);
     ExtendedObjects.add_artwork("game", "snap", 0, 0, fe.layout.width, fe.layout.height);
     //add your animations
-	//here we create an animation config that will be passed onto the object describing which animation, where to animate from and where to animate to
-	local moveLogo = {
+    //here we create an animation config that will be passed onto the object describing which animation, where to animate from and where to animate to
+    local moveLogo = {
         which = "translate",
         from = "offtopright",
         to = "top"
@@ -99,27 +99,27 @@ object.animate_set(set);
 
 You can use some existing presets:
     fade_in_out         fades out (alpha) on Transition.ToNewSelection, fades in on Transition.FromOldSelection
-	hover				simulate a floating object
-	
+    hover               simulate a floating object
+
 Or you can create your own:
 ```Squirrel
 local myAnimationSet = [
-	{
-		which = "translate",
+    {
+        which = "translate",
         duration = 1500,
         when = When.FromOldSelection,
         easing = "out",
         tween = "back",
         from = "offscreenbottom",
         to = "bottom"
-	},
-	{
-		which = "property",
+    },
+    {
+        which = "property",
         duration = 1500,
-		property = "alpha",
-		from = 0,
-		to = 255
-	}
+        property = "alpha",
+        from = 0,
+        to = 255
+    }
 ];
 ```
 
@@ -299,63 +299,68 @@ ExtendedObjects and Animate can be extended even further than objects and animat
 * Other interested classes can now listen for your callbacks using ExtendedObjects.add_callback("onMyThingInitialized");
 
 
-##Recently Added
-* convert to module(s) - check
-* add_surface not implemented  - check
-* add_clone not implemented - check
-* layer changes - check
-* new tutorial layouts - check
-* updates to new object methods for 1.3/1.4
-	* Image
-		* video_flags = getVideoFlags()/setVideoFlags()
-		* video_playing = getVideoPlaying()/setVideoPlaying()
-		* video_duration = getVideoDuration()
-		* video_time = getVideoTime()
-		* file_name = getFilename()/setFilename()
-		* set_rgb = setColor() - already exists
-		* set_pos = setPosition()/setSize() already exist
-	* Listbox
-		* format_string = getFormatString()/setFormatString()
-		* set_rgb = setColor() - already exists
-		* set_bg_rgb = getBGColor()/setBGColor() already exist
-		* set_sel_rgb = getSelectionColor()/setSelectionColor() already exist
-		* set_selbg_rgb = getSelectionBGColor()/setSelectionBGColor() already exist
-		* set_pos = setPosition()/setSize() already exist
-	* Text
-		* set_rgb = setColor() - already exists
-		* set_bg_rgb = getBGColor()/setBGColor() already exist
-		* set_pos = setPosition()/setSize() already exist
+##Recently Added (1.4)
+* convert to module
+* add_surface implemented
+* add_clone implemented 
+* layer updates
+* new tutorial layouts
+* additions of new object methods for 1.3/1.4
+    * Image
+        * swap = swap()
+            * should a shadow remain on the original object? i think so
+        * video_flags = getVideoFlags()/setVideoFlags()
+        * video_playing = getVideoPlaying()/setVideoPlaying()
+        * video_duration = getVideoDuration()
+        * video_time = getVideoTime()
+        * file_name = getFilename()/setFilename()
+        * set_rgb() = setColor() - already exists
+        * set_pos() = setPosition()/setSize() already exist
+    * Listbox
+        * format_string = getFormatString()/setFormatString()
+        * set_rgb() = setColor() - already exists
+        * set_bg_rgb() = getBGColor()/setBGColor() already exist
+        * set_sel_rgb() = getSelectionColor()/setSelectionColor() already exist
+        * set_selbg_rgb() = getSelectionBGColor()/setSelectionBGColor() already exist
+        * set_pos() = setPosition()/setSize() already exist
+    * Text
+        * set_rgb() = setColor() - already exists
+        * set_bg_rgb() = getBGColor()/setBGColor() already exist
+        * set_pos() = setPosition()/setSize() already exist
 
 ##TODO
 This is my active todo list (bugs and features):
-* Add Image swap method
-* Can all overload method be used (non-required arguments)
-* Debug text not working/following objects (images only? related to animations it seems?)
-* Animations
-	* check on waiting and non-waiting transition animations now using clock()
-	* start/current position not working?
+* Why are callbacks not running (in Debug, callbacks are no longer working)
+* callbacks not quite implemented properly (if the same environment asks for multiple callbacks, it might call them more than once.. or not at all?)
 * Particles
-	* create particle objects immediately, don't wait to draw or there will be layer/surface issues
-	* particle bug (wigs out - suddenly snow goes up or default comes from left of screen instead of center)
+    * create particle objects immediately, don't wait to draw or there will be layer/surface issues
+    * particle bug (wigs out - suddenly snow goes up or default comes from left of screen instead of center)
+* Animations
+    * allow for animations at different object events (When.OnObjectVisible/When.OnObjectHidden/When.OnObjectSelected?)
+    * check on waiting and non-waiting transition animations now using clock()
+    * start/current position not working?
+* Can we implement the overload methods? Looks like ExtendedObjects needs to be a class
+* flipping with subimg doesn't seem to be working for me
+* play with using surfaces as "screens"
 
 ###Issues
 This is a list of known issues:
 * Core
-	* fe.overlay not implemented - not sure what we will do with this yet
-	* fe.signal not implemented - nor sure what we will do with this yet
-	* add_shader not implemented - not sure what we will do with this yet
-	* add_sound not implemented - not sure what we will do with this yet
-	* does not verify availability of ExtendedObjects and Animate library
-	* does not validate user entered config variables
-	* possible variable/config naming conflicts?
+    * fe.overlay not implemented - not sure what we will do with this yet
+    * fe.signal not implemented - nor sure what we will do with this yet
+    * add_shader not implemented - not sure what we will do with this yet
+    * add_sound not implemented - not sure what we will do with this yet
+    * does not verify availability of ExtendedObjects and Animate library
+    * does not validate user entered config variables
+    * possible variable/config naming conflicts?
 * Objects
-	* objects that extend ExtendedObject must currently add an empty object
+    * objects that extend ExtendedObject must currently add an empty object
 * Animations
-	* still not always smooth (not starting from beginning)
-	* are we converted to using clock for tick and transitions?
-	* from/to = "current" won't work on a delayed animation if the position has changed (because it gets the current coordinates immediately instead of waiting until the delay is done)
-	* dont start animation until after delay?
-		* current won't work with chained animations, since current is set before the first animation finishes
+    * still not always smooth (not starting from beginning)
+    * are we converted to using clock for tick and transitions?
+    * from/to = "current" won't work on a delayed animation if the position has changed (because it gets the current coordinates immediately instead of waiting until the delay is done)
+    * dont start animation until after delay?
+        * current won't work with chained animations, since current is set before the first animation finishes
 * Particles
 
 
