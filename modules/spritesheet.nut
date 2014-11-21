@@ -33,7 +33,6 @@ class SpriteSheet
 {
     //TODO
     //single row/column only for now - implement row/columns as frames based on texture size
-    //played does not increase for yoyo
     //bug - doing last frame again after stop?
     //spf or fps?
     
@@ -101,7 +100,7 @@ class SpriteSheet
                 if ( mReverse && playFrame == last_frame() || !mReverse && playFrame == 0) mPlayed += 1;
                 if ( typeof repeat == "integer" && mPlayed > repeat) stop();
                 frame( playFrame );
-                //print( "frame: " + mTimer + " offset: " + mOffset + " reverse: " + mReverse + " played: " + mPlayed + "\n" );
+                print( "frame: " + mTimer + " offset: " + mOffset + " reverse: " + mReverse + " played: " + mPlayed + "\n" );
             }
         }
     }
