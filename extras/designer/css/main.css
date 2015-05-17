@@ -1,0 +1,17 @@
+.icon-text, .icon-image, .icon-art, .icon-list {
+    background-image: url('../images/icons.png');
+    background-repeat: no-repeat;
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    cursor: pointer; 
+}
+.icon-text { background-position: 0 0; }
+.icon-image { background-position: -32px 0; }
+.icon-art { background-position: -64px 0; }
+.icon-list { background-position: -96px 0; }
+.hidden { display: none; }
+.shown { display: inline; }
+.propertylist { padding-left: 0px; list-style: none; }
+#tools { background: #999;  }
+#myCanvas { border:1px solid #000000; }

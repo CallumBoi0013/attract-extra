@@ -1,0 +1,653 @@
+<html>
+    <head>
+        <title>Designer</title>
+        <meta charset="UTF-8" />
+        <!-- TODO
+            properly transform/rotate canvas for objects
+            hit not working after properties are manually changed
+            re-evaluate hit test (picks first object)
+            adjustable canvas size (scale/zoom/aspect ratio)
+        -->
+        <link rel="stylesheet" type="text/css" href="css/main.css">
+        <script src="js/jquery-1.11.2.min.js"></script>
+    </head>
+    <body>
+        <img id="placeholder" src="images/placeholder.png" class="hidden" />
+        <table>
+            <tr><td colspan="2"><div id="statusbar">AttractMode Layout Designer</div></td></tr>
+            <tr>
+                <td valign="top" width="20%">
+                    <div id="tools">
+                        <div class="icon-text" onclick="add('text')" title="Add Text"></div>
+                        <div class="icon-image" onclick="add('image')" title="Add Image"></div>
+                        <div class="icon-art" onclick="add('art')" title="Add Artwork"></div>
+                        <div class="icon-list" onclick="add('list')" title="Add List"></div>
+                    </div>
+                    <div id="properties"></div>
+                    <div id="instructions">
+                        <h3>Instructions</h3>
+                        <p>
+                        Up/Down = Prev/Next Rom
+                        <br>
+                        Left/Right = Prev/Next List
+                        <br>
+                        [ / ] = Prev/Next Filter
+                        </p>
+                    </div>
+                    <div id="code">
+                        <h3>Code</h3>
+                        <p>Copy this code into your layout.nut file</p>
+                        <input type="button" value="Update" onclick="codegen();" />
+                        <textarea id="pagecode" style="text-wrap: break-word; width: 100%; height: 100px; resize: vertical;"></textarea>
+                    </div>
+                </td>
+                <td valign="top">
+                    <canvas id="myCanvas" width="640" height="360"></canvas>
+                </td>
+        </table>
+        <script>
+            //config variables
+            var drag = false;
+            var dragOffset = { x: 0, y: 0 }
+            var CANVAS_WIDTH = 960;
+            var CANVAS_HEIGHT = 540;
+            
+            //this is some example list content
+            var listIndex = 1;
+            var lists = [
+                {
+                    title: "Arcade",
+                    emulator: "Mame",
+                    romIndex: 0,
+                    filterIndex: 0,
+                    filters: [
+                        { name: "All" },
+                        { name: "Trackball" },
+                        { name: "Vertical Shooters" }
+                    ],
+                    roms: [
+                        { name: "pacman", year: "1980", manufacturer: "Namco (Midway license)", cloneof: "puckman", title: "Pac-Man (Midway)" },
+                        { name: "sf2", year: "1991", manufacturer: "Capcom", category: "Fighter", title: "Street Fighter II: The World Warrior (World 910522)" },
+                        { name: "spf2t", year: "1996", manufacturer: "Capcom", category: "Puzzle", title: "Super Puzzle Fighter II Turbo (USA 960620)" }
+                    ]
+                },
+                {
+                    title: "Super Nintendo",
+                    emulator: "zsnes",
+                    romIndex: 0,
+                    filterIndex: 0,
+                    filters: [
+                        { name: "All" },
+                        { name: "USA" },
+                        { name: "Japan" }
+                    ],
+                    roms: [
+                        { title: "Legend of Zelda, The" },
+                        { title: "Super Mario World" },
+                        { title: "Super Metroid" }
+                    ]
+                }
+            ];
+            
+            //these are the objects we will draw
+            var selectedIndex = 0;
+            var objects = [
+                { type: 'text', msg: 'List: [ListTitle] ([ListEntry]/[ListSize])', x: 10, y: 15, charsize: 14 },
+                { type: 'text', msg: 'Filter: [ListFilterName]', x: 10, y:  30, charsize: 14 },
+                { type: 'text', msg: '[Title]', align: 'Align.Centre', x: 10, y: 45, width: 300, charsize: 18 },
+                { type: 'text', msg: 'Rom: [Name] (cloneof [CloneOf])', x: 10, y:  60, charsize: 14 },
+                { type: 'text', msg: 'Info: [Manufacturer] | [Year] | [Category]', x: 10, y:  75, charsize: 14 },
+                { type: 'text', msg: 'Emu: [Emulator]', x: 10, y:  90, charsize: 14 },
+                { type: 'image', x: 300, y: 0, skew_x: -2, width: 100, height: 100 },
+                { type: 'image', x: 300, y: 250, skew_y: 10, width: 100, height: 100 }
+            ];
+            
+            //initialize
+            $(document).ready(function(){
+                
+                //init canvas
+                var canvas = $('#myCanvas')[0];
+                canvas.width = 960;
+                canvas.height = 540;
+                
+                //hookup mouse events
+                canvas.onmousedown = onMouseDown;
+                canvas.onmouseup = onMouseUp;
+                canvas.onmousemove = onMouseMove;
+                canvas.onmouseout = onMouseOut;
+
+                //hookup key events
+                document.onkeydown = function(event) {
+                    event = event || window.event;
+                    //http://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes
+                    switch (event.keyCode)
+                    {
+                        case 38:    //up
+                            //previous rom index
+                            previous_rom();
+                            break;
+                        case 40:    //down
+                            //next rom index
+                            next_rom();
+                            break;
+                        case 37:    //left
+                            //previous list index
+                            previous_list();
+                            break;
+                        case 39:    //right
+                            //next list index
+                            next_list();
+                            break;
+                        case 219:   //open bracket
+                            previous_filter();
+                            break;
+                        case 221:   //close bracket
+                            next_filter();
+                            break;
+                        case 27:    //escape
+                            //back
+                            break;
+                        case 13:    //select
+                            //select
+                            break;
+                    }
+                }
+                
+                //generate layout.nut code
+                codegen();
+                
+                //redraw
+                setInterval(refresh, 10);
+            });
+            
+            //add objects
+            function add( which )
+            {
+                console.log('add: ' + which );
+                var obj;
+                switch( which )
+                {
+                    case 'text':
+                        obj = { type: 'text', msg: 'New Text', x: 0, y: 0, charsize: 14 }
+                        break;
+                    case 'image':
+                        obj = { type: 'image', x: 0, y: 0, width: 100, height: 100 }
+                        break;
+                }
+                objects.push(obj);
+            }
+            
+            //remove the selected object
+            function removeSelected()
+            {
+                objects.splice(selectedIndex, 1);
+                selectedIndex = -1;
+                hideProps();
+            }
+            
+            //hide properties dialogs
+            function hideProps()
+            {
+                $('#properties').html('');
+            }
+            
+            //properties dialogs for objects
+            function showProps()
+            {
+                var which = objects[selectedIndex].type;
+                var code = '';
+                code += '<h3>' + which + '</h3>';
+                code += '<table>';
+                code += '<tr><td>visible</td><td><input id="visible" type="checkbox" onchange="writeProps()" checked /></td></tr>';
+                code += '<tr><td>rotation</td><td><input id="rotation" type="text" onchange="writeProps()" /></td></tr>';
+                switch( which )
+                {
+                    case 'text':
+                        code += '<tr><td>text</td><td><input id="text_msg" type="text" value="MyText" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>x</td><td><input id="text_x" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>y</td><td><input id="text_y" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>width</td><td><input id="text_width" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>height</td><td><input id="text_height" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>charsize</td><td><input id="text_charsize" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>red</td><td><input id="red" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>green</td><td><input id="green" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>blue</td><td><input id="blue" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>alpha</td><td><input id="alpha" type="text" value="1.0" onKeyUp="writeProps()" /></td></tr>';
+                        break;
+                    case 'image':
+                        code += '<tr><td>file</td><td><input id="image_file" type="file" /></td></tr>';
+                        code += '<tr><td>x</td><td><input id="image_x" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>y</td><td><input id="image_y" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>width</td><td><input id="image_width" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>height</td><td><input id="image_height" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>skew_x</td><td><input id="image_skew_x" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        code += '<tr><td>skew_y</td><td><input id="image_skew_y" type="text" value="0" onKeyUp="writeProps()" /></td></tr>';
+                        break;
+                    case 'art':
+                        code += '<tr><td>art</td><td><select><option>box</option><option>marquee</option></select></td></tr>';
+                        break;
+                    case 'list':
+                        break;
+                }
+                code += '</table>';
+                code += '<input type="button" value="Remove" onclick="removeSelected();" />';
+                $('#properties').html(code);
+                //allow file selection for images
+                if ( which == 'image' ) $('#image_file').addEventListener('change', getfile, false);
+                readProps();
+            }
+            
+            //writes property changes to the objects
+            function writeProps()
+            {
+                var o = objects[selectedIndex];
+                o.visible = $('#visible').is(':checked');
+                o.rotation = $('#rotation').val();
+                switch( o.type )
+                {
+                    case 'text':
+                        o.msg = $('#text_msg').val();
+                        o.x = $('#text_x').val();
+                        o.y = $('#text_y').val();
+                        o.width = $('#text_width').val();
+                        o.height = $('#text_height').val();
+                        o.charsize = $('#text_charsize').val();
+                        o.red = $('#red').val();
+                        o.green = $('#green').val();
+                        o.blue = $('#blue').val();
+                        o.alpha = $('#alpha').val();
+                        break;
+                    case 'image':
+                        o.x = $('#image_x').val();
+                        o.y = $('#image_y').val();
+                        o.width = $('#image_width').val();
+                        o.height = $('#image_height').val();
+                        o.skew_x = $('#image_skew_x').val();
+                        o.skew_y = $('#image_skew_y').val();
+                        o.filename = $('#image_file').val();
+                        break;
+                }
+            }
+            
+            //reads properties from the objects
+            function readProps()
+            {
+                var o = objects[selectedIndex];
+                $('#visible').prop('checked', getProperty(o, 'visible', true));
+                $('#rotation').val(getProperty(o, 'rotation', 0));
+                switch( o.type )
+                {
+                    case 'text':
+                        $('#text_msg').val(o.msg);
+                        $('#text_x').val(o.x);
+                        $('#text_y').val(o.y);
+                        $('#text_width').val(getObjectWidth(o));
+                        $('#text_height').val(getObjectHeight(o));
+                        $('#text_charsize').val(o.charsize);
+                        $('#red').val(getProperty(o, 'red', 0));
+                        $('#green').val(getProperty(o, 'green', 0));
+                        $('#blue').val(getProperty(o, 'blue', 0));
+                        $('#alpha').val(getProperty(o, 'alpha', 1.0));
+                        break;
+                    case 'image':
+                        $('#image_x').val(o.x);
+                        $('#image_y').val(o.y);
+                        $('#image_width').val(getObjectWidth(o));
+                        $('#image_height').val(getObjectHeight(o));
+                        $('#image_skew_x').val(getProperty(o, 'skew_x', 0));
+                        $('#image_skew_y').val(getProperty(o, 'skew_y', 0));
+                        break;
+                }
+            }
+            
+            //retrieve an object property if it exists, otherwise use the default provided
+            function getProperty(o, prop, def)
+            {
+                return ( o[prop] == undefined ) ? def : o[prop];
+            }
+            
+            //find the height of an object
+            function getObjectHeight(obj)
+            {
+                switch(obj.type)
+                {
+                    case 'text':
+                        return getProperty(obj, 'height', obj.charsize);
+                    case 'image':
+                        return getProperty(obj, 'height', 100);
+                }
+            }
+            //find the width of an object (i.e. text box)
+            function getObjectWidth(obj)
+            {
+                var canvas = $('#myCanvas')[0];
+                var context = canvas.getContext("2d");
+                //context.rotate(0);
+                //context.translate(0,0);
+                //context.save();
+                switch (obj.type)
+                {
+                    case 'text':
+                        //measure text
+                        context.textBaseline = 'top';
+                        context.textAlign = 'start';
+                        context.font = obj.charsize + "px " + getProperty(obj, 'font', 'Arial');
+                        context.restore();
+                        var measuredWidth = context.measureText(replaceText(obj.msg)).width;
+                        //return width of object, or measuredWidth if none is provided
+                        return getProperty(obj, 'width', measuredWidth);
+                    case 'image':
+                        return getProperty(obj, 'width', 100);
+                }
+            }
+            
+            //get an empty string or the value
+            function str(text)
+            {
+                return ( text == undefined ) ? "" : text;
+            }
+            
+            //replace variables in object text
+            function replaceText(text)
+            {
+                return text.toLowerCase()
+                    .replace("[title]", str(lists[listIndex].roms[lists[listIndex].romIndex].title))
+                    //list info
+                    .replace("[listtitle]", str(lists[listIndex].title))
+                    .replace("[listsize]", lists[listIndex].roms.length)
+                    .replace("[listentry]", lists[listIndex].romIndex + 1)
+                    .replace("[listfiltername]", str(lists[listIndex].filters[lists[listIndex].filterIndex].name))
+                    .replace("[emulator]", str(lists[listIndex].emulator))
+                    //rom info
+                    .replace("[name]", str(lists[listIndex].roms[lists[listIndex].romIndex].name))
+                    .replace("[year]", str(lists[listIndex].roms[lists[listIndex].romIndex].year))
+                    .replace("[category]", str(lists[listIndex].roms[lists[listIndex].romIndex].category))
+                    .replace("[cloneof]", str(lists[listIndex].roms[lists[listIndex].romIndex].cloneof))
+                    .replace("[manufacturer]", str(lists[listIndex].roms[lists[listIndex].romIndex].manufacturer));
+                    //sortname
+                    //players
+                    //rotation
+                    //control
+                    //status
+                    //displaycount
+                    //displaytype
+                    //playedtime
+                    //playedcount
+                    //sortvalue
+            }
+            
+            //generate the layout code
+            function codegen()
+            {
+                var code = '';
+                    code += 'fe.layout.width = ' + CANVAS_WIDTH + ';\n';
+                    code += 'fe.layout.height = ' + CANVAS_HEIGHT + ';\n';
+                    for (var i = 0; i < objects.length; i++)
+                    {
+                        var o = objects[i];
+                        switch ( o.type )
+                        {
+                            case 'text':
+                                code += 'local text' + i + ' = fe.add_text("' + o.msg + '", ' + o.x + ', ' + o.y + ', ' + getObjectWidth(o) + ', ' + getObjectHeight(o) + ');\n';
+                                code += '   text' + i + '.align = ' + getProperty(o, 'align', 'Align.Left') + ';\n';
+                                code += '   text' + i + '.charsize = ' + o.charsize + ';\n';
+                                code += '   text' + i + '.set_rgb(' + getProperty(o, 'red', 0) + ',' + getProperty(o, 'green', 0) + ',' + getProperty(o, 'blue', 0) + ');\n';
+                                break;
+                            case 'image':
+                                code += 'local image' + i + ' = fe.add_image("' + o.filename + '", ' + o.x + ', ' + o.y + ', ' + o.width + ', ' + o.height + ');\n';
+                                code += '   image' + i + '.skew_x = ' + getProperty(o, 'skew_x', '0') + ';\n';
+                                code += '   image' + i + '.skew_y = ' + getProperty(o, 'skew_y', '0') + ';\n';
+                                break;
+                        }
+                    }
+                $('#pagecode').val(code);
+            }
+            
+            //get local files for images
+            function getfile(event)
+            {
+                // Check for the various File API support.
+                if (window.File && window.FileReader && window.FileList && window.Blob) {
+                  // Great success! All the File APIs are supported.
+                  //alert('file api supported');
+                  var reader = new FileReader();
+                  reader.onload = function(event) {
+                    var url = event.target.result;
+                    document.getElementById('placeholder').setAttribute('src', url);
+                  }
+                  reader.readAsDataURL(event.target.files[0]);
+                } else {
+                  alert('The File APIs are not fully supported in this browser.');
+                }
+            }
+            
+            //draw all objects
+            function drawObjects()
+            {
+                var canvas = $('#myCanvas')[0];
+                if ( canvas != undefined)
+                {
+                    var context = canvas.getContext("2d");
+                    for ( var i = 0; i < objects.length; i++ )
+                    {
+                        context.save();
+                        var o = objects[i];
+                        if (getProperty(o, 'visible', true))
+                        {
+                            switch( o.type )
+                            {
+                                case 'text':
+                                    //draw text object on the canvas
+                                    context.translate(o.x, o.y);
+                                    context.rotate(o.rotation);
+                                    context.translate(-o.x, -o.y);
+                                    context.font = o.charsize + "px " + getProperty(o, 'font', 'Arial');
+                                    context.fillStyle = 'rgba(' + getProperty(o, 'red', 0) + ',' + getProperty(o, 'green', 0) + ',' + getProperty(o, 'blue', 0) + ',' + getProperty(o,'alpha', 1.0) + ')';
+                                    context.textBaseline = 'top';
+                                    context.textAlign = 'start';
+                                    context.fillText( replaceText(o.msg), o.x, o.y );
+                                    break;
+                                case 'image':
+                                        var img = document.getElementById("placeholder");
+                                        context.setTransform(1, Math.tan(getProperty(o, 'skew_x', 0) * 0.01), Math.tan(getProperty(o, 'skew_y', 0) * 0.01), 1, 0, 0);
+                                        context.drawImage(img, o.x, o.y, o.width, o.height);
+                                    /*
+                                    if (o.filename == undefined)
+                                    {
+                                    } else
+                                    {
+                                        var img = new Image;
+                                            img.onload = function()
+                                            {
+                                                context.drawImage(img, o.x, o.y, o.width, o.height);
+                                            }
+                                            img.src = URL.createObjectURL("placeholder.png");
+                                    }
+                                    */
+                                    break;
+                            }
+                        }
+                        context.restore();
+                    }
+                }
+            }
+            
+            //draw object location rectangles
+            function drawBoxes()
+            {
+                var canvas = $('#myCanvas')[0];
+                var context = canvas.getContext("2d");
+                for ( var i = 0; i < objects.length; i++ )
+                {
+                    context.save();
+                    var o = objects[i];
+                    context.setTransform(1, Math.tan(getProperty(o, 'skew_x', 0) * 0.01), Math.tan(getProperty(o, 'skew_y', 0) * 0.01), 1, 0, 0);
+                    context.beginPath();
+                    context.rect(o.x, o.y, getObjectWidth(o), getObjectHeight(o));
+                    //context.fillStyle = 'blue';
+                    //context.fill();
+                    context.lineWidth = 1;
+                    context.strokeStyle = ( i == selectedIndex ) ? 'red' : 'blue';
+                    context.stroke();
+                    context.closePath();
+                    context.translate(o.x, o.y);
+                    context.rotate(o.rotation);
+                    context.translate(-o.x, -o.y);
+                    context.restore();
+                }
+            }
+            
+            //constant redraw
+            function refresh()
+            {
+                var canvas = $('#myCanvas')[0];
+                if (canvas != undefined)
+                {
+                    var context = canvas.getContext("2d");
+                    context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+                    drawObjects();
+                    drawBoxes();
+                }
+            }
+                        
+            //find canvas location
+            function getCanvasPos() {
+                var canvas = $('#myCanvas')[0];
+                if ( canvas != undefined )
+                {
+                    var _x = canvas.offsetLeft;
+                    var _y = canvas.offsetTop;
+        
+                    while(canvas = canvas.offsetParent) {
+                        _x += canvas.offsetLeft - canvas.scrollLeft;
+                        _y += canvas.offsetTop - canvas.scrollTop;
+                    }
+
+                    return {
+                        left : _x,
+                        top : _y
+                    }
+                }
+            };
+            
+            //find selected object with a hit test
+            function hit(x, y)
+            {
+                for ( var i = 0; i < objects.length; i++ )
+                {
+                    var o = objects[i];
+                    if ( x >= o.x && y >= o.y && x <= o.x + getObjectWidth(o) && y <= o.y + getObjectHeight(o) ) return i;
+                }
+                return -1;
+            }
+            
+            //handle mouse down event
+            function onMouseDown(e)
+            {
+                var x = e.pageX - getCanvasPos().left;
+                var y = e.pageY - getCanvasPos().top;
+                //determine what object if any is "hit"
+                selectedIndex = hit( x, y );
+                if (selectedIndex >= 0)
+                {
+                    drag = true;
+                    
+                    dragOffset.x = x - objects[selectedIndex].x;
+                    dragOffset.y = y - objects[selectedIndex].y;
+                    
+                    showProps();
+                    //update properties
+                    readProps();
+                } else
+                {
+                    drag = false;
+                    hideProps();
+                }
+            }
+            
+            //handle move event
+            function onMouseMove(e)
+            {
+                var canvas = document.getElementById('myCanvas');
+                var x = e.pageX - getCanvasPos().left;
+                var y = e.pageY - getCanvasPos().top;
+                x -= dragOffset.x;
+                y -= dragOffset.y;
+                
+                if (drag)
+                {
+                    //update object coordinates
+                    objects[selectedIndex].x = x;
+                    objects[selectedIndex].y = y;
+                }
+                
+                //update status text
+                var statusText = '';
+                statusText += " Canvas: " + getCanvasPos().left + "," + getCanvasPos().top;
+                statusText += " Page: " + e.pageX + "," + e.pageY;
+                statusText += " Client: " + e.clientX + "," + e.clientY;
+                statusText += " Mouse: " + x + "," + y;
+                statusText += " Drag: " + drag;
+                $('statusbar').val(statusText);
+            }
+            
+            //handle mouse up event
+            function onMouseUp()
+            {
+                drag = false;
+                if (selectedIndex > -1) readProps();
+                //canvas.onmousemove = null;
+            }
+            
+            //handle mouse out event
+            function onMouseOut()
+            {
+                drag = false;
+                $('statusbar').val('AttractMode Layout Designer');
+            }
+            
+            //move to previous list
+            function previous_list()
+            {
+                listIndex = ( listIndex - 1 >= 0 ) ? listIndex - 1 : lists.length - 1;
+                return listIndex;
+            }
+            
+            //move to next list
+            function next_list()
+            {
+                listIndex = ( listIndex + 1 <= lists.length - 1 ) ? listIndex + 1 : 0;
+                return listIndex;
+            }
+            
+            //move to previous rom
+            function previous_rom()
+            {
+                lists[listIndex].romIndex = ( lists[listIndex].romIndex - 1 >= 0 ) ? lists[listIndex].romIndex - 1 : lists[listIndex].roms.length - 1;
+                return lists[listIndex].romIndex;
+            }
+            
+            //move to next rom
+            function next_rom()
+            {
+                lists[listIndex].romIndex = ( lists[listIndex].romIndex + 1 <= lists[listIndex].roms.length - 1 ) ? lists[listIndex].romIndex + 1 : 0;
+                return lists[listIndex].romIndex;
+            }
+            
+            //move to previous filter
+            function previous_filter()
+            {
+                lists[listIndex].filterIndex = ( lists[listIndex].filterIndex - 1 >= 0 ) ? lists[listIndex].filterIndex - 1 : lists[listIndex].filters.length - 1;
+                return lists[listIndex].filterIndex;
+            }
+            
+            //move to next filter
+            function next_filter()
+            {
+                lists[listIndex].filterIndex = ( lists[listIndex].filterIndex + 1 <= lists[listIndex].filters.length - 1 ) ? lists[listIndex].filterIndex + 1 : 0;
+                return lists[listIndex].filterIndex;
+            }
+            
+        </script>
+    </body>
+</html>
