@@ -71,4 +71,4 @@ class Wheel extends ExtendedObject {
         //if (obj.getId() == "wheel0" && params.animation.config.when == Transition.ToNewSelection) obj.setPosition([ 50, 250 ]);
         //if (obj.getId() == "wheel0" && params.animation.config.when == Transition.ToNewSelection) obj.setPosition([ 50, 450 ]);
     }
-}
+}

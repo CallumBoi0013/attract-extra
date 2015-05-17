@@ -43,4 +43,4 @@ class ArcAnimation extends ExtendedAnimation {
         local ty = c1y + (c2y - c1y) * t;
         return [ tx, ty ];
     }
-}
+}

@@ -48,4 +48,4 @@ class TranslateAnimation extends ExtendedAnimation {
         //ExtendedDebugger.notice(ttime + "," + config.start[0] + "x" + config.start[1] + " - " + config.end[0] + "x" + config.end[1] + "," + config.duration + " - " + point[0] + "x" + point[1]);
         obj.setPosition( point );
     }
-}
+}

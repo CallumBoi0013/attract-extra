@@ -216,4 +216,4 @@ class Marquee {
 		o.ob = ob;
 		ob = temp;
 	}
-}
+}
