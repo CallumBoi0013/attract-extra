@@ -44,20 +44,20 @@
 // TODO
 //
 //  XML
-//      is reading text values working ok?
-//      spaces in attributes or possibly double spaces between attributes will fail splitting attribute name/values
+//      SPACES IN ATTRIBUTES VALUES NOT YET SUPPORTED (need to rewrite attribute splitting)
 //
 //  ALL
-//      Lenient format reading (multiple spaces, tabs, comments, etc)
 //      Validation of XML, INI, TXT (checking tag-endtags match), proper XML format
-//      Allow for reading a string or reading from filename for all formats
-//      Write XML, INI, TXT in squirrel
+//      Allow for reading a string or reading from filename for INI and TXT
+//      Write to XML, INI, TXT in squirrel
 //      Additional helper functions
 
 fe.load_module( "file" );
 
+::FileFormatVersion <- 1.0;
+DEBUG_FILEFORMAT <- false;
+
 local dir = fe.script_dir;
-FILEFORMAT_DEBUG <- false;
 
 class TXTFile
 {
@@ -332,7 +332,7 @@ class XML
                 }
                 local text = xmlStr.slice( pos + 1, textEnd );
                 doc.text = text;
-                if ( FILEFORMAT_DEBUG ) print( "text: " + text + "\n" );
+                if ( DEBUG_FILEFORMAT ) print( "text: " + text + "\n" );
             }
 
             if ( !COMMENT && !QUOTES && char == "<" && next2 != "</" && next2 != "<!" )
@@ -344,7 +344,7 @@ class XML
                 
                 if ( ROOT )
                 {
-                    if ( FILEFORMAT_DEBUG ) print( "root node: " + tag + "\n" );
+                    if ( DEBUG_FILEFORMAT ) print( "root node: " + tag + "\n" );
                     ROOT = false;
                     doc.startPos = pos;
                 } else
@@ -358,7 +358,7 @@ class XML
                 }
                 doc.tag = tag;
                 
-                if ( FILEFORMAT_DEBUG ) print( doc.tag + " (" + doc.startPos + ") : " );
+                if ( DEBUG_FILEFORMAT ) print( doc.tag + " (" + doc.startPos + ") : " );
                 pos = tagEnd + 1;
                 
                 //read attributes?
@@ -373,7 +373,7 @@ class XML
                     attrEnd++;
                 }
                 local attributes = xmlStr.slice( pos - 1, attrEnd );
-                if ( FILEFORMAT_DEBUG ) print( attributes + "\n" );
+                if ( DEBUG_FILEFORMAT ) print( attributes + "\n" );
                     local attrs = split(attributes, " ");
                     foreach( attr in attrs )
                     {
@@ -391,7 +391,7 @@ class XML
                 if ( next2 == "</" ) pos += doc.tag.len() + 1;
                 
                 local n = ( pos < xmlStr.len() ) ? xmlStr[pos].tochar() : "";
-                if ( FILEFORMAT_DEBUG ) print( "  " + doc.tag + " - next: " + n + "\n");
+                if ( DEBUG_FILEFORMAT ) print( "  " + doc.tag + " - next: " + n + "\n");
                 
                 if ( doc.parent == null )
                 {
