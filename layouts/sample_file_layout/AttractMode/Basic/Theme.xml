@@ -1,0 +1,18 @@
+<layout width="640" height="480">
+    <include type="module">animate/animate.nut</include>
+    <config>
+        <option name="image" label="Image" help="imageused" options="snap,video,title,marquee,wheel"></option>
+    </config>
+    <image x="0" y="0" width="fe.layout.width" height="fe.layout.height" file_name="bg.png"></image>
+    <artwork x="348" y="152" width="262" height="262" file_name="snap"></artwork>
+    <artwork x="348" y="64", width="262" height="72" file_name="marquee"></artwork>
+    <listbox x="32" y="64" width="262" height="352" charsize="16" selbg_red="255" selbg_green="255" selbg_blue="255" sel_red="0" sel_green="0" sel_blue="0" style="Style.Bold"></listbox>
+    <text x="30" y="424" width="320" height="16" red="200" green="200" blue="70" align="Align.Left" msg="[Title]">
+        <PropertyAnimation property="alpha" from="0" to="255" when="Transition.ToNewSelection" />
+    </text>
+    <text x="0" y="15" width="640" height="30" style="Style.Bold" msg="[DisplayName]"></text>
+    <text x="30" y="441" width="320" height="16" red="200" green="200" blue="70" align="Align.Left" msg="[Year]-[Manufacturer]"></text>
+    <text x="30" y="458" width="320" height="16" red="200" green="200" blue="70" align="Align.Left" msg="[Category]"></text>
+    <text x="320" y="424" width="290" height="16" red="200" green="200" blue="70" align="Align.Right" msg="[ListEntry]/[ListSize]"></text>
+    <text x="320" y="441" width="290" height="16" red="200" green="200" blue="70" align="Align.Right" msg="[FilterName]"></text>
+</layout>

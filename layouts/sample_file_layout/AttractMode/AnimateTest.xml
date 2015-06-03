@@ -1,0 +1,17 @@
+<layout width="1280" height="720">
+    <include type="module">animate</include>
+    <text y="20" width="fe.layout.width" height="30" msg="[Title]">
+        <animate type="PropertyAnimation" when="Transition.ToNewSelection" property="y" start="-20" end="50" delay="1000" />
+        <animate type="PropertyAnimation" when="Transition.ToNewSelection" property="alpha" start="255" end="0" time="250" wait="true" />
+        <animate type="PropertyAnimation" when="Transition.FromOldSelection" property="alpha" start="0" end="255" delay="1000" />
+    </text>
+    <artwork x="320" y="80" width="640" height="200" file_name="marquee">
+        <animate type="PropertyAnimation" when="Transition.ToNewSelection" property="alpha" start="255" end="0" time="250" wait="true" />
+        <animate type="PropertyAnimation" when="Transition.FromOldSelection" property="alpha" start="0" end="255" delay="1000" />
+    </artwork>
+    <artwork x="150" y="340" width="320" height="240" file_name="snap">
+        <animate type="PropertyAnimation" property="x" start="-170" end="150" />
+    </artwork>
+    <text y="675" width="fe.layout.width" height="30" msg="[Year]" />
+    <text x="0" y="650" width="fe.layout.width" height="30" msg="fe.list.name" />
+</layout>
