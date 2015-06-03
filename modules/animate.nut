@@ -1,3 +1,8 @@
+fe.load_module("file");
+
+::AnimateVersion <- 1.1;
+DEBUG_ANIMATION <- false;
+
 /*
     Animate module allows you to use and create custom animations in the frontend via the AnimationCore and Animation classes.
     
@@ -11,6 +16,9 @@
 
     USAGE:
     
+        Add the animate module to your layout:
+        fe.add_module("animate");
+        
         Animation classes typically accept an object and a config table, or just a config table.
         To create an animation, we create an instance of an animation class, and add it using animation.add():
         
@@ -81,7 +89,7 @@
         The Animation class is a base class which can be extended by developers to create new animations. It handles things such as
         timing, starting, updating and stopping animations.
     
-        See the included animation classes in the modules/animate/animations folder for examples.
+        See the included animation classes in the modules/animate folder for examples.
 
         ** If you create any custom animations, consider submitting them to me to be included with the animate module
         for others to use. **
@@ -142,33 +150,44 @@
             endTime: the clock time the animation will end (unless it is cancelled)
             reversed: if the animation is in a pulse state (reversed)
             played: number of times the animation ran
-            ttime: if started in transition state, the transition ttime, else null
-            ttype: if started in transition state, the transition ttype, else null
-            var: if started in transition state, the transition var, else null
+            transition.ttime: if started in transition state, the transition ttime, else null
+            transition.ttype: if started in transition state, the transition ttype, else null
+            transition.var: if started in transition state, the transition var, else null
             
         
     TODO LIST
-        fix pulse / loop (delays and repeating)
-        fix pos/scale/rot transform_translate - must be in specific order right now
-        how to handle transition info: mainly for waiting transitions, but need start variables for others
-        //later
-        state saving: how will we stored modified values, if the screensaver activates?)
+        
+        better presets for property, particles, sprites
+        fix pulse / loop / restart (delays and repeating)
         animation sets: be apart of animation core, or at discretion of developer?
-        custom when functions: improvements for calling them in transition/tick
         quad bezier arcs: function available, how to implement?
+        
+        fix pos/scale/rot transform_translate - must be in specific order right now
+        fix scale and rotation when image/artwork doesn't specify width (unscaled) - will need to get texture_width and texture_height in the transition callback
+        fix explosion of particle effects after launching a game? (unconfirmed)
+        
+        evaluate function improvements:
+            currently "-50" for end, even with a start value set continously removes 50
+            if start is provided, maybe make end relative to start
+            if end was provided, maybe make start relative to end?
+            or allow for last = "s+10" or "e-10%"? for modifying based on start or end values instead of current?
+
+        how to handle transition info: mainly for waiting transitions, but need start variables for others
+        state saving: how will we stored modified values, if the screensaver activates? currently modified values get reset
+        custom when functions: improvements for calling them in transition/tick
         bounds: set bounds instead of a start/end value for position?
+        Other animation classes?
+            KeyFrameAnimation
+            Interpolation?
+            Color?
         property.nut
+            do start/last/current work for values right now?
+            entrance and exit presets
+            center positioning: add proper centering with rotate, scale, skew and pinch
             properties before delay: should we set properties to start value before the delay occurs?
-            center positioning: add proper centering with skew and pinch
-            evaluate function:
-                currently "-50" for end, even with a start value set continously removes 50
-                if start is provided, maybe make end relative to start
-                if end was provided, maybe make start relative to end?
-                or allow for last = "s+10" or "e-10%"? for modifying based on start or end values instead of current?
-            //later
             multiple properties at once ( may rely on animation sets )
         particles.nut
-        
+            ?
         sprite.nut
             respect restart option - restart sprite animation from beginning if when transition is reached again
 */
@@ -189,8 +208,8 @@ When <- {
     EndScreenSaver = function( anim ) { if ( anim.transition.ttype == Transition.StartLayout && anim.transition.var == FromTo.ScreenSaver ) return true; return false; },
     OnPrevious = function( anim ) { if ( anim.transition.ttype == Transition.FromOldSelection && anim.transition.var == 1 ) return true; return false; },
     OnNext = function( anim ) { if ( anim.transition.ttype == Transition.FromOldSelection && anim.transition.var == -1 ) return true; return false; },
-    OnPageUp = function( anim ) { if ( anim.transition.ttype == Transition.FromOldSelection && anim.transition.var == -fe.LayoutGlobals.page_size ) return true; return false; },
-    OnPageDown = function( anim ) { if ( anim.transition.ttype == Transition.ToNewSelection && anim.transition.var == fe.LayoutGlobals.page_size ) return true; return false; },
+    OnPageUp = function( anim ) { if ( anim.transition.ttype == Transition.FromOldSelection && anim.transition.var == -fe.layout.page_size ) return true; return false; },
+    OnPageDown = function( anim ) { if ( anim.transition.ttype == Transition.FromOldSelection && anim.transition.var == fe.layout.page_size ) return true; return false; },
 }
 
 //aliases to tweens that are available for animations
@@ -216,12 +235,73 @@ Easing <- {
     InOut = "inout"
 }
 
+//helper for positioning
+Screen <- {
+    center = { x = fe.layout.width / 2, y = fe.layout.height / 2 },
+    percent_width = function( p ) { return (p.tofloat() / 100) * fe.layout.width; },
+    percent_height = function( p ) { return (p.tofloat() / 100) * fe.layout.height; }, 
+}
+
+const OFFSCREEN = 20;
+
+LOCATIONS <- {
+    top = function(o) { return o.y }
+    left = function(o) { return o.x }
+    right = function(o) { return o.x + o.width }
+    bottom = function(o) { return o.y + o.height }
+}
+
+POSITIONS <- {
+    center = function(o) { return { x = Screen.center.x - (o.width / 2), y = Screen.center.y - (o.height / 2) } },
+    start = function(o) { return { x = o.config.start_x, y = o.config.start_y } },
+    last = function(o) { if ("last" in o.config) return { x = o.config.last.x, y = o.config.last.y }; return start(o); },
+    current = function(o) { return { x = o.x, y = o.y } },
+    top = function(o) { return { x = Screen.center.x - (o.width / 2), y = 0 } },
+    left = function(o) { return { x = 0, y = Screen.center.y - (o.height / 2) } },
+    bottom = function(o) { return { x = Screen.center.x - (o.width / 2), y = fe.layout.height - o.height } },
+    right = function(o) { return { x = fe.layout.width - o.width, y = Screen.center.y - (o.height / 2) } },
+    topleft = function(o) { return { x = 0, y = 0 } },
+    topright = function(o) { return { x = fe.layout.width - o.width, y = 0 } },
+    bottomleft = function(o) { return { x = 0, y = fe.layout.height - o.height } },
+    bottomright = function(o) { return { x = fe.layout.width - o.width, y = fe.layout.height - o.height } },
+    midtop = function(o) { return { x = Screen.center.x - (o.width / 2), y = (Screen.center.y / 2) - (o.height / 2) } },
+    midbottom = function(o) { return { x = Screen.center.x - (o.width / 2), y = Screen.center.y + (Screen.center.y / 2) - (o.height / 2) } },
+    midleft = function(o) { return { x = (Screen.center.x / 2) - (o.width / 2), y = Screen.center.y - (o.height / 2) } },
+    midright = function(o) { return { x = Screen.center.x + (Screen.center.x / 2) - (o.width / 2), y = Screen.center.y - (o.height / 2) } },
+    midtopleft = function(o) { return { x = (Screen.center.x / 2) - (o.width / 2), y = (Screen.center.y / 2) - (o.height / 2) } },
+    midbottomleft = function(o) { return { x = (Screen.center.x / 2) - (o.width / 2), y = Screen.center.y + (Screen.center.y / 2) - (o.height / 2) } },
+    midtopright = function(o) { return { x = Screen.center.x + (Screen.center.x / 2) - (o.width / 2), y = (Screen.center.y / 2) - (o.height / 2) } },
+    midbottomright = function(o) { return { x = Screen.center.x + (Screen.center.x / 2) - (o.width / 2), y = Screen.center.y + (Screen.center.y / 2) - (o.height / 2) } },
+    offmidtopleftx = function(o) { return { x = -o.width - OFFSCREEN, y = (Screen.center.y / 2) - (o.height / 2) } },
+    offmidtoplefty = function(o) { return { x = (Screen.center.x / 2) - (o.width / 2), y = -o.height - OFFSCREEN } },
+    offmidbottomleftx = function(o) { return { x = -o.width - OFFSCREEN, y = Screen.center.y + (Screen.center.y / 2) - (o.height / 2) } },
+    offmidbottomlefty = function(o) { return { x = (Screen.center.x / 2) - (o.width / 2), y = fe.layout.height + OFFSCREEN } },
+    offmidtoprightx = function(o) { return { x = fe.layout.width + OFFSCREEN, y = (Screen.center.y / 2) - (o.height / 2) } },
+    offmidtoprighty = function(o) { return { x = Screen.center.x + (Screen.center.x / 2) - (o.width / 2), y = -o.height - OFFSCREEN } },
+    offmidbottomrightx = function(o) { return { x = fe.layout.width + OFFSCREEN, y = Screen.center.y + (Screen.center.y / 2) - (o.height / 2) } },
+    offmidbottomrighty = function(o) { return { x = Screen.center.x + (Screen.center.x / 2) - (o.width / 2), y = fe.layout.height + OFFSCREEN } },
+    offtop = function(o) { return { x = Screen.center.x - (o.width / 2), y = -o.height - OFFSCREEN } },
+    offbottom = function(o) { return { x = Screen.center.x - (o.width / 2), y = fe.layout.height + o.height + OFFSCREEN } },
+    offleft = function(o) { return { x = - o.width - OFFSCREEN, y = Screen.center.y - (o.height / 2) } },
+    offright = function(o) { return { x = fe.layout.width + o.width + OFFSCREEN, y = Screen.center.y - (o.height / 2) } },
+    offtopleftx = function(o) { return { x = - o.width - OFFSCREEN, y = 0 } },
+    offtoplefty = function(o) { return { x = 0, y = - o.height - OFFSCREEN } },
+    offtopleft = function(o) { return { x = - o.width - OFFSCREEN, y = - o.height - OFFSCREEN } },
+    offtoprightx = function(o) { return { x = fe.layout.width + OFFSCREEN, y = 0 } },
+    offtoprighty = function(o) { return { x = 0, y = - o.height - OFFSCREEN } },
+    offtopright = function(o) { return { x = fe.layout.width + OFFSCREEN, y = - o.height - OFFSCREEN } },
+    offbottomleftx = function(o) { return { x = - o.width - OFFSCREEN, y = 0 } },
+    offbottomlefty = function(o) { return { x = 0, y = fe.layout.height + OFFSCREEN } },
+    offbottomleft = function(o) { return { x = - o.width - OFFSCREEN, y = fe.layout.height + OFFSCREEN } },
+    offbottomrightx = function(o) { return { x = fe.layout.width + OFFSCREEN, y = 0 } },
+    offbottomrighty = function(o) { return { x = 0, y = fe.layout.height + OFFSCREEN } },
+    offbottomright = function(o) { return { x = fe.layout.width + OFFSCREEN, y = fe.layout.height + OFFSCREEN } }
+}
+
 // The core animation class which stores animation and provides some
 //  helper functions
 class AnimationCore
 {
-    version = 1.5;
-    build = 100;
     animations = [];
     
     //allows users to add a new animation
@@ -240,6 +320,7 @@ class AnimationCore
     //handle transitions for all animations
     function transition_callback(ttype, var, ttime)
     {
+        
         //we'll return true if there is any wait animations running
         local busy = false;
         foreach ( anim in animations )
@@ -357,7 +438,7 @@ class AnimationCore
             "bounce": function (t, b, c, d) { if (t < d / 2) return AnimationCore.penner["in"]["bounce"](t * 2, 0, c, d) * 0.5 + b; return AnimationCore.penner["out"]["bounce"](t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b; }
         }
     }
-    
+        
     //just for debugging purposes, so we know which 'when' we are talking about
     function when(w) {
         switch (w) {
@@ -403,6 +484,7 @@ class Animation
     
     constructor( userConfig = null )
     {
+        if ( DEBUG_ANIMATION ) print( "Loaded animation\n" );
         config = ( userConfig != null ) ? userConfig : {}
         
         //default animation config options
@@ -422,6 +504,7 @@ class Animation
     //called to initialize the animation (once the animation has been added to the animation table)
     function init()
     {
+        if ( DEBUG_ANIMATION ) print( "init animation\n" );
         //call the animations onInit functions
         onInit();
         if ( "onInit" in config == true ) config.onInit(this);
@@ -433,6 +516,7 @@ class Animation
     //called to start the animation
     function start()
     {
+        if ( DEBUG_ANIMATION ) print( "start animation\n" );
         if ( running )
         {
             //run the animations onRestart functions before we reset everything
@@ -455,13 +539,14 @@ class Animation
     
     //just an alias to start
     function restart() { 
+        if ( DEBUG_ANIMATION ) print( "restart animation\n" );
         start();
     }
     
     //called to update the animation
     function update( cancelled = false )
     {
-        
+        if ( DEBUG_ANIMATION ) print( "update animation\n" );
         //update time after delay has occured
         local delayedStart = AnimationCore.time() - startTime - config.delay;
         if (delayedStart >= 0)
@@ -492,11 +577,15 @@ class Animation
     }
     
     //called to cancel the animation
-    function cancel() { update(true); }
+    function cancel() { 
+        if ( DEBUG_ANIMATION ) print( "cancel animation\n" );
+        update(true);
+    }
     
     //called to stop the animation
     function stop()
     {
+        if ( DEBUG_ANIMATION ) print( "stop animation\n" );
         played++;
         
         if ( ( typeof(config.loop) == "integer" && played < config.loop ) || ( typeof(config.pulse) == "integer" && played < config.pulse ) )
@@ -523,6 +612,7 @@ class Animation
     
     function reverse()
     {
+        if ( DEBUG_ANIMATION ) print( "reverse animation\n" );
         reversed = !reversed;
         //run the animations onReverse functions
         if ( reversed )
@@ -585,6 +675,37 @@ class Animation
         return newValue;
     }
 
+    //evaluate for relative string values (+int, -int, /int, *int, int%)
+    //relTo is what the operators are relative to. i.e. +10 might relative to object.x
+    function evaluate(val, relTo)
+    {
+        if ( typeof(val) == "string" )
+        {
+            local first = val.slice(0, 1);
+            local last = val.slice(val.len() - 1, val.len());
+            local rest = ( last == "%"  ) ? val.slice(0, val.len() - 1) : val.slice(1, val.len());
+            switch ( first )
+            {
+                case "+":
+                    if ( last == "%" ) return relTo + ( relTo * ( rest.tofloat() / 100 ) );
+                    return relTo + rest.tofloat();
+                case "-":
+                    if ( last == "%" ) return relTo - ( relTo * ( rest.tofloat() / 100 ) );
+                    return relTo - rest.tofloat();
+                case "/":
+                    if ( last == "%" ) return relTo / ( relTo * ( rest.tofloat() / 100 ) );
+                    return relTo / rest.tofloat();
+                case "*":
+                    if ( last == "%" ) return relTo * ( relTo * ( rest.tofloat() / 100 ) );
+                    return relTo * rest.tofloat();
+                default:
+                    if ( last == "%" ) return relTo * ( rest.tofloat() / 100 );
+            }
+            return val.tofloat();
+        }
+        return val;
+    }
+    
     //provide a way to do arcs
     function quadbezier(p1x, p1y, cx, cy, p2x, p2y, t) {
         local c1x = p1x + (cx - p1x) * t;
@@ -604,9 +725,24 @@ animation <- AnimationCore();
 fe.add_transition_callback(animation, "transition_callback" );
 fe.add_ticks_callback(animation, "ticks_callback" );
 
-//add some prepared animations
-fe.load_module("animate/animations/property/property");
-fe.load_module("animate/animations/sprite/sprite");
-fe.load_module("animate/animations/particles/particles.nut");
+//load any animations in the animations folder
+local path = FeConfigDirectory + "modules/animate";
+local dir = DirectoryListing( path );
+foreach ( f in dir.results )
+{
+    try
+    {
+        local name = f.slice( path.len() + 1, f.len() );
+        local ext = f.slice( f.len() - 4 );
+        if ( ext == ".nut" )
+        {
+            if ( DEBUG_ANIMATION ) print( "Loading animation: " + name + "\n" );
+            fe.load_module( "animate/" + name );
+        }
+    }catch ( e )
+    {
+        print( "animate.nut: Error loading animation: " + f );
+    }
+}
 
 

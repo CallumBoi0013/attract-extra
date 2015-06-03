@@ -181,6 +181,10 @@ class PropertyAnimation extends Animation
     
     function getScale()
     {
+        if ( object.width <= 0 || origin.width <= 0 )
+        {
+            return 1.0;
+        }
         return object.width / origin.width;
     }
     
@@ -231,39 +235,9 @@ class PropertyAnimation extends Animation
         // object.height = newHeight;
         // object.rotation = rotation;
     }
-    
-    //evaluate for relative string values (+int, -int, /int, *int, int%)
-    function evaluate(val, relTo)
-    {
-        if ( typeof(val) == "string" )
-        {
-            local first = val.slice(0, 1);
-            local last = val.slice(val.len() - 1, val.len());
-            local rest = ( last == "%"  ) ? val.slice(0, val.len() - 1) : val.slice(1, val.len());
-            switch ( first )
-            {
-                case "+":
-                    if ( last == "%" ) return relTo + ( relTo * ( rest.tofloat() / 100 ) );
-                    return relTo + rest.tofloat();
-                case "-":
-                    if ( last == "%" ) return relTo - ( relTo * ( rest.tofloat() / 100 ) );
-                    return relTo - rest.tofloat();
-                case "/":
-                    if ( last == "%" ) return relTo / ( relTo * ( rest.tofloat() / 100 ) );
-                    return relTo / rest.tofloat();
-                case "*":
-                    if ( last == "%" ) return relTo * ( relTo * ( rest.tofloat() / 100 ) );
-                    return relTo * rest.tofloat();
-                default:
-                    if ( last == "%" ) return relTo * ( rest.tofloat() / 100 );
-            }
-            return val.tofloat();
-        }
-        return val;
-    }
-    
+        
     function tostring() { return "PropertyAnimation"; }
 }
 
 //load presets
-fe.load_module("animate/animations/property/presets");
+fe.load_module("animate/property/presets");

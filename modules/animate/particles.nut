@@ -60,7 +60,7 @@
 
 class ParticleAnimation extends Animation
 {
-    BASE_PATH = FeConfigDirectory + "modules/animate/animations/particles/";
+    BASE_PATH = FeConfigDirectory + "modules/animate/particles/";
     version = 1.5;
     build = 100;
     debug = false;
@@ -82,6 +82,7 @@ class ParticleAnimation extends Animation
     constructor( config = null )
     {
         base.constructor( config );
+        if ("surface" in config == false ) config.surface <- fe;
         if ("resources" in config == false) config.resources <- [ BASE_PATH + "images/default.png" ];
         //emitter variables
         if ("ppm" in config == false) config.ppm <- 60;
@@ -142,7 +143,7 @@ class ParticleAnimation extends Animation
         resources = [];
         foreach( r in config.resources )
         {
-            local img = fe.add_image( r, -1, -1, 1, 1 );
+            local img = config.surface.add_image( r, -1, -1, 1, 1 );
             img.x = -img.texture_width;
             img.y = -img.texture_height;
             img.width = img.texture_width;
@@ -168,8 +169,8 @@ class ParticleAnimation extends Animation
     }
     
     function setupDebug(config) {
-        debug_emitter = fe.add_image( BASE_PATH + "pixel.png", -1, -1, 1, 1);
-        //debug_emitter = fe.add_clone(debug_bounds);
+        debug_emitter = config.surface.add_image( BASE_PATH + "pixel.png", -1, -1, 1, 1);
+        //debug_emitter = config.surface.add_clone(debug_bounds);
         debug_emitter.set_rgb(255, 100, 0);
         debug_emitter.x = emitter.x - 3;
         debug_emitter.y = emitter.y - 3;
@@ -177,20 +178,22 @@ class ParticleAnimation extends Animation
         debug_emitter.height = emitter.height;
         debug_emitter.alpha = 125;
         
-        debug_angle_min = fe.add_clone(debug_emitter);
+        debug_angle_min = config.surface.add_clone(debug_emitter);
         debug_angle_min.set_rgb(255, 255, 0);
-        debug_angle_min.x = emitter.x;
-        debug_angle_min.y = emitter.y;
+        //debug_angle_min.x = emitter.x;
+        //debug_angle_min.y = emitter.y;
+        debug_angle_min.x = ( emitter.width != 0 ) ? emitter.x + ( emitter.width / 2 ) : 0;
+        debug_angle_min.y = ( emitter.height !=0 ) ? emitter.y + ( emitter.height / 2 ) : 0;
         debug_angle_min.width = 100;
         debug_angle_min.height = 2;
         debug_angle_min.rotation = config.angle[0];
         debug_angle_min.alpha = 255;
 
-        debug_angle_max = fe.add_clone(debug_angle_min);
+        debug_angle_max = config.surface.add_clone(debug_angle_min);
         debug_angle_max.set_rgb(255, 0, 0);
         debug_angle_max.rotation = config.angle[1];
         
-        debug_bounds = fe.add_image( BASE_PATH + "pixel.png", -1, -1, 1, 1);
+        debug_bounds = config.surface.add_image( BASE_PATH + "pixel.png", -1, -1, 1, 1);
         debug_bounds.set_rgb(255, 100, 0);
         debug_bounds.x = config.bound[0];
         debug_bounds.y = config.bound[1];
@@ -305,7 +308,7 @@ class Particle {
     currentSpeed = 0;       //store the current speed
     constructor(createdAt, resource, emitter, config) {
         this.createdAt = createdAt;
-        this.resource = fe.add_clone(resource);
+        this.resource = config.surface.add_clone(resource);
 
         this.x = this.startx = ParticleAnimation.random(emitter.x, emitter.x + emitter.width);
         this.y = this.starty = ParticleAnimation.random(emitter.y, emitter.y + emitter.height);
@@ -432,4 +435,4 @@ class Particle {
 }
 
 //load particle presets
-fe.load_module("animate/animations/particles/presets");
+fe.load_module("animate/particles/presets");

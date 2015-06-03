@@ -20,7 +20,7 @@
                                     //               - integer|true|false (def)
         pulse = false,              // optional     whether to pulse animation (play in reverse at end)
                                     //               - integer|true|false (def)
-        restart = true,             // optional     whether the animation should restart if it is already running and should run again
+        restart = true,             // optional     whether the animation should restart from the beginning if it is already running
                                     //               - true (def)|false
         tween = Tween.Linear        // optional     tween to use for animation
         easing = Easing.Out         // optional     easing to use for animation
@@ -45,7 +45,7 @@
 */    
 class SpriteAnimation extends Animation
 {
-    BASE_PATH = FeConfigDirectory + "modules/animate/animations/sprite/";
+    BASE_PATH = FeConfigDirectory + "modules/animate/sprite/";
     version = 1.5;
     build = 100;
     mOffset = 0;                    //current texture mOffset, or array index for a frame array
@@ -69,7 +69,16 @@ class SpriteAnimation extends Animation
         
         //initialize object and sprite size
         this.object = object;
-        if ( config.mask ) object.fix_masked_image();
+        
+        try
+        {
+            local f = file( object.file_name, "r" );
+            if ( config.mask ) object.fix_masked_image();
+        } catch ( e )
+        {
+            print("animate.nut: sprite.nut: Error reading file " + object.file_name + ". Make sure the image is valid\n");
+        }
+        
         object.subimg_width = config.width;
         object.subimg_height = config.height;
         frame(config.frame);
@@ -78,7 +87,7 @@ class SpriteAnimation extends Animation
     
     function onStart() {
         //??WHY WON'T IT RESTART LIKE PROPERTY ANIMS????
-        ::print("START WAS CALLED\n");
+        //::print("START WAS CALLED\n");
         started = 0;
         object.subimg_width = config.width;
         object.subimg_height = config.height;
@@ -211,4 +220,4 @@ class SpriteAnimation extends Animation
 }
 
 //load presets
-fe.load_module("animate/animations/sprite/presets");
+fe.load_module("animate/sprite/presets");
