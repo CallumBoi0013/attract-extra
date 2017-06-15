@@ -72,7 +72,7 @@ function genre( offset) {
       "platformer": [ "platformer", "platform" ],
       "puzzle": [ "puzzle" ],
       "racing": [ "racing", "driving" ],
-      "rpg": [ "rpg", "role playing", "role playing game" ],
+      "rpg": [ "rpg", "role playing", "role-playing", "role playing game" ],
       "shooter": [ "shooter", "shooter scrolling", "shmup" ],
       "sports": [ "sports", "boxing", "golf", "baseball", "football", "soccer" ],
       "strategy": [ "strategy"]
