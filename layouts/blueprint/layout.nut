@@ -14,8 +14,8 @@
         https://www.fontsquirrel.com/fonts/bebas-neue
 ***************************************/
 class UserConfig {
-    </ label="Layout", help="The layout to use", options="16x10,10x16", order=1 />
-    user_layout="16x10";
+    </ label="Layout", help="The layout to use", options="Default", order=1 />
+    user_layout="Default";
     </ label="Select Style", help="The style for the select screen", options="List", order=2 />
     user_style="List";
     </ label="Color Theme", help="The color theme to use", options="red,blue,green,purple,orange", order=3 />

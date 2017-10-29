@@ -2,16 +2,15 @@ local flw = fe.layout.width
 local flh = fe.layout.height
 //fe.layout.preserve_aspect_ratio = true
 
-//4x3 - 640×480, 800×600, 960×720, 1024×768, 1280×960, 1400×1050, 1440×1080 , 1600×1200, 1856×1392, 1920×1440, and 2048×1536
-//16x10 - 1280×800, 1440×900, 1680×1050, 1920×1200 and 2560×1600
-//16x9 -  1024×576, 1152×648, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440 and 3840×2160
+//4x3 - 640ï¿½480, 800ï¿½600, 960ï¿½720, 1024ï¿½768, 1280ï¿½960, 1400ï¿½1050, 1440ï¿½1080 , 1600ï¿½1200, 1856ï¿½1392, 1920ï¿½1440, and 2048ï¿½1536
+//16x10 - 1280ï¿½800, 1440ï¿½900, 1680ï¿½1050, 1920ï¿½1200 and 2560ï¿½1600
+//16x9 -  1024ï¿½576, 1152ï¿½648, 1280ï¿½720, 1366ï¿½768, 1600ï¿½900, 1920ï¿½1080, 2560ï¿½1440 and 3840ï¿½2160
 
 ::config <- {
     bg = {
-        "16x10": { x = 0, y = 0, width = flw, height = flh },
-        "16x9": { x = 0, y = 0, width = flw, height = flh },
+        "Default": { x = 0, y = 0, width = flw, height = flh }
     },
-    "16x10": {
+    "Default": {
         background = {
             x = 0, y = 0, width = flw, height = flh,
             red = themes[theme].bg_1.red, green = themes[theme].bg_1.green, blue = themes[theme].bg_1.blue, alpha = themes[theme].bg_1.alpha,
