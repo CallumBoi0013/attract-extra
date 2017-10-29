@@ -34,17 +34,29 @@ class UserConfig {
     user_info_six="[Players] [Category]";
     </ label="Info 7", help="Bottom Right", order=10 />
     user_info_seven="[FormattedPlayedTime]";
-    </ label="Side Art", help="Art shown to the side on the selection screen", options="wheel,flyer,marquee,snap,logo,box,fanart", order=11 />
+    </ label="Side Art", help="Art shown to the side on the selection screen", options="wheel,flyer,marquee,snap,logo,box,fanart,none", order=11 />
     user_side_art="wheel";
-    </ label="Fan Art", help="Art shown behind the selection screen", options="wheel,flyer,marquee,snap,logo,box,fanart", order=12 />
-    user_fan_art="fanart";
-    </ label="Search Key", help="Choose the key to initiate a search", options="custom1,custom2,custom3,custom4,custom5,custom6,up,down,left,right", order=14 />
-    user_search_key="custom1";
-    </ label="Search Results", help="Choose the search method", options="show_results,next_match", order=15 />
-    user_search_method="show_results";
-    </ label="Attract Mode", help="Fade menu to attract mode after a delay", options="Yes,No", order=16 />
+    </ label="Background Art", help="Art shown behind the selection screen", options="wheel,flyer,marquee,snap,logo,box,fanart,none", order=12 />
+    user_bg_art="snap";
+    </ label="Background Preserve Art", help="Fit, Fill or Stretch the Background Art", options="fill,fit,stretch", order=13 />
+    user_bg_art_fit="fill";
+    </ label="Background Pan And Scan", help="Use PanAndScan on the Background Art", options="Yes,No", order=14 />
+    user_bg_pan_and_scan="No";
+    </ label="Attract Mode", help="Fade menu to attract mode after a delay", options="Yes,No", order=15 />
     user_attract_mode="Yes";
-    </ label="12hr Clock", help="Use a 12hr clock instead of 24h", options="Yes,No", order=17 />
+    </ label="Attract Mode Delay", help="Delay until Attract Mode starts (in secs)", options="5,10,30,60,300", order=16 />
+    user_attract_delay="10";
+    </ label="Attract Mode Art", help="Art shown when menu is hidden", options="wheel,flyer,marquee,snap,logo,box,fanart,none", order=17 />
+    user_attract_bg_art="snap";
+    </ label="Attract Mode Preserve Art", help="Fit, Fill or Stretch the Attract Mode Art", options="fill,fit,stretch", order=18 />
+    user_attract_fit="fill";
+    </ label="Attract Mode Pan And Scan", help="Use PanAndScan on the Attract Mode Art", options="Yes,No", order=19 />
+    user_attract_pan_and_scan="No";
+    </ label="Search Key", help="Choose the key to initiate a search", options="custom1,custom2,custom3,custom4,custom5,custom6,up,down,left,right", order=20 />
+    user_search_key="custom1";
+    </ label="Search Results", help="Choose the search method", options="show_results,next_match", order=21 />
+    user_search_method="show_results";
+    </ label="12hr Clock", help="Use a 12hr clock instead of 24h", options="Yes,No", order=22 />
     user_clock_12hours="Yes";
 }
 
@@ -137,31 +149,66 @@ fe.do_nut("config.nut")
 
 ///////////////////////////
 // Attract Surface
+// These objects are added directly to ::fe
 //////////////////////////
-
 //create objects and set their properties
-local artwork = fe.add_artwork("snap", -1, -1, 1, 1)
-    setProps(artwork, config[layout].artwork)
-    artwork.video_flags = Vid.NoAudio
+local attract_bg_art = null;
+if ( user_config["user_attract_mode"] == "Yes" && user_config["user_attract_bg_art"] != "none" ) {
+    if ( user_config["user_attract_pan_and_scan"] == "Yes" ) {
+        //PanAndScanArt
+        attract_bg_art = PanAndScanArt( user_config["user_attract_bg_art"], 0, 0, fe.layout.width, fe.layout.height );
+        attract_bg_art.set_fit_or_fill( user_config["user_attract_fit"] );  // fit, fill or stretch
+        attract_bg_art.set_anchor( ::Anchor.Center ); // Top, Left, Center, Centre, Right, Bottom
+        attract_bg_art.set_zoom(1.25, 0.00008)
+        attract_bg_art.set_animate(::AnimateType.HorizBounce, 0.07, 0.07)
+        attract_bg_art.set_randomize_on_transition(true)
+        attract_bg_art.set_start_scale(1.25)
+    } else {
+        //PreserveArt
+        attract_bg_art = PreserveArt( user_config["user_attract_bg_art"], 0, 0, fe.layout.width, fe.layout.height );
+        attract_bg_art.set_fit_or_fill( user_config["user_attract_fit"] );  // fit, fill or stretch
+        attract_bg_art.set_anchor( ::Anchor.Center ); // Top, Left, Center, Centre, Right, Bottom
+    }
+   // attract_bg_art.art.video_flags = Vid.NoAutoStart | Vid.NoAudio;
+    setProps( attract_bg_art.surface, config[layout].attract_bg_art );
+}
+
 ///////////////////////////
 // Main Surface
+// The user interface is added to its own surface
 //////////////////////////
 local main_surface = fe.add_surface(fe.layout.width, fe.layout.height)
 
-//use PanAndScanArt
-//PreserveArt
-local fan_art = PreserveArt( "fanart", 0, 0, fe.layout.width, fe.layout.height, main_surface );
-    //setProps(fan_art.surface, config[layout].fan_art)
-fan_art.set_fit_or_fill( "fill" );  // fit, fill or stretch
-fan_art.set_anchor( ::Anchor.Center ); // Top, Left, Center, Centre, Right, Bottom
-//fan_art.set_zoom(1.25, 0.00008)
-//fan_art.set_animate(::AnimateType.HorizBounce, 0.07, 0.07)
-//fan_art.set_randomize_on_transition(false)
-//fan_art.set_start_scale(1.25)
-
+//background underlay, prevents bleedthrough of Attract surface
 local background = main_surface.add_image("images/pixel.png", -1, -1, 1, 1)
-    setProps(background, config[layout].background)
+setProps(background, config[layout].background)
 
+//Background Art
+local bg_art = null;
+if ( user_config["user_bg_art"] != "none" ) {
+    if ( user_config["user_bg_pan_and_scan"] == "Yes" ) {
+        //PanAndScanArt
+        bg_art = PanAndScanArt( user_config["user_bg_art"], 0, 0, fe.layout.width, fe.layout.height, main_surface );
+        bg_art.set_fit_or_fill( user_config["user_bg_art_fit"] );  // fit, fill or stretch
+        bg_art.set_anchor( ::Anchor.Center ); // Top, Left, Center, Centre, Right, Bottom
+        bg_art.set_zoom(1.25, 0.00008)
+        bg_art.set_animate(::AnimateType.HorizBounce, 0.07, 0.07)
+        bg_art.set_randomize_on_transition(true)
+        bg_art.set_start_scale(1.25)
+    } else {
+        //PreserveArt
+        bg_art = PreserveArt( user_config["user_bg_art"], 0, 0, fe.layout.width, fe.layout.height, main_surface );
+        bg_art.set_fit_or_fill( user_config["user_bg_art_fit"] );  // fit, fill or stretch
+        bg_art.set_anchor( ::Anchor.Center ); // Top, Left, Center, Centre, Right, Bottom
+    }
+    setProps(bg_art.surface, config[layout].bg_art)
+}
+
+//background overlay, soften background art
+local bg_overlay = main_surface.add_image("images/pixel.png", -1, -1, 1, 1)
+setProps(bg_overlay, config[layout].bg_overlay);
+
+//fade overlays and info bar
 local fade_top = main_surface.add_image("images/fade-top.png", -1, -1, 1, 1)
     setProps(fade_top, config[layout].fade_top)
 local fade_bottom = main_surface.add_image("images/fade-bottom.png", -1, -1, 1, 1)
@@ -169,6 +216,7 @@ local fade_bottom = main_surface.add_image("images/fade-bottom.png", -1, -1, 1, 
 local infobar = main_surface.add_image("images/pixel.png", -1, -1, 1, 1)
     setProps(infobar, config[layout].infobar)
 
+//info text
 local info_line = main_surface.add_image("images/pixel.png", -1, -1, 1, 1)
     setProps(info_line, config[layout].info_line)
 local info_one = main_surface.add_text("", -1, -1, 1, 1)
@@ -188,8 +236,11 @@ local info_seven = main_surface.add_text("", -1, -1, 1, 1)
 
 local list = main_surface.add_listbox(-1, -1, 1, 1)
     setProps(list, config[layout].list)
-local side_art = main_surface.add_artwork("wheel", -1, -1, 1, 1)
-    setProps(side_art, config[layout].side_art)
+
+if ( user_config["user_side_art"] != "none" ) {
+    local side_art = main_surface.add_artwork(user_config["user_side_art"], -1, -1, 1, 1)
+        setProps(side_art, config[layout].side_art)
+}
 
 ///////////////////////////
 // Select Surface
@@ -320,19 +371,23 @@ local most = most_played()
 function on_transition( ttype, var, ttime) {
     if ( ttype == Transition.StartLayout || ttype == Transition.FromOldSelection || ttype == Transition.ToNewList ) {
         if ( user_config["user_attract_mode"] == "Yes" ) {
+            local attract_delay = user_config["user_attract_delay"].tointeger() * 1000;
+            //delayed animation to hide menu and show attract mode
             animation.add(PropertyAnimation( main_surface, { property = "alpha", start = 255, end = 255, when = When.Always }))
-            animation.add(PropertyAnimation( main_surface, { property = "alpha", start = 255, end = 0, delay = 7000, when = When.Always }))
+            animation.add(PropertyAnimation( main_surface, { property = "alpha", start = 255, end = 0, delay = attract_delay, when = When.Always }))
         }
 
         //update values
-        theme_values.last_time_reset = fe.layout.time
-        theme_values.played_time = fe.game_info(Info.PlayedTime)
-        print("played time: " + theme_values.played_time + "\n")
-        theme_values.formatted_played_time = played_time(fe.game_info(Info.PlayedTime))
+        try {
+            theme_values.last_time_reset = fe.layout.time
+            theme_values.played_time = fe.game_info(Info.PlayedTime)
+            theme_values.formatted_played_time = played_time(fe.game_info(Info.PlayedTime))
+
+            //we have to manually update artwork's dynamic file_name
+            side_art.file_name = fe.get_art(user_config["user_side_art"])
+            bg_art.art.file_name = fe.get_art(user_config["user_bg_art"])
+        } catch(e) {}
         
-        //we have to manually update artwork's dynamic file_name
-        side_art.file_name = fe.get_art(user_config["user_side_art"])
-        fan_art.art.file_name = fe.get_art(user_config["user_fan_art"])
         //flyer.file_name = fe.get_art(config[layout].flyer.art)
         //system_most_played_1.file_name = fe.get_art(config[layout].system_most_played_1.art, most[0].index)
         //system_most_played_2.file_name = fe.get_art(config[layout].system_most_played_2.art, most[1].index)

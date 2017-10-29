@@ -15,6 +15,10 @@ local flh = fe.layout.height
             x = 0, y = 0, width = flw, height = flh,
             red = themes[theme].bg_1.red, green = themes[theme].bg_1.green, blue = themes[theme].bg_1.blue, alpha = themes[theme].bg_1.alpha,
         },
+        bg_overlay = {
+            x = 0, y = 0, width = flw, height = flh,
+            red = 0, green = 0, blue = 0, alpha = 210,
+        },
         fade_top = {
             x = 0, y = 0, width = flw, height = per(25, flh),
             red = themes[theme].bg_2.red, green = themes[theme].bg_2.green, blue = themes[theme].bg_2.blue, alpha = themes[theme].bg_2.alpha,
@@ -34,10 +38,16 @@ local flh = fe.layout.height
             x = per(66,flw), y = per(59,flh), width = per(33, flw), height = per(40, flh),
             preserve_aspect_ratio = true
         },
+        attract_bg_art = {
+            x = 0, y = 0, width = flw, height = flh
+        },
         attract_title = {
             x = per(0.5,flw), y = per(0.5,flh), width = per(98, flw), height = per(7, flh),
             red = themes[theme].fg_2.red, green = themes[theme].fg_2.green, blue = themes[theme].fg_2.blue, alpha = themes[theme].fg_2.alpha,
             font = "BebasNeue Book", align = Align.Left
+        },
+        bg_art = {
+            x = 0, y = 0, width = flw, height = flh
         },
         fan_art = {
             x = 0, y = 0, width = flw, height = flh,
@@ -93,10 +103,6 @@ local flh = fe.layout.height
             x = per(50,flw), y = per(94,flh), width = per(48,flw), height = per(4, flh),
             red = themes[theme].fg_2.red, green = themes[theme].fg_2.green, blue = themes[theme].fg_2.blue, alpha = themes[theme].fg_2.alpha,
             font = "BebasNeue Book", align = Align.Right
-        },
-        artwork = {
-            art = "snap",
-            x = 0, y = 0, width = flw, height = flh,
         },
         flyer = {
             art = "flyer",
