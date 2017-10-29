@@ -443,6 +443,7 @@ function on_transition( ttype, var, ttime) {
 }
 
 //for debugging
+/*
 function on_signal(str) {
     //let the system select custom list catch the signals
     switch( str ) {
@@ -452,6 +453,7 @@ function on_signal(str) {
     }
     return false
 }
+*/
 
 //setup clock
 function on_tick(tick_time) {
