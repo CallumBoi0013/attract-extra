@@ -18,6 +18,8 @@
 // art.set_fit_or_fill( "fit" );  // fit, fill or stretch
 // art.set_anchor( ::Anchor.Bottom ); // Top, Left, Center, Centre, Right, Bottom
 //
+// History:
+// 1.1 - added corner anchors (TopLeft, TopRight, BottomLeft, BottomRight)
 
 ::Anchor <-
 {
@@ -27,11 +29,15 @@
     Center = "Center",
     Right = "Right",
     Bottom = "Bottom",
+    TopLeft = "TopLeft",
+    TopRight = "TopRight",
+    BottomLeft = "BottomLeft",
+    BottomRight = "BottomRight"
 }
 
 class PreserveArt
 {
-    VERSION = 1.0;
+    VERSION = 1.1;
     debug = false;
     surface = null;
     art = null;
@@ -202,6 +208,22 @@ class PreserveArt
                     break;
                 case ::Anchor.Bottom:
                     art.x = ( surface.width - art.width ) / 2;
+                    art.y = surface.height - art.height;
+                    break;
+                case ::Anchor.TopLeft:
+                    art.x = 0;
+                    art.y = 0;
+                    break;
+                case ::Anchor.TopRight:
+                    art.x = surface.width - art.width;
+                    art.y = 0;
+                    break;
+                case ::Anchor.BottomLeft:
+                    art.x = 0;
+                    art.y = surface.height - art.height;
+                    break;
+                case ::Anchor.BottomRight:
+                    art.x = surface.width - art.width;
                     art.y = surface.height - art.height;
                     break;
                 case ::Anchor.Center:
