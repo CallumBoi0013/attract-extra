@@ -6,9 +6,15 @@ SceneBuilder is an AttractMode module designed to simplify the layout coding pro
 * [How it works](#how)
 * [Scenebuilder Code](#code)
 * [Methods](#methods)
+* [Scenes](#scenes)
+* [Finding Objects](#find)
+* [Props](#props)
+* [States](#states)
+* [Events and Triggers](#events)
+* [Shaders and Shader Aliases](#shaders)
+* [Registering Custom Stuff](#register)
 
-
-<a name="why"></a>Why
+<a name="why">Why</a>
 -
 Much of the code in an AttractMode layout file spends time dealing with object creation, object positioning, object animations or multiple aspect configurations. Some of the more advanced layouts have custom functions or custom screen configurations. Unfortunately, everyone handles this process differently, which can make understanding and modifying a layout somewhat difficult.
 
@@ -16,7 +22,7 @@ SceneBuilder is my attempt to simplify layout code creation, so you can focus on
 
 Hopefully, you will be able to look at a SceneBuilder layout, and easily see the objects that are added, the scenes they are separated in, and what events and actions occur in the layout.
 
-How it Works
+<a name="how">How it Works</a>
 -
 ```
 ////////////////////////
@@ -38,7 +44,7 @@ Load module. Set layout options. Add scene. Add objects to scene.
 
 Easy.
 
-If the code there doesn't scare you, you can skip on to [SceneBuilder Methods](#methods). Otherwise, read on to understand the formatting.
+If the code there doesn't scare you, you can skip on to [Using SceneBuilder Methods](#methods). Otherwise, read on to understand the formatting.
 
 <a name="code">SceneBuilder Code</a>
 -
@@ -77,7 +83,7 @@ SceneBuilder.scene("secondary")
 Properties are a Squirrel "table", and don't have to be on a single line, you can split them on multiple lines to read them easier:
 
 ```
-    .text({
+    .add("text", {
         x = 0,
         y = 0,
         width = fe.layout.width,
@@ -89,17 +95,17 @@ Ideally, if you have a couple properties, you can include them in a single line,
 NOTE: Tables in Squirrel can be formatted in two ways, with **quotes and semi-colons**, or **no quotes and equal signs**. If you need spaces in your property names, you'll need to use quotes, otherwise it's up to you:
 
 ```
-    .text({
+    .add("text", {
         "x": 0,
         ...
     })
 
-    .text({
+    .add("text", {
         x = 0
     })
 ```
 
-Using SceneBuilder
+<a name="methods">Using SceneBuilder Methods</a>
 -
 Sounds great! SceneBuilder.*what*??
 
@@ -135,25 +141,40 @@ Even More!
 -
 SceneBuilder is more than just creating the objects in a layout:
 
-Scenes
+<a name="scenes">Scenes</a>
 -
 Rather than building one layout screen, we'll take advantage of surfaces as *scenes*. When you create a scene, it is added as a surface, which allows us to switch between or modify multiple surfaces individually. This means you can create multiple scenes and decide which one is shown at any given time.
 
-New and Improved Object Properties
+<a name="find">Finding Objects</a>
+-
+Some objects you create never need to be referenced again in your code. If they do, though, all that is needed is to include the **name** property when you add the object. You can then use the **.find(name)** and **.findRef(name)** to get either a reference to the SceneBuilder object or the AM Object reference:
+```
+SceneBuilder
+    .add("text", { name = "title", ... })
+
+//to access the AM object directly
+SceneBuilder.findRef("title").alpha = 0;
+
+//to access the SceneBuilder object to do things such as setting its state
+SceneBuilder.find("title").state("hide");
+
+```
+
+<a name="props">New and Improved Object Properties</a>
 -
 When setting object properties, you can use these custom properties as well for objects that support them:
 |Custom Properties|
-|-
-|`rgb = [ 0, 0, 0 ]`
-|`rgba = [ 0, 0, 0, 100 ]`
-|`bg_rgb = [ 0, 0, 0 ]`
-|`bg_rgba = [ 0, 0, 0, 100 ]`
-|`sel_rgb = [ 0, 0, 0 ]`
-|`sel_rgba = [ 0, 0, 0, 100 ]`
-|`selbg_rgb = [ 0, 0, 0 ]`
-|`selbg_rgba = [ 0, 0, 0, 100 ]`
+|:-|
+|`rgb = [ 0, 0, 0 ]`|
+|`rgba = [ 0, 0, 0, 100 ]`|
+|`bg_rgb = [ 0, 0, 0 ]`|
+|`bg_rgba = [ 0, 0, 0, 100 ]`|
+|`sel_rgb = [ 0, 0, 0 ]`|
+|`sel_rgba = [ 0, 0, 0, 100 ]`|
+|`selbg_rgb = [ 0, 0, 0 ]`|
+|`selbg_rgba = [ 0, 0, 0, 100 ]`|
 
-States
+<a name="states">States</a>
 -
 Many times you want to change some properties on an object when a certain state change has occured. By creating predefined states, we can easily switch between them at any given time.
 
@@ -174,7 +195,7 @@ When the 'event' occurs, you can call:
 SceneBuilder.find("logo").state("hide");
 ```
 
-Events and Triggers
+<a name="events">Events and Triggers</a>
 -
 Speaking of events, aren't you tired of writing random functions all over the place and tracking them down?
 
@@ -206,7 +227,8 @@ SceneBuilder.on("my-custom-event", function(props) {
 });
 ```
 
-**Shaders and Shader Aliases**
+<a name="shaders">Shaders and Shader Aliases</a>
+-
 Out of the box, SceneBuilder includes various shaders you can use and customize. To use a shader, simply pass its name as the shader property for your object:
 
 ```
@@ -233,7 +255,7 @@ This means you can create multiple aliases for a single shader with different pa
 
 NOTE: .shader() must be called before the shader name is referenced.
 
-Registering Custom Stuff
+<a name="register">Registering Custom Stuff</a>
 -
 
 **Objects**
