@@ -1,6 +1,14 @@
 ## CUSTOM IGNORES
 todo.txt
 archive/
+modules/SumatraPDF
+modules/animlist.nut
+modules/conveyor.nut
+modules/fade.nut
+modules/file.nut
+modules/pan-and-scan.nut
+modules/submenu.nut
+
 
 #################
 ## Eclipse
