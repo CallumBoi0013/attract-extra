@@ -80,30 +80,18 @@ class Animation {
         loops_delay_from = true,    //delay setting 'from' values until the loop delay finishes
         yoyo = false,               //bounce back and forth the 'from' and 'to' states
         reverse = false,            //reverse the animation
-        easing = "linear"           //easing style
-        easing_reverse = "linear"   //easing style when animation is reversed
-        interpolator = null
+        easing = "linear",           //easing style
+        easing_reverse = "linear",   //easing style when animation is reversed
+        interpolator = SmoothInterpolator()
     }
 
-    constructor(opts = {}) {
+    constructor(...) {
         GLOBALS.COUNT++;
-        this.callbacks = [];
-        this.states = [];
 
-        //set default values
-        defaults();
-        this.opts = merge_opts(this.opts, opts);
-
-        //sanitize some of the options
-        foreach( key, val in opts ) {
-            if ( key == "duration" || key == "delay" || key == "loopsDelay" )
-                opts[key] <- parse_time( val );
-            if ( key == "speed" )
-                opts[key] <- parse_speed( val );
-            //forcefully set target to save its current state
-            if ( key == "target" )
-                target( opts.target );
-        }
+        //set defaults
+        callbacks = [];
+        states = [];
+        defaults(vargv);
 
         //add callbacks
         fe.add_ticks_callback( this, "on_tick" );
@@ -112,6 +100,25 @@ class Animation {
         //initialize the animation
         init();
     }
+
+    //reset animation options to defaults
+    function defaults(params) {
+        opts = clone( default_config );
+        opts.name <- "anim" + GLOBALS.COUNT
+        //if opts are provided, merge them
+        if ( params.len() > 0 && params[0] == "table" ) {
+            opts = merge_opts(opts, vargv[0]);
+            //sanitize - initialize some option values
+            foreach( key, val in opts ) {
+                if ( key == "duration" || key == "delay" || key == "loopsDelay" )
+                    opts[key] <- parse_time( val );
+                if ( key == "speed" )
+                    opts[key] <- parse_speed( val );
+            }
+        }
+        return this;
+    }
+    
     
     //listen to AM ticks
     function on_tick(ttime) {
@@ -149,8 +156,10 @@ class Animation {
     function reverse( bool = true ) { opts.reverse = bool; return this; }
     function yoyo( bool = true ) { opts.yoyo = bool; return this; }
     function interpolator( i ) { opts.interpolator = i; return this; }
-
-    //NOT BEING USED YET!
+    function triggers( triggers ) { opts.triggers = triggers; return this; }
+    function then( then ) { opts.then = then; return this; }
+    
+    //NOT VERIFIED/WORKING YET!
     function default_state( state ) { default_state = state; return this; }
     function delay( length ) { opts.delay = parse_time( length ); return this; }
     function delay_from( bool ) { opts.delay_from = bool; return this; }
@@ -159,8 +168,6 @@ class Animation {
     function loops_delay( delay ) { opts.loops_delay = parse_time(delay); return this; }
     function loops_delay_from( bool ) { opts.loops_delay_from = bool; return this; }
     function speed( s ) { opts.speed = parse_speed( s ); return this; }
-    function then( then ) { opts.then = then; return this; }
-    function triggers( triggers ) { opts.triggers = triggers; return this; }
     function trigger_restart( restart ) { opts.trigger_restart = restart; return this; }
     function state( name, state ) { states[name] <- state; return this }
     function duration( d ) { opts.duration = parse_time( d ); return this; }
@@ -194,16 +201,7 @@ class Animation {
         return this;
     }
 
-    //reset animation to defaults
-    function defaults() {
-        opts = clone( default_config );
-        opts.name <- "anim" + GLOBALS.COUNT;
-        opts.interpolator = SmoothInterpolator();
-        return this;
-    }
-
     function init() {
-        GLOBALS.COUNT++;
         run_callback( "init", this );
     }
 
@@ -215,8 +213,7 @@ class Animation {
 
     //start the animation
     function start() {
-        if ( opts.from == null && opts.default_state in states ) default_from = true;
-        if ( opts.to == null && opts.default_state in states ) default_to = true;
+        //reverse from and to if reverse is enabled
         if ( opts.reverse ) {
             _from = opts.to;
             _to = opts.from;
@@ -225,9 +222,11 @@ class Animation {
             _to = opts.to;
         }
 
+        //update times
         last_update = ::clock() * 1000;
         elapsed = 0;
         tick = 0;
+
         running = true;
         run_callback( "start", this );
     }
@@ -256,19 +255,23 @@ class Animation {
         play();
     }
 
+    //stop animation (depending on options)
     function stop() {
         if ( opts.yoyo ) {
+            //flip yoyoing, reverse animation
             yoyoing = !yoyoing;
             opts.reverse = !opts.reverse;
         }
         if ( yoyoing ) {
+            //first half of 'yoyo' finished, restart to play second half
             restart();
         } else {
-            if ( opts.loops > 0 && play_count < opts.loops ) {
+            if ( opts.loops == -1 || ( opts.loops > 0 && play_count < opts.loops ) ) {
                 //play loop
                 play_count++;
                 restart();
             } else {
+                //finished animation
                 running = false;
                 run_callback( "stop", this );
                 play_count = 0;
@@ -276,7 +279,7 @@ class Animation {
                 if ( "then" in opts && opts.then != null )
                     if ( typeof(opts.then) == "function" ) {
                         opts.then(this);
-                        //don't keep running it
+                        //don't keep running it .then()
                         opts.then = null;
                     }
             }
@@ -312,7 +315,8 @@ class Animation {
     //print messages in debug mode
     function print(msg) {
         if ( GLOBALS.DEBUG || debug ) {
-            ::print( "animate2: " + opts.name + " : " + msg + "\n" );
+            // + opts.name
+            ::print( "animate2: " + " : " + msg + "\n" );
         }
     }
 
@@ -398,3 +402,4 @@ class Animation {
 }
 
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/property.nut");
+fe.do_nut(FeConfigDirectory + "modules/animate2/animations/timeline.nut");

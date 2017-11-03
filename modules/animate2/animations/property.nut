@@ -1,46 +1,45 @@
 class PropertyAnimation extends Animation {
-    supported = [ "x", "y", "width", "height", "rotation", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "selbg_red", "selbg_green", "selbg_blue", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize" ];
-    unique_keys = null;
-    x = 0;
-    y = 0;
-    width = null;
-    height = null;
+    supported = [ "x", "y", "width", "height", "scale", "rotation", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "selbg_red", "selbg_green", "selbg_blue", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize" ];
+    origin = null;
     scale = 1.0;
 
-    constructor( param1 = null, param2 = null ) {
-        base.constructor();
+    function defaults(vargv) {
+        base.defaults(vargv);
 
-        unique_keys = [];
+        //set some additional default values
         opts = merge_opts({
             key = null,
-            center_origin = true
+            scale = 1.0,
+            center_scale = false,
+            center_rotation = false
         }, opts);
 
-        if ( param1 != null && typeof(param1) == "table" ) {
-            //param1 is a opts, update values opts.from defaults
-            opts = merge_opts( opts, param1 );
-        } else {
-            if ( param2 != null && typeof(param2) == "table" ) {
-                //param2 is a opts
-                opts = merge_opts( opts, param2 );
-            }
-            //param1 is the target
-            if ( param1 != null ) target(param1);
-        }
+        //if target was specified, set the target
+        if ( vargv.len() > 0 )
+            target(vargv[0]);
+        else if ( "target" in opts && opts.target != null )
+            target(opts.target);
+        return this;
     }
 
     function target( ref ) {
+        //store objects origin values
+        origin = {
+            x = ref.x,
+            y = ref.y,
+            width = ref.width,
+            height = ref.height,
+            origin_x = ref.origin_x,
+            origin_y = ref.origin_y,
+            scale = 1.0
+        }
         opts.target <- ref;
-        this.x = ref.x;
-        this.y = ref.y;
-        this.width = ref.width;
-        this.height = ref.height;
-        this.scale = 1.0;
         return this;
     }
 
     function key( key ) {
         opts.key <- key;
+        //set default from and to to the current value 
         if ( supported.find(key) != null ) {
             if ( key == "scale" )
                 opts.from = opts.to = 1;
@@ -52,48 +51,24 @@ class PropertyAnimation extends Animation {
         save_state( opts.target, "start");
         return this;
     }
-
-    function init() {
-        base.init();
-    }
-
-    function play() {
-        base.play();
-    }
-
-    function start() {
-        get_unique_keys();
-        base.start();
-    }
+    
+    function center_rotation(bool = true) { opts.center_rotation = bool; return this; }
+    function center_scale(bool = true) { opts.center_scale = bool; return this; }
 
     function update() {
         base.update();
+
+        //get current value and progress
         local value = ( opts.key == "scale" ) ? scale : opts.target[opts.key];
-        local progress = ( value - opts.to ) / ( opts.to - opts.from );
+        progress = ( value - opts.to ) / ( opts.to - opts.from );
+
         if ( opts.key == "rotation" ) {
             _from = opts.target[opts.key] = opts.interpolator.interpolate(_from, _to, progress);
-            if ( value != 0 ) {
-                if ( opts.center_origin ) {
-                    opts.target.x = this.x + ( ( width * scale ) / 2 );
-                    opts.target.y = this.y + ( ( height * scale ) / 2 );
-                    opts.target.origin_x = ( width * scale ) - ( width / 2 ) ;
-                    opts.target.origin_y = ( height * scale ) - (height / 2 );
-                }
-            } else {
-                opts.target.x = this.x;
-                opts.target.y = this.y;
-            }
+            set_rotation(_from);
         } else if ( opts.key == "scale" ) {
             print("scale from/to: " + _from + " " + _to );
-            _from = scale = opts.interpolator.interpolate(_from, _to, progress);
-            if ( value != 1 ) {
-                set_scale(scale);
-            } else {
-                opts.target.x = this.x;
-                opts.target.y = this.y;
-                opts.target.width = this.width;
-                opts.target.height = this.height;
-            }
+            _from = opts.interpolator.interpolate(_from, _to, progress);
+            set_scale(_from);
         } else if ( supported.find != null ) {
             _from = opts.target[opts.key] = opts.interpolator.interpolate(_from, _to, progress);
         } else {
@@ -118,11 +93,21 @@ class PropertyAnimation extends Animation {
             }
     }
 
-    function cancel() {
-        //immediately set state to the 'to' values on cancel
-        local cancel_state = ( opts.to != null ) ? opts.to : states[opts.default_state];
-        set_state( cancel_state );
+    function cancel( state = "stop") {
         base.cancel();
+        if ( state == "table" ) {
+            set_state( state );
+        } else if ( state == "string" ) {
+            if ( state == "start" ) {
+                set_state( origin );
+            } else if ( state == "stop" ) {
+                local cancel_state = {}
+                cancel_state[opts.key] <- opts.to;
+                set_state( cancel_state );
+            } else if ( "state" in state ) {
+                set_state( states[state] );
+            }
+        }
     }
     
     //set the animation state
@@ -136,16 +121,25 @@ class PropertyAnimation extends Animation {
         return this;
     }
 
-    function set_scale( s ) {
-        opts.target.width = width * s;
-        opts.target.height = height * s;
-        if ( opts.center_origin ) {
-            opts.target.x = this.x + ( ( width * s ) / 2 );
-            opts.target.y = this.y + ( ( height * s ) / 2 );
-            opts.target.origin_x = ( width * s ) - ( width / 2 ) ;
-            opts.target.origin_y = ( height * s ) - (height / 2 );
+    function set_rotation( r ) {
+        if ( opts.center_rotation ) {
+            opts.target.x = origin.x + ( ( origin.width * scale ) / 2 );
+            opts.target.y = origin.y + ( ( origin.height * scale ) / 2 );
+            opts.target.origin_x = ( origin.width * scale ) - ( origin.width / 2 ) ;
+            opts.target.origin_y = ( origin.height * scale ) - ( origin.height / 2 );
         }
+    }
+
+    function set_scale( s ) {
         scale = s;
+        opts.target.width = origin.width * s;
+        opts.target.height = origin.height * s;
+        if ( opts.center_scale ) {
+            opts.target.x = origin.x + ( ( origin.width * s ) / 2 );
+            opts.target.y = origin.y + ( ( origin.height * s ) / 2 );
+            opts.target.origin_x = ( origin.width * s ) - ( origin.width / 2 ) ;
+            opts.target.origin_y = ( origin.height * s ) - ( origin.height / 2 );
+        }
     }
 
     //find unique keys that will be animated in the 'opts.from' and 'opts.to' states
