@@ -3,8 +3,8 @@ class PropertyAnimation extends Animation {
     origin = null;
     scale = 1.0;
 
-    function defaults(vargv) {
-        base.defaults(vargv);
+    function defaults(params) {
+        base.defaults(params);
 
         //set some additional default values
         opts = merge_opts({
@@ -15,8 +15,8 @@ class PropertyAnimation extends Animation {
         }, opts);
 
         //if target was specified, set the target
-        if ( vargv.len() > 0 )
-            target(vargv[0]);
+        if ( params.len() > 0 )
+            target(params[0]);
         else if ( "target" in opts && opts.target != null )
             target(opts.target);
         return this;
@@ -57,20 +57,14 @@ class PropertyAnimation extends Animation {
 
     function update() {
         base.update();
-
-        //get current value and progress
-        local value = ( opts.key == "scale" ) ? scale : opts.target[opts.key];
-        progress = ( value - opts.to ) / ( opts.to - opts.from );
-
         if ( opts.key == "rotation" ) {
-            _from = opts.target[opts.key] = opts.interpolator.interpolate(_from, _to, progress);
-            set_rotation(_from);
+            current = opts.target[opts.key] = opts.interpolator.interpolate(_from, _to, progress);
+            set_rotation(current);
         } else if ( opts.key == "scale" ) {
-            print("scale from/to: " + _from + " " + _to );
-            _from = opts.interpolator.interpolate(_from, _to, progress);
-            set_scale(_from);
+            current = opts.interpolator.interpolate(_from, _to, progress);
+            set_scale(current);
         } else if ( supported.find != null ) {
-            _from = opts.target[opts.key] = opts.interpolator.interpolate(_from, _to, progress);
+            current = opts.target[opts.key] = opts.interpolator.interpolate(_from, _to, progress);
         } else {
             print("unsupported key: " + opts.key + "\n");
         }

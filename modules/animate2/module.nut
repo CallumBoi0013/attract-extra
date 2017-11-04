@@ -14,6 +14,10 @@
 ////////////////////////////////////
 
 class Interpolator {
+    constructor(arg = null) {
+
+    }
+
     function interpolate( from, to, progress ) {
 
     }
@@ -21,19 +25,18 @@ class Interpolator {
     //print messages in debug mode
     function print(msg) {
         if ( Animation.GLOBALS.DEBUG ) {
-            ::print( msg + "\n" );
+            ::print( "Interpolator: " + msg + "\n" );
         }
     }
 }
 
-//fe.do_nut(FeConfigDirectory + "modules/animate2/interpolators/cubicbezier.nut");
-fe.do_nut(FeConfigDirectory + "modules/animate2/interpolators/smooth.nut");
-
+fe.do_nut(FeConfigDirectory + "modules/animate2/interpolators/cubicbezier.nut");
+fe.do_nut(FeConfigDirectory + "modules/animate2/interpolators/penner.nut");
 
 class Animation {
     static VERSION = 2.0;
     GLOBALS = {
-        DEBUG = true,
+        DEBUG = false,
         COUNT = 0
     }
 
@@ -46,15 +49,14 @@ class Animation {
 
     debug = false;                 //is debug enabled for this animation
     opts = null;                   //the current animation options
-    _from = 0;                     //current from value
-    _to = 0;                       //current to value
+    current = 0;                   //current value
+    _from = 0;                     //from value, based on animation options
+    _to = 0;                       //to value, based on animation options
 
     states = null;                 //predefined states
     callbacks = null;              //registered callbacks for animation events
     time_unit = "ms";              //default time unit for duration or delay - a number or string with no time unit is specified
     yoyoing = false;               //is animation yoyoing
-    default_from = true;           //is the animation using the default state for 'from'
-    default_to = true;             //is the animation using the default state for 'to'
 
     //predefined speed aliases
     speeds = {
@@ -62,8 +64,7 @@ class Animation {
         "normal": 1.0,
         "double": 2.0
     }
-
-
+    
     default_config = {
         target = null,              //target object to animate
         from = null,                //state (values) we will animate from
@@ -72,7 +73,9 @@ class Animation {
         trigger_restart = true,     //when a trigger occurs, the animation is restarted
         default_state = "start"     //default state if no 'from' or 'to' is specified
         then = null,                //a function or state that is applied at the end of the animation
-        speed = "normal",           //speed multiplier of animation
+        duration = 0,               //duration of animation (if timed)
+        speed = 1,                  //speed multiplier of animation
+        smoothing = 0.033,          //smoothing ( magnifies speed )
         delay = 0,                  //delay before animation begins
         delay_from = true,          //delay setting the 'from' values until the animation begins
         loops = 0,                  //loop count (-1 is infinite)
@@ -80,9 +83,7 @@ class Animation {
         loops_delay_from = true,    //delay setting 'from' values until the loop delay finishes
         yoyo = false,               //bounce back and forth the 'from' and 'to' states
         reverse = false,            //reverse the animation
-        easing = "linear",           //easing style
-        easing_reverse = "linear",   //easing style when animation is reversed
-        interpolator = SmoothInterpolator()
+        interpolator = CubicBezierInterpolator("ease")
     }
 
     constructor(...) {
@@ -123,13 +124,21 @@ class Animation {
     //listen to AM ticks
     function on_tick(ttime) {
         if ( running ) {
-            if ( _from != _to ) {
+            progress = clamp(progress, 0, 1);
+            if ( progress == 1 ) {
+                stop();
+            } else {
                 tick = ::clock() * 1000 - last_update;
                 elapsed += tick;
                 last_update = ::clock() * 1000;
+                //update animation progress
+                if ( opts.duration <= 0 ) {
+                    progress += opts.smoothing * opts.speed;
+                } else {
+                    //use time
+                    print("duration was given, but timed animation not yet implemented");
+                }
                 update();
-            } else {
-                stop();
             }
         }
     }
@@ -158,16 +167,15 @@ class Animation {
     function interpolator( i ) { opts.interpolator = i; return this; }
     function triggers( triggers ) { opts.triggers = triggers; return this; }
     function then( then ) { opts.then = then; return this; }
+    function speed( s ) { opts.speed = parse_speed( s ); return this; }
+    function smoothing( s ) { opts.smoothing = s; return this; }
     
     //NOT VERIFIED/WORKING YET!
     function default_state( state ) { default_state = state; return this; }
     function delay( length ) { opts.delay = parse_time( length ); return this; }
     function delay_from( bool ) { opts.delay_from = bool; return this; }
-    function easing( e ) { opts.easing = e; return this; }
-    function easing_reverse( e ) { opts.easing_reverse = e; return this; }
     function loops_delay( delay ) { opts.loops_delay = parse_time(delay); return this; }
     function loops_delay_from( bool ) { opts.loops_delay_from = bool; return this; }
-    function speed( s ) { opts.speed = parse_speed( s ); return this; }
     function trigger_restart( restart ) { opts.trigger_restart = restart; return this; }
     function state( name, state ) { states[name] <- state; return this }
     function duration( d ) { opts.duration = parse_time( d ); return this; }
@@ -215,10 +223,10 @@ class Animation {
     function start() {
         //reverse from and to if reverse is enabled
         if ( opts.reverse ) {
-            _from = opts.to;
+            current = _from = opts.to;
             _to = opts.from;
         } else {
-            _from = opts.from;
+            current = _from = opts.from;
             _to = opts.to;
         }
 
@@ -226,6 +234,7 @@ class Animation {
         last_update = ::clock() * 1000;
         elapsed = 0;
         tick = 0;
+        progress = 0;
 
         running = true;
         run_callback( "start", this );
@@ -235,6 +244,13 @@ class Animation {
     function update() {
         print( "progress: " + progress + " elapsed: " + elapsed + " tick: " + tick + " last_update: " + last_update + " play_count: " + play_count + " loops: " + opts.loops + " reverse: " + opts.reverse + " yoyoing: " + yoyoing );
         run_callback( "update", this );
+    }
+
+    //pause animation at specified step (progress)
+    function step(progress) {
+        if ( running ) pause();
+        this.progress = clamp(progress, 0, 1);
+        update();
     }
 
     //pause the animation
@@ -282,10 +298,9 @@ class Animation {
                         //don't keep running it .then()
                         opts.then = null;
                     }
+                print( "DONE. elapsed: " + elapsed + " tick: " + tick + " last_update: " + last_update + " play_count: " + play_count + " loops: " + opts.loops + " reverse: " + opts.reverse + " yoyoing: " + yoyoing );
             }
         }
-
-        print( "DONE. elapsed: " + elapsed + " tick: " + tick + " last_update: " + last_update + " play_count: " + play_count + " loops: " + opts.loops + " reverse: " + opts.reverse + " yoyoing: " + yoyoing );
     }
 
     //cancel the animation
@@ -315,7 +330,6 @@ class Animation {
     //print messages in debug mode
     function print(msg) {
         if ( GLOBALS.DEBUG || debug ) {
-            // + opts.name
             ::print( "animate2: " + " : " + msg + "\n" );
         }
     }
