@@ -107,20 +107,33 @@ class Animation {
         opts = clone( default_config );
         opts.name <- "anim" + GLOBALS.COUNT
         //if opts are provided, merge them
-        if ( params.len() > 0 && params[0] == "table" ) {
-            opts = merge_opts(opts, vargv[0]);
-            //sanitize - initialize some option values
-            foreach( key, val in opts ) {
-                if ( key == "duration" || key == "delay" || key == "loopsDelay" )
-                    opts[key] <- parse_time( val );
-                if ( key == "speed" )
-                    opts[key] <- parse_speed( val );
+        if ( params.len() > 0 ) {
+            if ( typeof(params[0]) == "table" ) {
+                opts = merge_opts(opts, params[0]);
+                //set the target if its in the config
+                if ( "target" in opts && opts.target != null )
+                    target(opts.target);
+                //sanitize - initialize some option values
+                foreach( key, val in opts ) {
+                    if ( key == "duration" || key == "delay" || key == "loopsDelay" )
+                        opts[key] <- parse_time( val );
+                    if ( key == "speed" )
+                        opts[key] <- parse_speed( val );
+                }
+            } else if ( typeof(params[0]) != "array" && typeof(params[0]) != "string" ) {
+                //assume this is a target object instance
+                target(params[0]);
             }
         }
         return this;
     }
     
-    
+    //set the target object for the animation
+    function target( ref ) {
+        opts.target <- ref;
+        return this;
+    }
+
     //listen to AM ticks
     function on_tick(ttime) {
         if ( running ) {

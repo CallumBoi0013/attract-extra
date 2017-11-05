@@ -4,28 +4,20 @@ class PropertyAnimation extends Animation {
 
     function defaults(params) {
         base.defaults(params);
-
         //set some additional default values
         opts = merge_opts({
             key = null,
-            scale = 1.0,
             center_scale = false,
             center_rotation = false
         }, opts);
-
-        //if target was specified, set the target
-        if ( params.len() > 0 )
-            target(params[0]);
-        else if ( "target" in opts && opts.target != null )
-            target(opts.target);
         return this;
     }
 
     function target( ref ) {
-        opts.target <- ref;
+        base.target( ref );
         //store objects origin values
         save_state( "origin", collect_state(ref) );
-        states["origin"].scale <- opts.scale;
+        states["origin"].scale <- 1.0;
         return this;
     }
 
