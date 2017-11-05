@@ -431,4 +431,5 @@ class Animation {
 }
 
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/property.nut");
+fe.do_nut(FeConfigDirectory + "modules/animate2/animations/sprite.nut");
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/timeline.nut");
