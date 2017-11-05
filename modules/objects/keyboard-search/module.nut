@@ -22,6 +22,7 @@ class KeyboardSearch {
     config = {
         search_key = "custom1",
         mode = "show_results",
+        retain = false,
         key_delay = 100,
         repeat_key_delay = 250,
         bg = ::fe.module_dir + "/images/pixel.png",
@@ -52,6 +53,7 @@ class KeyboardSearch {
     function get_text() { return text }
     function search_key(key) { this.config.search_key = key; return this; }
     function mode(mode) { this.config.mode = mode; return this; }
+    function retain(retain) { this.config.retain = retain; return this; }
     function key_delay(delay) { this.config.key_delay = delay; return this; }
     function repeat_key_delay(delay) { this.config.repeat_key_delay = delay; return this; }
     function set_pos(x, y, width, height) { this.surface.set_pos( x, y, width, height); return this; }
@@ -267,7 +269,7 @@ class KeyboardSearch {
     function toggle() {
         surface.alpha = ( surface.alpha == 0 ) ? 255: 0
         //clear text when shown
-        if ( visible() ) clear()
+        if ( visible() && !config.retain ) clear()
         print("toggle keyboard " + visible() )
     }
     
@@ -303,7 +305,7 @@ class KeyboardSearch {
     }
     
     function on_tick( ttime )
-    {
+    {  
         //check for additional keys
         /*
         if ( visible() && ttime - last_key_check > config.key_delay )
