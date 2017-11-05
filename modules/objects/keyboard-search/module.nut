@@ -17,7 +17,7 @@ class KeyboardSearch {
     last_key_check = 0
     last_key = null
     //map of supported values and their filename equivalent
-    key_names = { "a": "a", "b": "b", "c": "c", "d": "d", "e": "e", "f": "f", "g": "g", "h": "h", "i": "i", "j": "j", "k": "k", "l": "l", "m": "m", "n": "n", "o": "o", "p": "p", "q": "q", "r": "r", "s": "s", "t": "t", "u": "u", "v": "v", "w": "w", "x": "x", "y": "y", "z": "z", "1": "Num1", "2": "Num2", "3": "Num3", "4": "Num4", "5": "Num5", "6": "Num6", "7": "Num7", "8": "Num8", "9": "Num9", "0": "Num0", "<": "Backspace", " ": "Space", "-": "Clear" }
+    key_names = { "a": "a", "b": "b", "c": "c", "d": "d", "e": "e", "f": "f", "g": "g", "h": "h", "i": "i", "j": "j", "k": "k", "l": "l", "m": "m", "n": "n", "o": "o", "p": "p", "q": "q", "r": "r", "s": "s", "t": "t", "u": "u", "v": "v", "w": "w", "x": "x", "y": "y", "z": "z", "1": "Num1", "2": "Num2", "3": "Num3", "4": "Num4", "5": "Num5", "6": "Num6", "7": "Num7", "8": "Num8", "9": "Num9", "0": "Num0", "<": "Backspace", " ": "Space", "-": "Clear", "~": "Done" }
     
     config = {
         search_key = "custom1",
@@ -38,7 +38,7 @@ class KeyboardSearch {
             folder = ::fe.module_dir + "/images",
             font = "Arial",
             pos = [ 0.1, 0.4, 0.8, 0.5 ],
-            rows = [ "1234567890", "abcdefghi", "jklmnopqr", "stuvwxyz", "- <" ],
+            rows = [ "1234567890", "abcdefghi", "jklmnopqr", "stuvwxyz", "- <~" ],
             rgba = [ 255, 255, 255, 200 ],
             rgba_selected = [ 20, 150, 20, 255 ],
             selected = [ 0, 0 ]
@@ -70,19 +70,19 @@ class KeyboardSearch {
     function preset(name) {
         switch(name) {
             case "arcade":
-                keys_rows(["abcdefghijklmnopqrstuvwxyz1234567890- <"])
+                keys_rows(["abcdefghijklmnopqrstuvwxyz1234567890- <~"])
                 text_pos( [ 0, 0, 1, 0.5 ])
                 keys_pos([ 0, 0.5, 1, 0.5])
                 set_pos( 0, fe.layout.height * 0.8, fe.layout.width, fe.layout.height * 0.4 )
                 break
             case "qwerty":
-                keys_rows([ "1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm", "- <" ])
+                keys_rows([ "1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm", "- <~" ])
                 set_pos( 0, 0, fe.layout.width / 2, fe.layout.height)
                 text_pos( [ 0, 0, 1, 0.2 ])
                 keys_pos([ 0, 0.2, 1, 0.8])
                 break
             case "alpha":
-                keys_rows(["1234567890", "abcdefghi", "jklmnopqr", "stuvwxyz", "- <"])
+                keys_rows(["1234567890", "abcdefghi", "jklmnopqr", "stuvwxyz", "- <~"])
                 break
         }
         return this
@@ -124,7 +124,7 @@ class KeyboardSearch {
                 keys[ key.tolower() ] <- surface.add_image( config.keys.folder + "/" + val.tolower() + ".png", -1, -1, 64, 64 )
             } else {
                 //use text
-                local key_name = ( key == "-" ) ? "CLR" : ( key == " " ) ? "SPC" : ( key == "<" ) ? "DEL": key.toupper()
+                local key_name = ( key == "-" ) ? "CLR" : ( key == " " ) ? "SPC" : ( key == "<" )  ? "DEL" : ( key == "~" ) ? "DONE" : key.toupper()
                 keys[ key.tolower() ] <- surface.add_text( key_name, -1, -1, 1, 1 )
                 keys[ key.tolower() ].font = config.keys.font
             }
@@ -185,7 +185,7 @@ class KeyboardSearch {
     }
     
     //type the character specified
-    //special characters are < (backspace) and - (clear)
+    //special characters are "<" (backspace), "-" (clear) and "~" (done)
     function type( c )
     {
         print("typed: " + c)
@@ -193,6 +193,8 @@ class KeyboardSearch {
             text = ( text.len() > 0 ) ? text.slice( 0, text.len() - 1 ) : ""
         else if ( c == "-" )
             clear()
+        else if ( c == "~" )
+            toggle()
         else
             text = text + c
         search_text.msg = ( text == "" ) ? "" : "\"" + text + "\""
