@@ -8,7 +8,7 @@ modules/fade.nut
 modules/file.nut
 modules/pan-and-scan.nut
 modules/submenu.nut
-
+modules/shader-module
 
 #################
 ## Eclipse
