@@ -83,7 +83,7 @@ class Animation {
         loops_delay_from = true,    //delay setting 'from' values until the loop delay finishes
         yoyo = false,               //bounce back and forth the 'from' and 'to' states
         reverse = false,            //reverse the animation
-        interpolator = CubicBezierInterpolator("ease")
+        interpolator = CubicBezierInterpolator("linear")
     }
 
     constructor(...) {
@@ -91,7 +91,7 @@ class Animation {
 
         //set defaults
         callbacks = [];
-        states = [];
+        states = {};
         defaults(vargv);
 
         //add callbacks
@@ -124,7 +124,6 @@ class Animation {
     //listen to AM ticks
     function on_tick(ttime) {
         if ( running ) {
-            progress = clamp(progress, 0, 1);
             if ( progress == 1 ) {
                 stop();
             } else {
@@ -133,7 +132,7 @@ class Animation {
                 last_update = ::clock() * 1000;
                 //update animation progress
                 if ( opts.duration <= 0 ) {
-                    progress += opts.smoothing * opts.speed;
+                    progress = clamp( progress + ( opts.smoothing * opts.speed ), 0, 1);
                 } else {
                     //use time
                     print("duration was given, but timed animation not yet implemented");
@@ -242,7 +241,7 @@ class Animation {
 
     //update the animation
     function update() {
-        print( "progress: " + progress + " elapsed: " + elapsed + " tick: " + tick + " last_update: " + last_update + " play_count: " + play_count + " loops: " + opts.loops + " reverse: " + opts.reverse + " yoyoing: " + yoyoing );
+        print( "progress: " + progress + " current: " + current + " elapsed: " + elapsed + " tick: " + tick + " last_update: " + last_update + " play_count: " + play_count + " loops: " + opts.loops + " reverse: " + opts.reverse + " yoyoing: " + yoyoing );
         run_callback( "update", this );
     }
 
@@ -298,23 +297,26 @@ class Animation {
                         //don't keep running it .then()
                         opts.then = null;
                     }
-                print( "DONE. elapsed: " + elapsed + " tick: " + tick + " last_update: " + last_update + " play_count: " + play_count + " loops: " + opts.loops + " reverse: " + opts.reverse + " yoyoing: " + yoyoing );
+                print( "DONE. current: " + current + " elapsed: " + elapsed + " tick: " + tick + " last_update: " + last_update + " play_count: " + play_count + " loops: " + opts.loops + " reverse: " + opts.reverse + " yoyoing: " + yoyoing );
             }
         }
     }
 
     //cancel the animation
     function cancel() {
+        running = false;
+        progress = 1.0;
         run_callback( "cancel", this );
     }
 
     //*****  Helper Functions  *****
 
     //save a state
-    function save_state( table, name ) {
+    function save_state( name, table ) {
+        if ( name in states == false ) states[name] <- {};
         if ( typeof(table) == "table" )
             foreach( key, val in table )
-                states[ name ][ key ] = val;
+                states[ name ][ key ] <- val;
     }
 
     //run callbacks for an event
