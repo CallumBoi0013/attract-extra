@@ -47,7 +47,6 @@ class Animation {
     progress = 0;                  //current animation progress, 0 to 1
     play_count = 0;                //number of times animation has played
 
-    debug = false;                 //is debug enabled for this animation
     opts = null;                   //the current animation options
     current = 0;                   //current value
     _from = 0;                     //from value, based on animation options
@@ -66,6 +65,7 @@ class Animation {
     }
     
     default_config = {
+        debug = false,              //is debug enabled for this animation
         target = null,              //target object to animate
         from = null,                //state (values) we will animate from
         to = null,                  //state (values) we will animate to
@@ -170,7 +170,7 @@ class Animation {
 
     //*** CHAINABLE METHODS ***
     function name( str ) { opts.name = str; return this; }
-    function debug( bool ) { debug = bool; return this; }
+    function debug( bool ) { opts.debug = bool; return this; }
     function from( val ) { _from = opts.from = val; return this; }
     function to( val ) { _to = opts.to = val; return this; }
     function loops( count ) { opts.loops = count; return this; }
@@ -344,7 +344,7 @@ class Animation {
 
     //print messages in debug mode
     function print(msg) {
-        if ( GLOBALS.DEBUG || debug ) {
+        if ( Animation.GLOBALS.DEBUG || opts.debug ) {
             ::print( "animate2: " + " : " + msg + "\n" );
         }
     }
@@ -432,4 +432,5 @@ class Animation {
 
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/property.nut");
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/sprite.nut");
+fe.do_nut(FeConfigDirectory + "modules/animate2/animations/particles/module.nut");
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/timeline.nut");
