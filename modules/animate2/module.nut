@@ -345,7 +345,7 @@ class Animation {
     //print messages in debug mode
     function print(msg) {
         if ( Animation.GLOBALS.DEBUG || opts.debug ) {
-            ::print( "animate2: " + " : " + msg + "\n" );
+            ::print( "animate2: " + ( ( opts.name != null ) ? opts.name + " : " : "" ) + msg + "\n" );
         }
     }
 
