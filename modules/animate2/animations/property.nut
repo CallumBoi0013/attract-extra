@@ -25,10 +25,13 @@ class PropertyAnimation extends Animation {
         opts.key <- key;
         //set default from and to to the current value 
         if ( supported.find(key) != null ) {
-            if ( key == "scale" )
-                opts.from = opts.to = 1;
-            else
-                opts.from = opts.to = opts.target[key];
+            if ( key == "scale" ) {
+                if ( _from == null ) _from = opts.from = 1;
+                if ( _to == null ) _to = opts.to = 1;
+            } else {
+                if ( _from == null ) _from = opts.from = opts.target[key];
+                if ( _to == null ) _to = opts.to = opts.target[key];
+            }
         } else {
             print("unsupported key: " + key + "\n");
         }
@@ -50,6 +53,7 @@ class PropertyAnimation extends Animation {
     }
 
     function update() {
+        if ( _from == null || _to == null ) return;
         base.update();
         if ( opts.key == "rotation" ) {
             current = opts.target[opts.key] = opts.interpolator.interpolate(_from, _to, progress);

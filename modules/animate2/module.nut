@@ -49,8 +49,8 @@ class Animation {
 
     opts = null;                   //the current animation options
     current = 0;                   //current value
-    _from = 0;                     //from value, based on animation options
-    _to = 0;                       //to value, based on animation options
+    _from = null;                  //from value, based on animation options
+    _to = null;                    //to value, based on animation options
 
     states = null;                 //predefined states
     callbacks = null;              //registered callbacks for animation events
