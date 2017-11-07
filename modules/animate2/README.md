@@ -42,13 +42,15 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |`.unpause()`||unpause animation - if not running, the animation will start running|
 |`.restart()`||restart an animation|
 |`.stop()`||stop an animation|
+|`.cancel(*state*)`||cancel animation, setting properties to optional state origin, start, from or to|
 |`.then( func )`||Run a function after animation completes (one-shot after), function is passed anim as param|
 |`.on( string, function )`||hook a callback to your own function, one of AnimationEvents, function is passed anim as param|
 |`.off( string, function )`||remove a callback that was hooked to an event, function is passed anim as param|
 
 **Not yet implemented**
+
 |Method|Default|Desc|
-|:-|:-|:-|
+|:---|:---:|:---|
 |`state(string, table)`||store a state by name|
 |`trigger_restart(bool)`|true|if true, restart animation when specified triggers occur|
 |`.set_time_unit(string)`|"ms"|set the default time unit - ms or s|
@@ -60,8 +62,9 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |`.default_state(string)`|"current"|state used when the 'from' or 'to' value is not specified|
 |`.loops_delay(int|float|string)`||delay before loop - a number (default time unit), a time string ( "1s" or "250ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
 |`.loops_delay_from(bool)`|false|if true, animation will wait for a loop delay to finish to set the 'from' state|
-|`.exec( table )`||execute a macro
+|`.exec( table )`||execute a macro|
 |`.copy( anim )`||copy another anims properties|
+
 
 Notes
 -
