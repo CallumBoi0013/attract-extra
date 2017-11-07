@@ -10,8 +10,7 @@ OBJECTS.tutorial_bar_text.visible = OBJECTS.tutorial_bar_progress.visible = fals
 // You can use the following existing objects prefixed with OBJECTS.
 // bg, surface
 // snap, wheel, marquee, list, title
-// cd, joystick, joy_text
-// red_block, blue_block, green_block, yellow_block, purple_block, box, pixel
+// cd, joystick, joy_text, pixel
 //
 // You can change any values of the objects just like any other object:
 
