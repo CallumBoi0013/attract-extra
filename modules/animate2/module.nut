@@ -44,6 +44,7 @@ class Animation {
     last_update = 0;               //time of last update
     elapsed = 0;                   //time elapsed since animation started
     tick = 0;                      //time since last update
+    started = 0;                   //time animation started
     progress = 0;                  //current animation progress, 0 to 1
     play_count = 0;                //number of times animation has played
 
@@ -54,9 +55,15 @@ class Animation {
 
     states = null;                 //predefined states
     callbacks = null;              //registered callbacks for animation events
-    time_unit = "ms";              //default time unit for duration or delay - a number or string with no time unit is specified
     yoyoing = false;               //is animation yoyoing
-
+    
+    // predefined duration shortcuts
+    durations = {
+        "slow": "750ms",
+        "normal": "400ms",
+        "fast": "200ms"
+    }
+    
     //predefined speed aliases
     speeds = {
         "half": 0.5,
@@ -83,7 +90,8 @@ class Animation {
         loops_delay_from = true,    //delay setting 'from' values until the loop delay finishes
         yoyo = false,               //bounce back and forth the 'from' and 'to' states
         reverse = false,            //reverse the animation
-        interpolator = CubicBezierInterpolator("linear")
+        interpolator = CubicBezierInterpolator("linear"),
+        time_unit = "ms"            //default time unit for duration or delay - ms or s
     }
 
     constructor(...) {
@@ -144,11 +152,18 @@ class Animation {
                 elapsed += tick;
                 last_update = ::clock() * 1000;
                 //update animation progress
-                if ( opts.duration <= 0 ) {
-                    progress = clamp( progress + ( opts.smoothing * opts.speed ), 0, 1);
+                if ( elapsed > opts.delay ) {
+                    if ( opts.duration <= 0 ) {
+                        progress = clamp( progress + ( opts.smoothing * opts.speed ), 0, 1);
+                    } else {
+                        //use time
+                        local current = last_update;
+                        local min = started;
+                        local max = started + opts.delay + opts.duration;
+                        progress = clamp( ( current - min ) / ( max - min ) , 0, 1 );
+                    }
                 } else {
-                    //use time
-                    print("duration was given, but timed animation not yet implemented");
+                    print("DELAYED START: " + opts.delay );
                 }
                 update();
             }
@@ -179,19 +194,19 @@ class Animation {
     function interpolator( i ) { opts.interpolator = i; return this; }
     function triggers( triggers ) { opts.triggers = triggers; return this; }
     function then( then ) { opts.then = then; return this; }
-    function speed( s ) { opts.speed = parse_speed( s ); return this; }
+    function speed( s ) { opts.speed = s; return this; }
     function smoothing( s ) { opts.smoothing = s; return this; }
+    function delay( length ) { opts.delay = length; return this; }
+    function duration( d ) { opts.duration = d; return this; }
+    function time_unit( unit ) { opts.time_unit = unit; return this; }
     
     //NOT VERIFIED/WORKING YET!
     function default_state( state ) { default_state = state; return this; }
-    function delay( length ) { opts.delay = parse_time( length ); return this; }
     function delay_from( bool ) { opts.delay_from = bool; return this; }
-    function loops_delay( delay ) { opts.loops_delay = parse_time(delay); return this; }
+    function loops_delay( delay ) { opts.loops_delay = delay; return this; }
     function loops_delay_from( bool ) { opts.loops_delay_from = bool; return this; }
     function trigger_restart( restart ) { opts.trigger_restart = restart; return this; }
     function state( name, state ) { states[name] <- state; return this }
-    function duration( d ) { opts.duration = parse_time( d ); return this; }
-    function set_time_unit( unit ) { time_unit = unit; return this; }
 
     //add an event handler
     function on( event, param1, param2 = null ) {
@@ -233,6 +248,12 @@ class Animation {
 
     //start the animation
     function start() {
+        //convert alias and time unit values
+        opts.speed = parse_speed( opts.speed );
+        opts.duration = parse_time( opts.duration );
+        opts.delay = parse_time( opts.delay );
+        opts.loops_delay = parse_time(opts.loops_delay);
+
         //reverse from and to if reverse is enabled
         if ( opts.reverse ) {
             current = _from = opts.to;
@@ -243,7 +264,7 @@ class Animation {
         }
 
         //update times
-        last_update = ::clock() * 1000;
+        started = last_update = ::clock() * 1000;
         elapsed = 0;
         tick = 0;
         progress = 0;
@@ -254,7 +275,7 @@ class Animation {
 
     //update the animation
     function update() {
-        print( "progress: " + progress + " current: " + current + " elapsed: " + elapsed + " tick: " + tick + " last_update: " + last_update + " play_count: " + play_count + " loops: " + opts.loops + " reverse: " + opts.reverse + " yoyoing: " + yoyoing );
+        print( "p: " + progress + "\tcurr: " + current + "\te: " + elapsed + " t: " + tick + "\tpc: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
         run_callback( "update", this );
     }
 
@@ -310,7 +331,7 @@ class Animation {
                         //don't keep running it .then()
                         opts.then = null;
                     }
-                print( "DONE. current: " + current + " elapsed: " + elapsed + " tick: " + tick + " last_update: " + last_update + " play_count: " + play_count + " loops: " + opts.loops + " reverse: " + opts.reverse + " yoyoing: " + yoyoing );
+                print( "DONE. c: " + current + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
             }
         }
     }
@@ -359,7 +380,7 @@ class Animation {
     {
         if ( typeof( value ) == "integer" || typeof( value ) == "float" )
           //use the default time unit for the number
-          return ( time_unit == "s" ) ? value.tofloat() * 1000 : value.tofloat();
+          return ( opts.time_unit == "s" ) ? value.tofloat() * 1000 : value.tofloat();
         if ( typeof( value ) == "string" )
             //look for a predefined time string
             foreach( key, val in Animation.durations )
@@ -374,7 +395,7 @@ class Animation {
                 value = ( value.slice( 0, value.len() - 1 ) ).tofloat() * 1000;
             else
                 //force string to float
-                value = ( time_unit == "s" ) ? value.tofloat() * 1000 : value.tofloat();
+                value = ( opts.time_unit == "s" ) ? value.tofloat() * 1000 : value.tofloat();
         }
         if ( typeof( value ) == "string" ) {
             //if its still a string, don't recognized it

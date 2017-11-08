@@ -32,11 +32,13 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |`.yoyo(bool)`|false|if true, play animation forward, then backwards
 |`.reverse(bool)`|false|play animation in reverse|
 |`.loops(int), .repeat(int)`|0|number of times to loop/repeat animation, -1 = infinite|
+|`.delay(int|string)`|0|delay in ms, a time string ( "1s" or "250ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
 |`.triggers( array )`||array of any Transition. values|
 |`.speed(int|float|string)`|1|speed factor integer/float (1.0 being normal speed) or aliases "half" (0.5), "normal" (1.0), "double" (2.0)|
 |`.interpolator( class )`|CubicBezierInterpolator|specify a custom interpolator|
 |`.smoothing(float)`|0.033|tick update frequency, multiples speed
 |`.step(float)`||pause an animation and jump to a specified progress (0-1)
+|`.duration(int|string)`|| optional duration in ms, a time string ( "1.5s" or "500ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
 |`.play()`||play animation immediately, triggers still apply|
 |`.pause()`||pause animation - if already paused, has no affect|
 |`.unpause()`||unpause animation - if not running, the animation will start running|
@@ -48,14 +50,11 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |`.off( string, function )`||remove a callback that was hooked to an event, function is passed anim as param|
 
 **Not yet implemented**
-
 |Method|Default|Desc|
 |:---|:---:|:---|
 |`state(string, table)`||store a state by name|
 |`trigger_restart(bool)`|true|if true, restart animation when specified triggers occur|
 |`.set_time_unit(string)`|"ms"|set the default time unit - ms or s|
-|`.delay(int|string)`|0|delay in ms, a time string ( "1s" or "250ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
-|`.duration(int|string)`||duration in ms, a time string ( "1.5s" or "500ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
 |`.easing(string)`|"linear"|easing string ("ease-out-back" or Easing. value - Easing.InBack, Easing.OutElastic, etc.)|
 |`.delayFrom(bool)`||if true, animation will wait for a delay to finish to set the 'from' state|
 |`.set( table )`||immediately set values for target (if target is specified )|
