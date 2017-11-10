@@ -49,9 +49,8 @@ class Animation {
     play_count = 0;                //number of times animation has played
 
     opts = null;                   //the current animation options
-    current = 0;                   //current value
-    _from = null;                  //from value, based on animation options
-    _to = null;                    //to value, based on animation options
+    _from = null;                  //values we are animating from
+    _to = null;                    //values we are animating to
 
     states = null;                 //predefined states
     callbacks = null;              //registered callbacks for animation events
@@ -70,7 +69,7 @@ class Animation {
         "normal": 1.0,
         "double": 2.0
     }
-    
+
     default_config = {
         debug = false,              //is debug enabled for this animation
         target = null,              //target object to animate
@@ -186,8 +185,8 @@ class Animation {
     //*** CHAINABLE METHODS ***
     function name( str ) { opts.name = str; return this; }
     function debug( bool ) { opts.debug = bool; return this; }
-    function from( val ) { _from = opts.from = val; return this; }
-    function to( val ) { _to = opts.to = val; return this; }
+    function from( val ) { if ( typeof(val) == "string" && val in states ) opts.from = states[val]; else opts.from = val; return this; }
+    function to( val ) { if ( typeof(val) == "string" && val in states ) opts.to = states[val]; else opts.to = val; return this; }
     function loops( count ) { opts.loops = count; return this; }
     function reverse( bool = true ) { opts.reverse = bool; return this; }
     function yoyo( bool = true ) { opts.yoyo = bool; return this; }
@@ -256,11 +255,11 @@ class Animation {
 
         //reverse from and to if reverse is enabled
         if ( opts.reverse ) {
-            current = _from = opts.to;
-            _to = opts.from;
+            _from = ( states["to"] == null ) ? opts.to : states["to"];
+            _to = ( states["from"] == null ) ? opts.from : states["from"];
         } else {
-            current = _from = opts.from;
-            _to = opts.to;
+            _from = ( states["from"] == null ) ? opts.from : states["from"];
+            _to = ( states["to"] == null ) ? opts.to : states["to"];
         }
 
         //update times
@@ -275,7 +274,7 @@ class Animation {
 
     //update the animation
     function update() {
-        print( "p: " + progress + "\tcurr: " + current + "\te: " + elapsed + " t: " + tick + "\tpc: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
+        print( "p: " + progress + "\te: " + elapsed + " t: " + tick + "\tpc: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
         run_callback( "update", this );
     }
 
@@ -331,7 +330,7 @@ class Animation {
                         //don't keep running it .then()
                         opts.then = null;
                     }
-                print( "DONE. c: " + current + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
+                print( "DONE. " + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
             }
         }
     }

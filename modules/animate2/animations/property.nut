@@ -1,5 +1,5 @@
 class PropertyAnimation extends Animation {
-    supported = [ "x", "y", "width", "height", "origin_x", "origin_y", "scale", "rotation", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "selbg_red", "selbg_green", "selbg_blue", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize" ];
+    supported = [ "x", "y", "width", "height", "origin_x", "origin_y", "scale", "rotation", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "selbg_red", "selbg_green", "selbg_blue", "selbg_alpha", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize" ];
     scale = 1.0;
 
     function defaults(params) {
@@ -23,18 +23,6 @@ class PropertyAnimation extends Animation {
 
     function key( key ) {
         opts.key <- key;
-        //set default from and to to the current value 
-        if ( supported.find(key) != null ) {
-            if ( key == "scale" ) {
-                if ( _from == null ) _from = opts.from = 1;
-                if ( _to == null ) _to = opts.to = 1;
-            } else {
-                if ( _from == null ) _from = opts.from = opts.target[key];
-                if ( _to == null ) _to = opts.to = opts.target[key];
-            }
-        } else {
-            print("unsupported key: " + key + "\n");
-        }
         return this;
     }
     
@@ -42,40 +30,69 @@ class PropertyAnimation extends Animation {
     function center_scale(bool = true) { opts.center_scale = bool; return this; }
 
     function start() {
-        local state = collect_state( opts.target );
-        //save the target start state
-        save_state( "start", clone(state) );
-        save_state( "from", clone(state) );
-        save_state( "to", clone(state) );
-        states["from"][opts.key] <- opts.from;
-        states["to"][opts.key] <- opts.to;
+        if ( opts.from == null && opts.to == null ) {
+            print("you didn't specify a from or to value");
+            return;
+        } else if ( opts.key == null && ( typeof(opts.from) != "table" || typeof(opts.to) != "table" ) ) {
+            print("you must specify a key with from or to values, or a from or to table with key/value pairs");
+            return;
+        }
+
+        //convert `from` and `to` to tables
+        if ( typeof(opts.to) != "table" ) {
+            local val = opts.to;
+            opts.to <- {}
+            opts.to[opts.key] <- val;
+        }
+        if ( typeof(opts.from) != "table" ) {
+            local val = opts.from;
+            opts.from <- {}
+            opts.from[opts.key] <- val;
+        }
+
+        //save target states
+        states["current"] <- collect_state( opts.target );
+        save_state( "start", clone(states["current"]) );
+        save_state( "from", ( opts.from == null ) ? clone(state) : opts.from );
+        save_state( "to", ( opts.to == null ) ? clone(state) : opts.to );
+
+        //ensure all keys are accounted for
+        foreach( key, val in opts.to )
+            if ( key in opts.from == false )
+                opts.from[key] <- states["current"][key];
+        foreach( key, val in opts.from )
+            if ( key in opts.to == false )
+                opts.to[key] <- states["current"][key];
+        
+        states["from"] <- opts.from;
+        states["to"] <- opts.to;
         base.start();
     }
 
     function update() {
-        if ( _from == null || _to == null ) return;
+        if ( opts.from == null || opts.to == null ) return;
         base.update();
-        if ( opts.key == "rotation" ) {
-            current = opts.target[opts.key] = opts.interpolator.interpolate(_from, _to, progress);
-            set_rotation(current);
-        } else if ( opts.key == "scale" ) {
-            current = opts.interpolator.interpolate(_from, _to, progress);
-            set_scale(current);
-        } else if ( supported.find != null ) {
-            current = opts.target[opts.key] = opts.interpolator.interpolate(_from, _to, progress);
-        } else {
-            print("unsupported key: " + opts.key + "\n");
+        foreach( key, val in states["to"] ) {
+            if ( key == "scale" ) {
+                local s = opts.interpolator.interpolate(_from[key], _to[key], progress);
+                set_scale(s);
+            } else if ( supported.find(key) != null ) {
+                opts.target[key] = opts.interpolator.interpolate(_from[key], _to[key], progress);
+                if ( key == "rotation" ) set_rotation(opts.target[key]);
+            } else {
+                print("nothing to do");
+            }
         }
+        states["current"] <- collect_state(opts.target);
     }
 
     function stop() {
         base.stop();
 
         foreach( key in supported )
-            if ( "current" in states && key in states["current"] )
-                try {
-                    states["current"][key] <- target[key];    
-                } catch(e) {}
+            try {
+                states["current"][key] <- target[key];    
+            } catch(e) {}
         
         if ( !yoyoing && opts.loops > 0 && play_count == 0 )
             if ( "then" in opts && typeof(opts.then) == "table" ) {
@@ -117,6 +134,7 @@ class PropertyAnimation extends Animation {
             try {
                 state[supported[i]] <- target[supported[i]];
             } catch(e) {}
+        state.scale <- 1;
         return state;
     }
 
@@ -136,10 +154,15 @@ class PropertyAnimation extends Animation {
         opts.target.width = states["origin"].width * s;
         opts.target.height = states["origin"].height * s;
         if ( opts.center_scale ) {
-            opts.target.x = states["origin"].x + ( ( states["origin"].width * s ) / 2 );
-            opts.target.y = states["origin"].y + ( ( states["origin"].height * s ) / 2 );
-            opts.target.origin_x = ( states["origin"].width * s ) - ( states["origin"].width / 2 ) ;
-            opts.target.origin_y = ( states["origin"].height * s ) - ( states["origin"].height / 2 );
+            //auto center scale
+            //local offsetX = ( opts.target.width - states["origin"].width ) / 2;
+            //local offsetY = ( opts.target.height - states["origin"].height ) / 2;
+            opts.target.origin_x = ( opts.target.width / 2 ) / 2;
+            opts.target.origin_y = ( opts.target.height / 2 ) / 2;
+        } else {
+            //scale origin
+            opts.target.origin_x = states["origin"].origin_x * s;
+            opts.target.origin_y = states["origin"].origin_y * s;
         }
     }
 }
