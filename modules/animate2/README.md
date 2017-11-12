@@ -27,14 +27,14 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |`.debug(bool)`|false|if true, enable debug console output|
 |`.target(obj)`||target object to animate, if required by animation (can be specified as animations 1st argument instead)|
 |`.key(string)`||key value to animate|
-|`.from(int|float|table|string)`||start value(s) - an integer/float, table of key-value pairs or a state name|
+|`.from(int/float/table/string)`||start value(s) - an integer/float, table of key-value pairs or a state name|
 |`.to(val)`||ending value(s) - an integer/float, a table of key-value pairs or a state name|
 |`.yoyo(bool)`|false|if true, play animation forward, then backwards
 |`.reverse(bool)`|false|play animation in reverse|
 |`.loops(int), .repeat(int)`|0|number of times to loop/repeat animation, -1 = infinite|
-|`.delay(int|string)`|0|delay in ms, a time string ( "1s" or "250ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
-|`.duration(int|string)`|| optional duration in ms, a time string ( "1.5s" or "500ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
-|`.speed(int|float|string)`|1|speed factor integer/float (1.0 being normal speed) or aliases "half" (0.5), "normal" (1.0), "double" (2.0)|
+|`.delay(int/string)`|0|delay in ms, a time string ( "1s" or "250ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
+|`.duration(int/string)`|| optional duration in ms, a time string ( "1.5s" or "500ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
+|`.speed(int/float/string)`|1|speed factor integer/float (1.0 being normal speed) or aliases "half" (0.5), "normal" (1.0), "double" (2.0)|
 |`.triggers( array )`||array of any Transition. values|
 |`.easing( string )`|"linear"|string name of easing to use (see [CubicBezierInterpolator](interpolators/cubicbezier.nut) or [PennerInterpolator](interpolators/penner.nut) for available values)|
 |`.interpolator( class )`|CubicBezierInterpolator|specify a custom interpolator|
@@ -60,7 +60,7 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |:---|:---:|:---|
 |`trigger_restart(bool)`|true|if true, restart animation when specified triggers occur|
 |`.delayFrom(bool)`||if true, animation will wait for a delay to finish to set the 'from' state|
-|`.loops_delay(int|float|string)`||delay before loop - a number (default time unit), a time string ( "1s" or "250ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
+|`.loops_delay(int/float/string)`||delay before loop - a number (default time unit), a time string ( "1s" or "250ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
 |`.loops_delay_from(bool)`|false|if true, animation will wait for a loop delay to finish to set the 'from' state|
 |`.exec( table )`||execute a macro|
 |`.copy( anim )`||copy another anims properties|
