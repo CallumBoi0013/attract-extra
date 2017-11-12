@@ -151,7 +151,9 @@ class Animation {
                 elapsed += tick;
                 last_update = ::clock() * 1000;
                 //update animation progress
+                update();
                 if ( elapsed > opts.delay ) {
+                    //increase progress
                     if ( opts.duration <= 0 ) {
                         progress = clamp( progress + ( opts.smoothing * opts.speed ), 0, 1);
                     } else {
@@ -164,7 +166,6 @@ class Animation {
                 } else {
                     print("DELAYED START: " + opts.delay );
                 }
-                update();
             }
         }
     }
@@ -319,6 +320,8 @@ class Animation {
                 play_count++;
                 restart();
             } else {
+                //run a final update
+                update();
                 //finished animation
                 running = false;
                 run_callback( "stop", this );
@@ -330,7 +333,7 @@ class Animation {
                         //don't keep running it .then()
                         opts.then = null;
                     }
-                print( "DONE. " + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
+                print( "DONE. " + " p: " + progress + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
             }
         }
     }
