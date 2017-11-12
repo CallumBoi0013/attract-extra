@@ -78,8 +78,6 @@ class PropertyAnimation extends Animation {
             } else if ( supported.find(key) != null ) {
                 opts.target[key] = opts.interpolator.interpolate(_from[key], _to[key], progress);
                 if ( key == "rotation" ) set_rotation(opts.target[key]);
-            } else {
-                print("nothing to do");
             }
         }
         states["current"] <- collect_state(opts.target);
