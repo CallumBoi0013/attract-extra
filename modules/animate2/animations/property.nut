@@ -64,8 +64,8 @@ class PropertyAnimation extends Animation {
             if ( key in opts.to == false )
                 opts.to[key] <- states["current"][key];
         
-        states["from"] <- opts.from;
-        states["to"] <- opts.to;
+        states["from"] <- ( opts.from == null ) ? states[opts.default_state] : opts.from;
+        states["to"] <- ( opts.to == null ) ? states[opts.default_state] : opts.to;
         base.start();
     }
 

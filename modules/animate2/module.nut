@@ -255,11 +255,11 @@ class Animation {
 
         //reverse from and to if reverse is enabled
         if ( opts.reverse ) {
-            _from = ( states["to"] == null ) ? opts.to : states["to"];
-            _to = ( states["from"] == null ) ? opts.from : states["from"];
+            _from = ( "to" in states == false ) ? opts.to : states["to"];
+            _to = ( "from" in states == false ) ? opts.from : states["from"];
         } else {
-            _from = ( states["from"] == null ) ? opts.from : states["from"];
-            _to = ( states["to"] == null ) ? opts.to : states["to"];
+            _from = ( "from" in states == false ) ? opts.from : states["from"];
+            _to = ( "to" in states == false ) ? opts.to : states["to"];
         }
 
         //update times
