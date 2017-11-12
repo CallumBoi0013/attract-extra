@@ -151,7 +151,9 @@ class Animation {
                 elapsed += tick;
                 last_update = ::clock() * 1000;
                 //update animation progress
+                update();
                 if ( elapsed > opts.delay ) {
+                    //increase progress
                     if ( opts.duration <= 0 ) {
                         progress = clamp( progress + ( opts.smoothing * opts.speed ), 0, 1);
                     } else {
@@ -164,7 +166,6 @@ class Animation {
                 } else {
                     print("DELAYED START: " + opts.delay );
                 }
-                update();
             }
         }
     }
@@ -198,15 +199,16 @@ class Animation {
     function delay( length ) { opts.delay = length; return this; }
     function duration( d ) { opts.duration = d; return this; }
     function time_unit( unit ) { opts.time_unit = unit; return this; }
+    function state( name, state ) { states[name] <- state; return this }
+    function default_state( state ) { opts.default_state = state; return this; }
+    function easing( e ) { if ( e.find("elastic") != null || e.find("bounce") != null ) return interpolator( PennerInterpolator(e) ); else return interpolator( CubicBezierInterpolator(e) ); }
     
     //NOT VERIFIED/WORKING YET!
-    function default_state( state ) { default_state = state; return this; }
     function delay_from( bool ) { opts.delay_from = bool; return this; }
     function loops_delay( delay ) { opts.loops_delay = delay; return this; }
     function loops_delay_from( bool ) { opts.loops_delay_from = bool; return this; }
     function trigger_restart( restart ) { opts.trigger_restart = restart; return this; }
-    function state( name, state ) { states[name] <- state; return this }
-
+    
     //add an event handler
     function on( event, param1, param2 = null ) {
         callbacks.push({
@@ -255,11 +257,11 @@ class Animation {
 
         //reverse from and to if reverse is enabled
         if ( opts.reverse ) {
-            _from = ( states["to"] == null ) ? opts.to : states["to"];
-            _to = ( states["from"] == null ) ? opts.from : states["from"];
+            _from = ( "to" in states == false ) ? opts.to : states["to"];
+            _to = ( "from" in states == false ) ? opts.from : states["from"];
         } else {
-            _from = ( states["from"] == null ) ? opts.from : states["from"];
-            _to = ( states["to"] == null ) ? opts.to : states["to"];
+            _from = ( "from" in states == false ) ? opts.from : states["from"];
+            _to = ( "to" in states == false ) ? opts.to : states["to"];
         }
 
         //update times
@@ -319,6 +321,8 @@ class Animation {
                 play_count++;
                 restart();
             } else {
+                //run a final update
+                update();
                 //finished animation
                 running = false;
                 run_callback( "stop", this );
@@ -330,7 +334,7 @@ class Animation {
                         //don't keep running it .then()
                         opts.then = null;
                     }
-                print( "DONE. " + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
+                print( "DONE. " + " p: " + progress + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
             }
         }
     }
