@@ -15,7 +15,7 @@ To use Animate, add the animate module in your layout:
 
 `fe.load_module("animate2");`
 
-Next, create an animation by specify options. You can append multiple options using chained methods:
+Next, create an animation by specifying options. You can append multiple options using chained methods:
 
 `PropertyAnimation(obj).key("x").from(100).to(200).play()`
 
@@ -25,40 +25,41 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |:-|:-:|:-|
 |`.name(string)`||name for the animation, useful for debugging multiple animations|
 |`.debug(bool)`|false|if true, enable debug console output|
-|`.target(obj)`||target object to animate, if required by animation|
+|`.target(obj)`||target object to animate, if required by animation (can be specified as animations 1st argument instead)|
 |`.key(string)`||key value to animate|
-|`.from(val)`||start value(s)|
-|`.to(val)`||ending value(s)|
+|`.from(int|float|table|string)`||start value(s) - an integer/float, table of key-value pairs or a state name|
+|`.to(val)`||ending value(s) - an integer/float, a table of key-value pairs or a state name|
 |`.yoyo(bool)`|false|if true, play animation forward, then backwards
 |`.reverse(bool)`|false|play animation in reverse|
 |`.loops(int), .repeat(int)`|0|number of times to loop/repeat animation, -1 = infinite|
 |`.delay(int|string)`|0|delay in ms, a time string ( "1s" or "250ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
-|`.triggers( array )`||array of any Transition. values|
+|`.duration(int|string)`|| optional duration in ms, a time string ( "1.5s" or "500ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
 |`.speed(int|float|string)`|1|speed factor integer/float (1.0 being normal speed) or aliases "half" (0.5), "normal" (1.0), "double" (2.0)|
+|`.triggers( array )`||array of any Transition. values|
+|`.easing( string )`|"linear"|string name of easing to use (see [CubicBezierInterpolator](interpolators/cubicbezier.nut) or [PennerInterpolator](interpolators/penner.nut) for available values)|
 |`.interpolator( class )`|CubicBezierInterpolator|specify a custom interpolator|
 |`.smoothing(float)`|0.033|tick update frequency, multiples speed
 |`.step(float)`||pause an animation and jump to a specified progress (0-1)
-|`.duration(int|string)`|| optional duration in ms, a time string ( "1.5s" or "500ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
+|`.set_time_unit(string)`|"ms"|set the default time unit - ms or s - used for delays or duration|
+|`.default_state(string)`|"start"|default state used if 'from' or 'to' are not specified. This must be a state stored using the `state()` method. You can use the builtin "origin" or "start" state|
+|`state(string, table)`||save a state by name. This state can later be used by referencing its name using `from()`, `to()` or `default_state()`|
+|`.set_state( table )`||immediately set state values for a target (if target is specified )|
 |`.play()`||play animation immediately, triggers still apply|
 |`.pause()`||pause animation - if already paused, has no affect|
 |`.unpause()`||unpause animation - if not running, the animation will start running|
 |`.restart()`||restart an animation|
 |`.stop()`||stop an animation|
-|`.cancel(*state*)`||cancel animation, setting properties to optional state origin, start, from or to|
+|`.cancel(*string)`||cancel animation. Specify an optional state name to specify what state to put the target in - "origin", "start", "from" or "to"|
 |`.then( func )`||Run a function after animation completes (one-shot after), function is passed anim as param|
 |`.on( string, function )`||hook a callback to your own function, one of AnimationEvents, function is passed anim as param|
 |`.off( string, function )`||remove a callback that was hooked to an event, function is passed anim as param|
 
 **Not yet implemented**
+
 |Method|Default|Desc|
 |:---|:---:|:---|
-|`state(string, table)`||store a state by name|
 |`trigger_restart(bool)`|true|if true, restart animation when specified triggers occur|
-|`.set_time_unit(string)`|"ms"|set the default time unit - ms or s|
-|`.easing(string)`|"linear"|easing string ("ease-out-back" or Easing. value - Easing.InBack, Easing.OutElastic, etc.)|
 |`.delayFrom(bool)`||if true, animation will wait for a delay to finish to set the 'from' state|
-|`.set( table )`||immediately set values for target (if target is specified )|
-|`.default_state(string)`|"current"|state used when the 'from' or 'to' value is not specified|
 |`.loops_delay(int|float|string)`||delay before loop - a number (default time unit), a time string ( "1s" or "250ms" ), or time aliases "slow" (750ms), "normal" (500ms), "fast" = (250ms)|
 |`.loops_delay_from(bool)`|false|if true, animation will wait for a loop delay to finish to set the 'from' state|
 |`.exec( table )`||execute a macro|
