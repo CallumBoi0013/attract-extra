@@ -56,10 +56,10 @@ class PropertyAnimation extends Animation {
         
         //ensure all keys are accounted for
         foreach( key, val in opts.to )
-            if ( key in opts.from == false )
+            if ( key in opts.from == false || opts.from[key] == null )
                 opts.from[key] <- states["current"][key];
         foreach( key, val in opts.from )
-            if ( key in opts.to == false )
+            if ( key in opts.to == false || opts.from[key] == null )
                 opts.to[key] <- states["current"][key];
 
         save_state( "from", ( opts.from == null ) ? ( opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.from );
