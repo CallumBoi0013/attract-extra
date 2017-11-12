@@ -201,7 +201,8 @@ class Animation {
     function time_unit( unit ) { opts.time_unit = unit; return this; }
     function state( name, state ) { states[name] <- state; return this }
     function default_state( state ) { opts.default_state = state; return this; }
-
+    function easing( e ) { if ( e.find("elastic") != null || e.find("bounce") != null ) return interpolator( PennerInterpolator(e) ); else return interpolator( CubicBezierInterpolator(e) ); }
+    
     //NOT VERIFIED/WORKING YET!
     function delay_from( bool ) { opts.delay_from = bool; return this; }
     function loops_delay( delay ) { opts.loops_delay = delay; return this; }
