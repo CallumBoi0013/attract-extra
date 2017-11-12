@@ -33,17 +33,16 @@ class PropertyAnimation extends Animation {
         if ( opts.from == null && opts.to == null ) {
             print("you didn't specify a from or to value");
             return;
-        } else if ( opts.key == null && ( typeof(opts.from) != "table" || typeof(opts.to) != "table" ) ) {
-            print("you must specify a key with from or to values, or a from or to table with key/value pairs");
-            return;
         }
 
         //convert `from` and `to` to tables
+        if ( opts.to == null ) opts.to <- {}
         if ( typeof(opts.to) != "table" ) {
             local val = opts.to;
             opts.to <- {}
             opts.to[opts.key] <- val;
         }
+        if ( opts.from == null ) opts.from <- {}
         if ( typeof(opts.from) != "table" ) {
             local val = opts.from;
             opts.from <- {}
@@ -57,10 +56,10 @@ class PropertyAnimation extends Animation {
         //ensure all keys are accounted for
         foreach( key, val in opts.to )
             if ( key in opts.from == false || opts.from[key] == null )
-                opts.from[key] <- states["current"][key];
+                opts.from[key] <- ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
         foreach( key, val in opts.from )
             if ( key in opts.to == false || opts.from[key] == null )
-                opts.to[key] <- states["current"][key];
+                opts.to[key] <- ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
 
         save_state( "from", ( opts.from == null ) ? ( opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.from );
         save_state( "to", ( opts.to == null ) ? (opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.to );

@@ -199,15 +199,15 @@ class Animation {
     function delay( length ) { opts.delay = length; return this; }
     function duration( d ) { opts.duration = d; return this; }
     function time_unit( unit ) { opts.time_unit = unit; return this; }
-    
+    function state( name, state ) { states[name] <- state; return this }
+    function default_state( state ) { opts.default_state = state; return this; }
+
     //NOT VERIFIED/WORKING YET!
-    function default_state( state ) { default_state = state; return this; }
     function delay_from( bool ) { opts.delay_from = bool; return this; }
     function loops_delay( delay ) { opts.loops_delay = delay; return this; }
     function loops_delay_from( bool ) { opts.loops_delay_from = bool; return this; }
     function trigger_restart( restart ) { opts.trigger_restart = restart; return this; }
-    function state( name, state ) { states[name] <- state; return this }
-
+    
     //add an event handler
     function on( event, param1, param2 = null ) {
         callbacks.push({
