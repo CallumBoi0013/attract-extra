@@ -17,11 +17,12 @@ class KeyboardSearch {
     last_key_check = 0
     last_key = null
     //map of supported values and their filename equivalent
-    key_names = { "a": "a", "b": "b", "c": "c", "d": "d", "e": "e", "f": "f", "g": "g", "h": "h", "i": "i", "j": "j", "k": "k", "l": "l", "m": "m", "n": "n", "o": "o", "p": "p", "q": "q", "r": "r", "s": "s", "t": "t", "u": "u", "v": "v", "w": "w", "x": "x", "y": "y", "z": "z", "1": "Num1", "2": "Num2", "3": "Num3", "4": "Num4", "5": "Num5", "6": "Num6", "7": "Num7", "8": "Num8", "9": "Num9", "0": "Num0", "<": "Backspace", " ": "Space", "-": "Clear" }
+    key_names = { "a": "a", "b": "b", "c": "c", "d": "d", "e": "e", "f": "f", "g": "g", "h": "h", "i": "i", "j": "j", "k": "k", "l": "l", "m": "m", "n": "n", "o": "o", "p": "p", "q": "q", "r": "r", "s": "s", "t": "t", "u": "u", "v": "v", "w": "w", "x": "x", "y": "y", "z": "z", "1": "Num1", "2": "Num2", "3": "Num3", "4": "Num4", "5": "Num5", "6": "Num6", "7": "Num7", "8": "Num8", "9": "Num9", "0": "Num0", "<": "Backspace", " ": "Space", "-": "Clear", "~": "Done" }
     
     config = {
         search_key = "custom1",
         mode = "show_results",
+        retain = false,
         key_delay = 100,
         repeat_key_delay = 250,
         bg = ::fe.module_dir + "/images/pixel.png",
@@ -37,8 +38,9 @@ class KeyboardSearch {
         keys = {
             folder = ::fe.module_dir + "/images",
             font = "Arial",
+            charsize = 46,
             pos = [ 0.1, 0.4, 0.8, 0.5 ],
-            rows = [ "1234567890", "abcdefghi", "jklmnopqr", "stuvwxyz", "- <" ],
+            rows = [ "1234567890", "abcdefghi", "jklmnopqr", "stuvwxyz", "- <~" ],
             rgba = [ 255, 255, 255, 200 ],
             rgba_selected = [ 20, 150, 20, 255 ],
             selected = [ 0, 0 ]
@@ -52,6 +54,7 @@ class KeyboardSearch {
     function get_text() { return text }
     function search_key(key) { this.config.search_key = key; return this; }
     function mode(mode) { this.config.mode = mode; return this; }
+    function retain(retain) { this.config.retain = retain; return this; }
     function key_delay(delay) { this.config.key_delay = delay; return this; }
     function repeat_key_delay(delay) { this.config.repeat_key_delay = delay; return this; }
     function set_pos(x, y, width, height) { this.surface.set_pos( x, y, width, height); return this; }
@@ -60,29 +63,30 @@ class KeyboardSearch {
     function text_pos( arr ) { this.config.search_text.pos = arr; return this; }
     function text_color ( red, green, blue, alpha = 255 ) { this.config.search_text.rgba[0] = red; this.config.search_text.rgba[1] = green; this.config.search_text.rgba[2] = blue; this.config.search_text.rgba[3] = alpha; return this; }
     function text_font(font) { this.config.search_text.font = font; return this; }
-    function keys_image_folder(folder) { this.config.keys.folder = folder; return this; }
+    function keys_image_folder(folder=null) { this.config.keys.folder = folder; return this; }
     function keys_pos( arr ) { this.config.keys.pos = arr; return this; }
     function keys_rows(rows) { this.config.keys.rows = rows; return this; }
     function keys_font(font) { this.config.keys.font = font; return this; }
+    function keys_charsize(size) { this.config.keys.charsize = size; return this; }
     function keys_color(red, green, blue, alpha = 255) { this.config.keys.rgba[0] = red; this.config.keys.rgba[1] = green; this.config.keys.rgba[2] = blue; this.config.keys.rgba[3] = alpha; return this; }
     function keys_selected_color(red, green, blue, alpha = 255) { this.config.keys.rgba_selected[0] = red; this.config.keys.rgba_selected[1] = green; this.config.keys.rgba_selected[2] = blue; this.config.keys.rgba_selected[3] = alpha; return this; }
     function keys_selected(col, row) { this.config.keys.selected[0] = col; this.config.keys.selected[1] = row; return this; }
     function preset(name) {
         switch(name) {
             case "arcade":
-                keys_rows(["abcdefghijklmnopqrstuvwxyz1234567890- <"])
+                keys_rows(["abcdefghijklmnopqrstuvwxyz1234567890- <~"])
                 text_pos( [ 0, 0, 1, 0.5 ])
                 keys_pos([ 0, 0.5, 1, 0.5])
                 set_pos( 0, fe.layout.height * 0.8, fe.layout.width, fe.layout.height * 0.4 )
                 break
             case "qwerty":
-                keys_rows([ "1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm", "- <" ])
+                keys_rows([ "1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm", "- <~" ])
                 set_pos( 0, 0, fe.layout.width / 2, fe.layout.height)
                 text_pos( [ 0, 0, 1, 0.2 ])
                 keys_pos([ 0, 0.2, 1, 0.8])
                 break
             case "alpha":
-                keys_rows(["1234567890", "abcdefghi", "jklmnopqr", "stuvwxyz", "- <"])
+                keys_rows(["1234567890", "abcdefghi", "jklmnopqr", "stuvwxyz", "- <~"])
                 break
         }
         return this
@@ -119,14 +123,15 @@ class KeyboardSearch {
         
         //draw the search key objects
         foreach( key, val in key_names ) {
-            if ( config.keys.folder != null ) {
+            if ( config.keys.folder != null && config.keys.folder != "" ) {
                 //use key images
                 keys[ key.tolower() ] <- surface.add_image( config.keys.folder + "/" + val.tolower() + ".png", -1, -1, 64, 64 )
             } else {
                 //use text
-                local key_name = ( key == "-" ) ? "CLR" : ( key == " " ) ? "SPC" : ( key == "<" ) ? "DEL": key.toupper()
+                local key_name = ( key == "-" ) ? "CLR" : ( key == " " ) ? "SPC" : ( key == "<" )  ? "DEL" : ( key == "~" ) ? "DONE" : key.toupper()
                 keys[ key.tolower() ] <- surface.add_text( key_name, -1, -1, 1, 1 )
                 keys[ key.tolower() ].font = config.keys.font
+                keys[ key.tolower() ].charsize = config.keys.charsize
             }
             keys[ key.tolower() ].set_rgb( config.keys.rgba[0], config.keys.rgba[1], config.keys.rgba[2])
             keys[ key.tolower() ].alpha = config.keys.rgba[3]
@@ -185,7 +190,7 @@ class KeyboardSearch {
     }
     
     //type the character specified
-    //special characters are < (backspace) and - (clear)
+    //special characters are "<" (backspace), "-" (clear) and "~" (done)
     function type( c )
     {
         print("typed: " + c)
@@ -193,6 +198,8 @@ class KeyboardSearch {
             text = ( text.len() > 0 ) ? text.slice( 0, text.len() - 1 ) : ""
         else if ( c == "-" )
             clear()
+        else if ( c == "~" )
+            toggle()
         else
             text = text + c
         search_text.msg = ( text == "" ) ? "" : "\"" + text + "\""
@@ -265,7 +272,7 @@ class KeyboardSearch {
     function toggle() {
         surface.alpha = ( surface.alpha == 0 ) ? 255: 0
         //clear text when shown
-        if ( visible() ) clear()
+        if ( visible() && config.retain == "false" ) clear()
         print("toggle keyboard " + visible() )
     }
     
@@ -301,7 +308,7 @@ class KeyboardSearch {
     }
     
     function on_tick( ttime )
-    {
+    {  
         //check for additional keys
         /*
         if ( visible() && ttime - last_key_check > config.key_delay )
