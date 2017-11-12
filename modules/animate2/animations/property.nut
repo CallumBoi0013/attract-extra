@@ -53,9 +53,7 @@ class PropertyAnimation extends Animation {
         //save target states
         states["current"] <- collect_state( opts.target );
         save_state( "start", clone(states["current"]) );
-        save_state( "from", ( opts.from == null ) ? clone(state) : opts.from );
-        save_state( "to", ( opts.to == null ) ? clone(state) : opts.to );
-
+        
         //ensure all keys are accounted for
         foreach( key, val in opts.to )
             if ( key in opts.from == false )
@@ -63,9 +61,10 @@ class PropertyAnimation extends Animation {
         foreach( key, val in opts.from )
             if ( key in opts.to == false )
                 opts.to[key] <- states["current"][key];
-        
-        states["from"] <- ( opts.from == null ) ? states[opts.default_state] : opts.from;
-        states["to"] <- ( opts.to == null ) ? states[opts.default_state] : opts.to;
+
+        save_state( "from", ( opts.from == null ) ? ( opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.from );
+        save_state( "to", ( opts.to == null ) ? (opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.to );
+                
         base.start();
     }
 
