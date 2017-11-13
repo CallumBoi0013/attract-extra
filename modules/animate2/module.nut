@@ -188,9 +188,11 @@ class Animation {
     function debug( bool ) { opts.debug = bool; return this; }
     function from( val ) { if ( typeof(val) == "string" && val in states ) opts.from = states[val]; else opts.from = val; return this; }
     function to( val ) { if ( typeof(val) == "string" && val in states ) opts.to = states[val]; else opts.to = val; return this; }
+    function loop( count ) { opts.loops = count; return this; }
     function loops( count ) { opts.loops = count; return this; }
     function reverse( bool = true ) { opts.reverse = bool; return this; }
     function yoyo( bool = true ) { opts.yoyo = bool; return this; }
+    function pulse( bool = true ) { opts.yoyo = bool; return this; }
     function interpolator( i ) { opts.interpolator = i; return this; }
     function triggers( triggers ) { opts.triggers = triggers; return this; }
     function then( then ) { opts.then = then; return this; }
