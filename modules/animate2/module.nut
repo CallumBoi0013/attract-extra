@@ -342,8 +342,9 @@ class Animation {
         }
     }
 
-    //cancel the animation
-    function cancel() {
+    //cancel animation, set key to specified state (origin, start, from or to, current)
+    function cancel( state = "current" ) {
+        set_state(state);
         running = false;
         progress = 1.0;
         run_callback( "cancel", this );

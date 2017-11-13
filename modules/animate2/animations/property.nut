@@ -89,19 +89,6 @@ class PropertyAnimation extends Animation {
                 states["current"][key] <- target[key];    
             } catch(e) {}
     }
-
-    //cancel animation, set key to specified state (origin, start, from or to)
-    function cancel( state = "") {
-        print("anim canceled");
-        if ( typeof(state) == "string" && state in states )
-            try {
-                opts.target[opts.key] = states[state][opts.key];
-                print("set cancel state to: " + state);
-            } catch(e) {
-                print("couldn't set " + opts.key + "for cancel state: " + state);
-            }
-        base.cancel();
-    }
     
     //collect supported key values in a state from target
     function collect_state(target) {
