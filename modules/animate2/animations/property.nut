@@ -16,7 +16,7 @@ class PropertyAnimation extends Animation {
     function target( ref ) {
         base.target( ref );
         //store objects origin values
-        save_state( "origin", collect_state(ref) );
+        state( "origin", collect_state(ref) );
         states["origin"].scale <- 1.0;
         return this;
     }
@@ -51,7 +51,7 @@ class PropertyAnimation extends Animation {
 
         //save target states
         states["current"] <- collect_state( opts.target );
-        save_state( "start", clone(states["current"]) );
+        state( "start", clone(states["current"]) );
         
         //ensure all keys are accounted for
         foreach( key, val in opts.to )
@@ -61,8 +61,8 @@ class PropertyAnimation extends Animation {
             if ( key in opts.to == false || opts.from[key] == null )
                 opts.to[key] <- ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
 
-        save_state( "from", ( opts.from == null ) ? ( opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.from );
-        save_state( "to", ( opts.to == null ) ? (opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.to );
+        state( "from", ( opts.from == null ) ? ( opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.from );
+        state( "to", ( opts.to == null ) ? (opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.to );
                 
         base.start();
     }
@@ -84,18 +84,10 @@ class PropertyAnimation extends Animation {
 
     function stop() {
         base.stop();
-
         foreach( key in supported )
             try {
                 states["current"][key] <- target[key];    
             } catch(e) {}
-        
-        if ( !yoyoing && opts.loops > 0 && play_count == 0 )
-            if ( "then" in opts && typeof(opts.then) == "table" ) {
-                set_state( opts.then );
-                //don't keep running it
-                opts.then = null;
-            }
     }
 
     //cancel animation, set key to specified state (origin, start, from or to)
@@ -111,17 +103,6 @@ class PropertyAnimation extends Animation {
         base.cancel();
     }
     
-    //set the target state
-    function set_state( state ) {
-        if ( "target" in opts && opts.target != null ) {
-            print( "set state: " + table_as_string( state ) );
-            foreach( key, val in state ) {
-                try { opts.target[ key ] = val; } catch (err) {}
-            }
-        }
-        return this;
-    }
-
     //collect supported key values in a state from target
     function collect_state(target) {
         if ( target == null ) return;

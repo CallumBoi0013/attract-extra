@@ -328,13 +328,18 @@ class Animation {
                 run_callback( "stop", this );
                 play_count = 0;
                 //run then function or set state if either exist
-                if ( "then" in opts && opts.then != null )
+                if ( "then" in opts && opts.then != null ) {
                     if ( typeof(opts.then) == "function" ) {
                         opts.then(this);
-                        //don't keep running it .then()
-                        opts.then = null;
+                    } else if ( typeof(opts.then) == "table" ) {
+                        set_state(opts.then);
+                    } else if ( typeof(opts.then) == "string" && opts.then in states ) {
+                        set_state(states[opts.then]);
                     }
-                print( "DONE. " + " p: " + progress + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
+                    //don't keep running .then()
+                    //opts.then == null;
+                    print( "DONE. " + " p: " + progress + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
+                }
             }
         }
     }
@@ -348,12 +353,15 @@ class Animation {
 
     //*****  Helper Functions  *****
 
-    //save a state
-    function save_state( name, table ) {
-        if ( name in states == false ) states[name] <- {};
-        if ( typeof(table) == "table" )
-            foreach( key, val in table )
-                states[ name ][ key ] <- val;
+    //set the target state
+    function set_state( state ) {
+        if ( "target" in opts && opts.target != null ) {
+            if ( typeof(state) == "string" && state in states ) state = states[state];
+            if ( typeof(state) == "table" )
+                foreach( key, val in state )
+                    try { opts.target[ key ] = val; } catch (err) { print("error settings state: " + err); }
+        }
+        return this;
     }
 
     //run callbacks for an event
