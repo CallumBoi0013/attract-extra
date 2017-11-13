@@ -77,7 +77,7 @@ class Animation {
         to = null,                  //state (values) we will animate to
         triggers = [],              //array of transitions that will trigger the animation
         trigger_restart = true,     //when a trigger occurs, the animation is restarted
-        default_state = "start"     //default state if no 'from' or 'to' is specified
+        default_state = "current"   //default state if no 'from' or 'to' is specified
         then = null,                //a function or state that is applied at the end of the animation
         duration = 0,               //duration of animation (if timed)
         speed = 1,                  //speed multiplier of animation

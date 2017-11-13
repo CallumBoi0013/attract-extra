@@ -41,7 +41,7 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |`.smoothing(float)`|0.033|tick update frequency, multiples speed
 |`.step(float)`||pause an animation and jump to a specified progress (0-1)
 |`.set_time_unit(string)`|"ms"|set the default time unit - ms or s - used for delays or duration|
-|`.default_state(string)`|"start"|default state used if 'from' or 'to' are not specified. This must be a state stored using the `state()` method. You can use the builtin "origin" or "start" state|
+|`.default_state(string)`|"current"|default state used if 'from' or 'to' are not specified. This must be a state stored using the `state()` method. You can use the builtin "origin", "start" or "current" states|
 |`state(string, table)`||save a state by name. This state can later be used by referencing its name using `from()`, `to()` or `default_state()`|
 |`.set_state( table )`||immediately set state values for a target (if target is specified )|
 |`.play()`||play animation immediately, triggers still apply|
