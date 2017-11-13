@@ -135,12 +135,6 @@ class Animation {
         return this;
     }
     
-    //set the target object for the animation
-    function target( ref ) {
-        opts.target <- ref;
-        return this;
-    }
-
     //listen to AM ticks
     function on_tick(ttime) {
         if ( running ) {
@@ -186,13 +180,15 @@ class Animation {
     //*** CHAINABLE METHODS ***
     function name( str ) { opts.name = str; return this; }
     function debug( bool ) { opts.debug = bool; return this; }
+    function target( ref ) { opts.target <- ref; return this; }
+    function get( ref ) { return target(ref); }     //alias for target
     function from( val ) { if ( typeof(val) == "string" && val in states ) opts.from = states[val]; else opts.from = val; return this; }
     function to( val ) { if ( typeof(val) == "string" && val in states ) opts.to = states[val]; else opts.to = val; return this; }
-    function loop( count ) { opts.loops = count; return this; }
     function loops( count ) { opts.loops = count; return this; }
+    function loop( count ) { return loops(count); } //alias for loops
     function reverse( bool = true ) { opts.reverse = bool; return this; }
     function yoyo( bool = true ) { opts.yoyo = bool; return this; }
-    function pulse( bool = true ) { opts.yoyo = bool; return this; }
+    function pulse( bool = true ) { return yoyo(bool); }    //alias for yoyo
     function interpolator( i ) { opts.interpolator = i; return this; }
     function triggers( triggers ) { opts.triggers = triggers; return this; }
     function then( then ) { opts.then = then; return this; }
