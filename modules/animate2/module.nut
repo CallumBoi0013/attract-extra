@@ -186,7 +186,7 @@ class Animation {
     function to( val ) { if ( typeof(val) == "string" && val in states ) opts.to = states[val]; else opts.to = val; return this; }
     function loops( count ) { opts.loops = count; return this; }
     function loop( count ) { return loops(count); } //alias for loops
-    function reverse( bool = true ) { opts.reverse = bool; return this; }
+    function reverse( bool = null ) { opts.reverse = ( bool == null ) ? !opts.reverse : bool; if ( running ) do_reverse(); return this; }
     function yoyo( bool = true ) { opts.yoyo = bool; return this; }
     function pulse( bool = true ) { return yoyo(bool); }    //alias for yoyo
     function interpolator( i ) { opts.interpolator = i; return this; }
@@ -254,13 +254,7 @@ class Animation {
         opts.loops_delay = parse_time(opts.loops_delay);
 
         //reverse from and to if reverse is enabled
-        if ( opts.reverse ) {
-            _from = ( "to" in states == false ) ? opts.to : states["to"];
-            _to = ( "from" in states == false ) ? opts.from : states["from"];
-        } else {
-            _from = ( "from" in states == false ) ? opts.from : states["from"];
-            _to = ( "to" in states == false ) ? opts.to : states["to"];
-        }
+        do_reverse();
 
         //update times
         started = last_update = ::clock() * 1000;
@@ -276,6 +270,17 @@ class Animation {
     function update() {
         print( "p: " + progress + "\te: " + elapsed + " t: " + tick + "\tpc: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
         run_callback( "update", this );
+    }
+
+    //update the from and to values when reversed
+    function do_reverse() {
+        if ( opts.reverse ) {
+            _from = states["from"] <- opts.to;
+            _to = states["to"] <- opts.from;
+        } else {
+            _from = states["from"] <- opts.from;
+            _to = states["to"] <- opts.to;
+        }
     }
 
     //pause animation at specified step (progress)
