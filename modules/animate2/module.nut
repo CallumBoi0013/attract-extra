@@ -348,9 +348,10 @@ class Animation {
 
     //cancel animation, set key to specified state (origin, start, from or to, current)
     function cancel( state = "current" ) {
-        set_state(state);
+        print("animation canceled");
         running = false;
         progress = 1.0;
+        set_state(state);
         run_callback( "cancel", this );
     }
 
@@ -360,9 +361,8 @@ class Animation {
     function set_state( state ) {
         if ( "target" in opts && opts.target != null ) {
             if ( typeof(state) == "string" && state in states ) state = states[state];
-            if ( typeof(state) == "table" )
-                foreach( key, val in state )
-                    try { opts.target[ key ] = val; } catch (err) { print("error settings state: " + err); }
+            foreach( key, val in state )
+                try { if ( key != "scale" ) opts.target[ key ] = val; } catch (err) { print("error settings state: " + err); }
         }
         return this;
     }

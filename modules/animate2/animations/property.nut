@@ -77,7 +77,7 @@ class PropertyAnimation extends Animation {
 
     function update() {
         if ( opts.from == null || opts.to == null ) return;
-        base.update();
+
         foreach( key, val in states["to"] ) {
             if ( key == "scale" ) {
                 local s = opts.interpolator.interpolate(_from[key], _to[key], progress);
@@ -87,7 +87,9 @@ class PropertyAnimation extends Animation {
                 if ( key == "rotation" ) set_rotation(opts.target[key]);
             }
         }
+
         states["current"] <- collect_state(opts.target);
+        base.update();
 
         if ( debug ) {
             //during debug, print out values as they are animated
@@ -95,14 +97,6 @@ class PropertyAnimation extends Animation {
                 unique_keys[key] <- states["current"][key];
             print( "\t" + table_as_string(unique_keys));
         }
-    }
-
-    function stop() {
-        base.stop();
-        foreach( key in supported )
-            try {
-                states["current"][key] <- target[key];    
-            } catch(e) {}
     }
     
     //collect supported key values in a state from target

@@ -49,7 +49,7 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |`.unpause()`||unpause animation - if not running, the animation will start running|
 |`.restart()`||restart an animation|
 |`.stop()`||stop an animation|
-|`.cancel(*string)`||cancel animation. Specify an optional state name to specify what state to put the target in - "origin", "start", "from" or "to"|
+|`.cancel(*string)`||cancel animation. Specify an optional state name to specify what state to put the target in - "origin", "start", "from" or "to". Default is "current"|
 |`.then( func )`||Run a function after animation completes (one-shot after), function is passed anim as param|
 |`.on( string, function )`||hook a callback to your own function, one of AnimationEvents, function is passed anim as param|
 |`.off( string, function )`||remove a callback that was hooked to an event, function is passed anim as param|
