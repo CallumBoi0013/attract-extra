@@ -319,24 +319,23 @@ class Animation {
                 play_count++;
                 restart();
             } else {
-                //run a final update
-                update();
                 //finished animation
                 running = false;
                 run_callback( "stop", this );
                 play_count = 0;
+                print( "DONE. " + " p: " + progress + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
                 //run then function or set state if either exist
                 if ( "then" in opts && opts.then != null ) {
-                    if ( typeof(opts.then) == "function" ) {
-                        opts.then(this);
-                    } else if ( typeof(opts.then) == "table" ) {
-                        set_state(opts.then);
-                    } else if ( typeof(opts.then) == "string" && opts.then in states ) {
-                        set_state(states[opts.then]);
+                    local t = opts.then;
+                    //don't keep running .then() on loops or replayed anim.play() from then references
+                    opts.then = null;
+                    if ( typeof(t) == "function" ) {
+                        t(this);
+                    } else if ( typeof(t) == "table" ) {
+                        set_state(t);
+                    } else if ( typeof(t) == "string" && t in states ) {
+                        set_state(states[t]);
                     }
-                    //don't keep running .then()
-                    //opts.then == null;
-                    print( "DONE. " + " p: " + progress + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
                 }
             }
         }
