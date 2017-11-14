@@ -1,6 +1,7 @@
 class PropertyAnimation extends Animation {
     supported = [ "x", "y", "width", "height", "origin_x", "origin_y", "scale", "rotation", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "selbg_red", "selbg_green", "selbg_blue", "selbg_alpha", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize" ];
     scale = 1.0;
+    unique_keys = null;
 
     function defaults(params) {
         base.defaults(params);
@@ -63,7 +64,14 @@ class PropertyAnimation extends Animation {
 
         state( "from", ( opts.from == null ) ? ( opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.from );
         state( "to", ( opts.to == null ) ? (opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.to );
-                
+        
+        //store a table of unique keys we are animating
+        unique_keys = {}
+        foreach ( key, val in opts.from )
+            unique_keys[key] <- "";
+        foreach ( key, val in opts.to )
+            unique_keys[key] <- "";
+
         base.start();
     }
 
@@ -80,6 +88,13 @@ class PropertyAnimation extends Animation {
             }
         }
         states["current"] <- collect_state(opts.target);
+
+        if ( debug ) {
+            //during debug, print out values as they are animated
+            foreach( key, val in unique_keys )
+                unique_keys[key] <- states["current"][key];
+            print( "\t" + table_as_string(unique_keys));
+        }
     }
 
     function stop() {
