@@ -128,5 +128,6 @@ class PropertyAnimation extends Animation {
             opts.target.origin_x = states["origin"].origin_x * s;
             opts.target.origin_y = states["origin"].origin_y * s;
         }
+        states["current"].scale <- scale;
     }
 }
