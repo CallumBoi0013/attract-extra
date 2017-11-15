@@ -281,6 +281,7 @@ class Animation {
             _from = states["from"] <- opts.from;
             _to = states["to"] <- opts.to;
         }
+        run_callback( "reverse", this );
     }
 
     //pause animation at specified step (progress)
@@ -317,11 +318,13 @@ class Animation {
         }
         if ( yoyoing ) {
             //first half of 'yoyo' finished, restart to play second half
+            run_callback( "yoyo", this );
             restart();
         } else {
             if ( opts.loops == -1 || ( opts.loops > 0 && play_count < opts.loops ) ) {
                 //play loop
                 play_count++;
+                run_callback( "loop", this );
                 restart();
             } else {
                 //finished animation
