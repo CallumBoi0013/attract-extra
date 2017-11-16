@@ -179,7 +179,7 @@ class Animation {
 
     //*** CHAINABLE METHODS ***
     function name( str ) { opts.name = str; return this; }
-    function debug( bool ) { opts.debug = bool; return this; }
+    function debug( bool = true ) { opts.debug = bool; return this; }
     function target( ref ) { opts.target <- ref; return this; }
     function get( ref ) { return target(ref); }     //alias for target
     function from( val ) { if ( typeof(val) == "string" && val in states ) opts.from = states[val]; else opts.from = val; return this; }
