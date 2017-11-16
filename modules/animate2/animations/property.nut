@@ -1,5 +1,5 @@
 class PropertyAnimation extends Animation {
-    supported = [ "x", "y", "width", "height", "origin_x", "origin_y", "scale", "rotation", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "selbg_red", "selbg_green", "selbg_blue", "selbg_alpha", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize" ];
+    supported = [ "x", "y", "width", "height", "origin_x", "origin_y", "scale", "rotation", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "sel_alpha", "selbg_red", "selbg_green", "selbg_blue", "selbg_alpha", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize" ];
     scale = 1.0;
     unique_keys = null;
 
@@ -22,11 +22,7 @@ class PropertyAnimation extends Animation {
         return this;
     }
 
-    function key( key ) {
-        opts.key <- key;
-        return this;
-    }
-    
+    function key( key ) { opts.key <- key; return this; }
     function center_rotation(bool = true) { opts.center_rotation = bool; return this; }
     function center_scale(bool = true) { opts.center_scale = bool; return this; }
 
@@ -36,48 +32,43 @@ class PropertyAnimation extends Animation {
             return;
         }
 
-        //convert `from` and `to` to tables
-        if ( opts.to == null ) opts.to <- {}
-        if ( typeof(opts.to) != "table" ) {
-            local val = opts.to;
-            opts.to <- {}
-            opts.to[opts.key] <- val;
-        }
-        if ( opts.from == null ) opts.from <- {}
-        if ( typeof(opts.from) != "table" ) {
-            local val = opts.from;
-            opts.from <- {}
-            opts.from[opts.key] <- val;
-        }
-
         //save target states
         states["current"] <- collect_state( opts.target );
         state( "start", clone(states["current"]) );
         
-        //ensure all keys are accounted for
-        foreach( key, val in opts.to )
-            if ( key in opts.from == false || opts.from[key] == null )
-                opts.from[key] <- ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
-        foreach( key, val in opts.from )
-            if ( key in opts.to == false || opts.from[key] == null )
-                opts.to[key] <- ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
+        //evaluate states["from"] and states["to"] from opts.from and opts.to
+        foreach( i, val in [ "from", "to" ]) {
+            if ( opts[val] == null ) {
+                //use default state
+                states[val] <- states[opts.default_state];
+            } else if ( typeof( opts[val] ) == "string" && opts[val] in states ) {
+                //use requested state
+                states[val] <- states[ opts[val] ];
+            } else if ( typeof( opts[val] ) == "table" ) {
+                //use provided table
+                states[val] <- opts[val];
+            } else {
+                //generate a table using opts.key as key, opts.from/to as val
+                states[val] <- {}
+                states[val][opts.key] <- opts[val];
+            }
+        }
 
-        state( "from", ( opts.from == null ) ? ( opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.from );
-        state( "to", ( opts.to == null ) ? (opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.to );
+        //ensure all keys are accounted for
+        foreach( key, val in states["to"] )
+            states["from"][key] <- ( key in states["from"] ) ? states["from"][key] : ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
+        foreach( key, val in states["from"] )
+            states["to"][key] <- ( key in states["to"] ) ? states["to"][key] : ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
         
         //store a table of unique keys we are animating
         unique_keys = {}
-        foreach ( key, val in opts.from )
-            unique_keys[key] <- "";
-        foreach ( key, val in opts.to )
-            unique_keys[key] <- "";
+        foreach ( key, val in states["from"] )
+            if ( states["from"][key] != states["to"][key] ) unique_keys[key] <- "";
 
         base.start();
     }
 
     function update() {
-        if ( opts.from == null || opts.to == null ) return;
-
         foreach( key, val in states["to"] ) {
             if ( key == "scale" ) {
                 local s = opts.interpolator.interpolate(_from[key], _to[key], progress);

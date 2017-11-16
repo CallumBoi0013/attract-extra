@@ -179,11 +179,11 @@ class Animation {
 
     //*** CHAINABLE METHODS ***
     function name( str ) { opts.name = str; return this; }
-    function debug( bool ) { opts.debug = bool; return this; }
+    function debug( bool = true ) { opts.debug = bool; return this; }
     function target( ref ) { opts.target <- ref; return this; }
     function get( ref ) { return target(ref); }     //alias for target
-    function from( val ) { if ( typeof(val) == "string" && val in states ) opts.from = states[val]; else opts.from = val; return this; }
-    function to( val ) { if ( typeof(val) == "string" && val in states ) opts.to = states[val]; else opts.to = val; return this; }
+    function from( val ) { opts.from = val; return this; }
+    function to( val ) { opts.to = val; return this; }
     function loops( count ) { opts.loops = count; return this; }
     function loop( count ) { return loops(count); } //alias for loops
     function reverse( bool = null ) { opts.reverse = ( bool == null ) ? !opts.reverse : bool; if ( running ) do_reverse(); return this; }
@@ -253,6 +253,9 @@ class Animation {
         opts.delay = parse_time( opts.delay );
         opts.loops_delay = parse_time(opts.loops_delay);
 
+        _from = ( "from" in states ) ? states["from"] : opts.from;
+        _to = ( "to" in states ) ? states["to"] : opts.to;
+
         //reverse from and to if reverse is enabled
         do_reverse();
 
@@ -268,6 +271,7 @@ class Animation {
 
     //update the animation
     function update() {
+        if ( _from == null || _to == null ) return;
         print( "p: " + progress + "\te: " + elapsed + " t: " + tick + "\tpc: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
         run_callback( "update", this );
     }
@@ -275,12 +279,13 @@ class Animation {
     //update the from and to values when reversed
     function do_reverse() {
         if ( opts.reverse ) {
-            _from = states["from"] <- opts.to;
-            _to = states["to"] <- opts.from;
+            _from = ( "to" in states ) ? states["to"] : opts.to;
+            _to = ( "from" in states ) ? states["from"] : opts.from;
         } else {
-            _from = states["from"] <- opts.from;
-            _to = states["to"] <- opts.to;
+            _from = ( "from" in states ) ? states["from"] : opts.from;
+            _to = ( "to" in states ) ? states["to"] : opts.to;
         }
+        run_callback( "reverse", this );
     }
 
     //pause animation at specified step (progress)
@@ -317,11 +322,13 @@ class Animation {
         }
         if ( yoyoing ) {
             //first half of 'yoyo' finished, restart to play second half
+            run_callback( "yoyo", this );
             restart();
         } else {
             if ( opts.loops == -1 || ( opts.loops > 0 && play_count < opts.loops ) ) {
                 //play loop
                 play_count++;
+                run_callback( "loop", this );
                 restart();
             } else {
                 //finished animation
@@ -466,6 +473,7 @@ class Animation {
 }
 
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/property.nut");
+fe.do_nut(FeConfigDirectory + "modules/animate2/animations/shader.nut");
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/sprite.nut");
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/particles/module.nut");
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/timeline.nut");
