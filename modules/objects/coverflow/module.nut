@@ -1,84 +1,75 @@
 class CoverFlow {
     slots = null;
-    reflections = null;
-    opts = null;
-	lastaction = null;
+    width = 0;
+    selected = 0;
+	opts = {
+        COUNT = 5,
+        SELECTED_PAD = 20,
+        SELECTED_PRESERVE = true,
+        SELECTED_WIDTH = 0.25,
+        SELECTED_HEIGHT = 1.25,
+        SELECTED_YOFFSET = 0,
+        SELECTED_PINCH_Y = 0,
+        UNSELECTED_PAD = 10,
+        UNSELECTED_PRESERVE = false,
+        UNSELECTED_YOFFSET = 0.4,
+        UNSELECTED_PINCH_Y = 20,
+        UNSELECTED_HEIGHT = 0.6
+    }
 
     constructor(art, x, y, w, h) {
-        opts = {
-            art = art,
-            x = x,
-            y = y,
-            width = w,
-            height = h,
-            selected = 0,
-            selected_width = 0.25,
-            selected_height = 1.25,
-            selected_yoffset = 0,
-            unselected_yoffset = 0.4,
-            unselected_height = 0.6,
-            count = 5,
-            preserve_aspect_ratio = true,
-            pad = 10
-        }
-
-        slots = create_slots();
-        reflections = [];
-        
+        slots = [];
+        create(art, x, y, w, h);
 
         //fe.add_transition_callback(this, "on_transition" );
         fe.add_signal_handler(this, "on_signal");
     }
+	
+    function create(art, x, y, w, h) {
+        width = ( w / opts.COUNT ) - (opts.UNSELECTED_PAD * opts.COUNT);
+        selected = floor(opts.COUNT / 2) + 1;	
 
-    function create_slots() {
-        local slots = [];
-        //width = ( opts.width / opts.count ) - (opts.pad * opts.count);
-        opts.selected = floor(opts.count / 2) + 1;
-
-        local totalW = opts.width - ( opts.pad * 2 );
-        local totalH = opts.height - ( opts.pad * 2 );
-        local selectedY = opts.y + ( opts.pad + totalH * -opts.selected_yoffset ) * 1;
-        local selectedW = totalW * opts.selected_width + (opts.pad / 2);
-        local selectedH = totalH * opts.selected_height - opts.pad;
-        local unselectedY = y + ( opts.pad + totalH * opts.unselected_yoffset ) * 1;
-        local unselectedW = totalW / opts.count * ( 1 - opts.selected_width ) + opts.pad;
-        local unselectedH = totalH * opts.unselected_height - opts.pad;
-        local cfX = x - unselectedW - opts.pad;
+        local totalW = w - ( opts.UNSELECTED_PAD * 2 );
+        local totalH = h - ( opts.UNSELECTED_PAD * 2 );
+        local selectedY = y + ( opts.UNSELECTED_PAD + totalH * -opts.SELECTED_YOFFSET ) * 1;
+        local selectedW = totalW * opts.SELECTED_WIDTH + (opts.UNSELECTED_PAD / 2);
+        local selectedH = totalH * opts.SELECTED_HEIGHT - opts.UNSELECTED_PAD;
+        local unselectedY = y + ( opts.UNSELECTED_PAD + totalH * opts.UNSELECTED_YOFFSET ) * 1;
+        local unselectedW = totalW / opts.COUNT * ( 1 - opts.SELECTED_WIDTH ) + opts.UNSELECTED_PAD;
+        local unselectedH = totalH * opts.UNSELECTED_HEIGHT - opts.UNSELECTED_PAD;
+        local cfX = x - unselectedW - opts.UNSELECTED_PAD;
 
         //create art slots, animations and set props for each slot
-        for( local i = 0; i < opts.count + 2; i++) {
-            local itemX = cfX + opts.pad;
-            local itemY = ( i == opts.selected ) ? selectedY : unselectedY;
-            local itemW = ( i == opts.selected ) ? selectedW : unselectedW;
-            local itemH = ( i == opts.selected ) ? selectedH : unselectedH;
-            slots.push( CoverFlowArt(opts.art) );
+        for( local i = 0; i < opts.COUNT + 2; i++) {
+            local itemX = ( i == selected || i == selected + 1 ) ? cfX + opts.SELECTED_PAD : cfX + opts.UNSELECTED_PAD;
+            local itemY = ( i == selected ) ? selectedY : unselectedY;
+            local itemW = ( i == selected ) ? selectedW : unselectedW;
+            local itemH = ( i == selected ) ? selectedH : unselectedH;
+            slots.push( CoverFlowArt(art) );
             slots[i].props({
                 x = itemX,
                 y = itemY,
                 width = itemW,
                 height = itemH,
-                pinch_y = ( i < opts.selected ) ? 20 : ( i == opts.selected ) ? 0 : -20,
-                alpha = ( i == 0 || i == opts.count + 1 ) ? 0 : 255,
+                pinch_y = ( i < selected ) ? opts.UNSELECTED_PINCH_Y : ( i == selected ) ? opts.SELECTED_PINCH_Y : -opts.UNSELECTED_PINCH_Y,
+                alpha = ( i == 0 || i == opts.COUNT + 1 ) ? 0 : 255,
             });
-            slots[i].ref.preserve_aspect_ratio = opts.preserve_aspect_ratio;
-            slots[i].ref.index_offset = -opts.selected + i;
-			slots[i].index_offset = -opts.selected + i;
-			slots[i].slotnumber = i;
+            slots[i].ref.preserve_aspect_ratio = slots[i].mirror.preserve_aspect_ratio = ( i == selected ) ? opts.SELECTED_PRESERVE : opts.UNSELECTED_PRESERVE;
+            slots[i].ref.index_offset = slots[i].mirror.index_offset = -selected + i;
+			slots[i].index_offset = -selected + i;
             cfX = itemX + itemW;
         }
-        return slots;
+
     }
 
     function on_signal(str) {
         if ( str == "prev_game" ) {
-            backwards();
-			if (lastaction ==str)	{fe.list.index++}
-			lastaction = str;
+            forwards();
+			fe.list.index--
             return true;
         } else if ( str == "next_game" ) {
-            forwards();
-			if (lastaction ==str)	{fe.list.index--}
-            lastaction = str;
+            backwards();
+			fe.list.index++
 			return true;
         }
         return false;
@@ -90,129 +81,131 @@ class CoverFlow {
         } else if ( ttype == Transition.FromOldSelection ) {
             if ( var > 0 ) forwards(); else backwards();
         }
+        for( local i = 0; i < slots.len(); i++)
+            slots[i].artwork_transition(ttype, var, ttime);
         return false;
     }
 
     function backwards() {
-        print("backwards\n");
         for ( local i = 0; i < slots.len(); i++ ) {
             local toIndex = ( i > 0 ) ? i - 1 : slots.len() - 1;
-			local fromIndex = ( i  > 0 ) ? i - 1 : slots.len() - 1;
-            slots[i].animate( slots[toIndex]._props, slots[toIndex].ref );
+			slots[i].animate( slots[toIndex]._props, - 1 );
         }
+		
+		
     }
 
     function forwards() {
-        print("forwards\n");
         for ( local i = 0; i < slots.len(); i++ ) {
             local toIndex = ( i < slots.len() - 1 ) ? i + 1 : 0;
-			local fromIndex = ( i+1 < slots.len() - 1 ) ? i + 1 : 0;
-            slots[i].animate( slots[toIndex]._props, slots[toIndex].ref );
+            slots[i].animate( slots[toIndex]._props, 1 );
         }
     }
 }
 
 class CoverFlowArt {
     ref = null;
-    reflection = null;
     anim = null;
     _props = null;
+    mirror = null;
+    mirror_anim = null;
+    mirror_props = null;
     index_offset = null;
-	newref = null;	
-	slotnumber=null;
+	offset = null;	
+	
     constructor(art) {
         ref = fe.add_artwork(art, -1, -1, 1, 1);
-        reflection = fe.add_clone(ref);
-        reflection.subimg_x = -1;
+        anim = PropertyAnimation(ref);
+        mirror = fe.add_clone(ref);
+        mirror_anim = PropertyAnimation(mirror);
+    }
+
+    function artwork_transition(ttype, var, ttime) {
+        //mirror.subimg_y = -1 * ref.texture_height;
+        //mirror.subimg_height = -ref.texture_height;
     }
 
     function props(props) {
         this._props = props;
-        set_props(props);
-        reflection.y = props.y + props.height;
+        set_props(ref, props);
+        //update_mirror();
     }
 	
 	function reset_index(blah)
 	{
-		if (slotnumber==3) {print("Slot:"+ slotnumber +" REFINDEX:"+ ref.x + " INDEX SETTING IN SLOT"+ index_offset+"\n")};
-		
-//		ref.swap(newref);
-//		ref.rawset_index_offset(index_offset)
+		ref.rawset_index_offset(index_offset);			
 		return;
 	}
 
-    function animate(to, toref) {
-		newref = toref;
-		anim = PropertyAnimation(ref).from(_props)
-		.to(to)
-        .easing("ease")
-        .speed(2)
-//		.on("start", this, "reset_index" )
-//		.debug(true)
-		.play();
-    }
-
-
+	function adjust_images(blah)
+	{
+		ref.index_offset = index_offset + offset;
+		return;
+	}	
 	
-    function set_props(props) {
+    function animate(to, offset) {
+		this.offset = offset;
+		anim.from(_props).to(to).on("start", this "adjust_images").on("stop", this, "reset_index" ).play();
+		//mirror_anim.from(mirror_props).to(to).on("start", this "adjust_images").on("stop", this, "reset_index" ).play();
+    }
+    
+    function update_mirror() {
+        mirror_props = {
+            x = _props.x,
+            y = _props.y + _props.height,
+            width = _props.width,
+            height = _props.height,
+            alpha = _props.alpha,
+            subimg_y = -1 * ref.texture_height,
+            subimg_height = -ref.texture_height
+        }
+        //set_props(mirror, mirror_props);
+    }
+		
+    function set_props(target, props) {
         foreach( key, val in props )
         try {
             if ( key == "rgb" ) {
-                ref.set_rgb(val[0],val[1],val[2]);
-                if ( val.len() > 3 ) ref.alpha = val[3];
+                target.set_rgb(val[0],val[1],val[2]);
+                if ( val.len() > 3 ) target.alpha = val[3];
             } else {
-                ref[key] = val;
+                target[key] = val;
             }
         } catch(e) { ::print("set_props error,  setting property: " + key + "\n") }
     }
 }
 
+
+class CustomFlow extends CoverFlow {
+    opts = {
+        COUNT = 9,
+        SELECTED_PAD = 50,
+        SELECTED_PRESERVE = true,
+        SELECTED_WIDTH = 0.25,
+        SELECTED_HEIGHT = 1.5,
+        SELECTED_YOFFSET = 0.2,
+        SELECTED_PINCH_Y = 0,
+        UNSELECTED_PAD = 0,
+        UNSELECTED_PRESERVE = false,
+        UNSELECTED_YOFFSET = 0.7,
+        UNSELECTED_HEIGHT = 0.5
+        UNSELECTED_PINCH_Y = 30,
+    }
+}
+
 class Gallery extends CoverFlow {
-    constructor(art) {
-        fe.layout.width = 1920;
-        fe.layout.height = 1080;
-        base.constructor(art, 0, 0, fe.layout.width, fe.layout.height);
+    function create(art, x, y, w, h) {
+        for ( local i = 0; i < 5; i++)
+            slots.push( CoverFlowArt(art) );
+        slots[0].props({ x = 50, y = 50, width = 300, height = 300 });
+        slots[1].props({ x = 450, y = 50, width = 300, height = 300 });
+        slots[2].props({ x = 850, y = 50, width = 300, height = 300 });
+        slots[3].props({ x = 50, y = 450, width = 300, height = 300 });
+        slots[4].props({ x = 450, y = 450, width = 300, height = 300 });
+        slots[0].ref.index_offset = -2;
+        slots[1].ref.index_offset = -1;
+        slots[2].ref.index_offset = 0;
+        slots[3].ref.index_offset = 1;
+        slots[4].ref.index_offset = 2;
     }
-
-    function create_slots() {
-        local slots = [];
-        for ( local i = 0; i < 15; i++)
-            slots.push( CoverFlowArt(opts.art) );
-        
-        slots[0].props({ x = 150, y = 50, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[1].props({ x = 470, y = 50, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[2].props({ x = 790, y = 50, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[3].props({ x = 1110, y = 50, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[4].props({ x = 1430, y = 50, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        
-        slots[5].props({ x = 150, y = 370, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[6].props({ x = 470, y = 370, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[7].props({ x = 770, y = 350, width = 340, height = 340, rgb = [ 255, 255, 255, 255 ] });
-        slots[8].props({ x = 1110, y = 370, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[9].props({ x = 1430, y = 370, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-
-        slots[10].props({ x = 150, y = 690, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[11].props({ x = 470, y = 690, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[12].props({ x = 790, y = 690, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[13].props({ x = 1110, y = 690, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        slots[14].props({ x = 1430, y = 690, width = 280, height = 280, rgb = [ 30, 30, 30, 225 ] });
-        opts.selected = 7;
-
-        for ( local i = 0; i < 15; i++) {
-            slots[i].ref.index_offset = i - opts.selected;
-            slots[i].ref.zorder = ( i == opts.selected ) ? 2 : 1;
-            //if ( i != opts.selected ) slots[i].ref.set_rgb(30,30,30);
-            //if ( i != opts.selected) slots[i].ref.alpha = 255;
-        }
-        return slots;
-    }
-
-    function animate(to, toref) {
-		PropertyAnimation(ref).from(_props)
-            .to(to)
-            .easing("ease-in-back")
-            .speed(0.25)
-            .play();
-    }
-
 }
