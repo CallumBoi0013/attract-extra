@@ -1,5 +1,5 @@
 class PropertyAnimation extends Animation {
-    supported = [ "x", "y", "width", "height", "origin_x", "origin_y", "scale", "rotation", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "sel_alpha", "selbg_red", "selbg_green", "selbg_blue", "selbg_alpha", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize" ];
+    supported = [ "x", "y", "width", "height", "origin_x", "origin_y", "scale", "rotation", "rgb", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "sel_alpha", "selbg_red", "selbg_green", "selbg_blue", "selbg_alpha", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize" ];
     scale = 1.0;
     unique_keys = null;
 
@@ -73,6 +73,14 @@ class PropertyAnimation extends Animation {
             if ( key == "scale" ) {
                 local s = opts.interpolator.interpolate(_from[key], _to[key], progress);
                 set_scale(s);
+            } else if ( key == "rgb" ) {
+                opts.target.set_rgb(
+                    opts.interpolator.interpolate(_from[key][0], _to[key][0], progress),
+                    opts.interpolator.interpolate(_from[key][1], _to[key][1], progress),
+                    opts.interpolator.interpolate(_from[key][2], _to[key][2], progress)
+                )
+                if ( _from[key].len() > 3 && _to[key].len() > 3 )
+                    opts.interpolator.interpolate(_from[key][3], _to[key][3], progress)
             } else if ( supported.find(key) != null ) {
                 opts.target[key] = opts.interpolator.interpolate(_from[key], _to[key], progress);
                 if ( key == "rotation" ) set_rotation(opts.target[key]);
@@ -96,7 +104,11 @@ class PropertyAnimation extends Animation {
         local state = {}
         for ( local i = 0; i < supported.len(); i++)
             try {
-                state[supported[i]] <- target[supported[i]];
+                if ( supported[i] == "rgb" ) {
+                    state[supported[i]] <- [ target.red, target.green, target.blue, target.alpha ];
+                } else {
+                    state[supported[i]] <- target[supported[i]];
+                }
             } catch(e) {}
         state.scale <- 1;
         return state;

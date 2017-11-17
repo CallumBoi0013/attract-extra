@@ -369,7 +369,14 @@ class Animation {
         if ( "target" in opts && opts.target != null ) {
             if ( typeof(state) == "string" && state in states ) state = states[state];
             foreach( key, val in state )
-                try { if ( key != "scale" ) opts.target[ key ] = val; } catch (err) { print("error settings state: " + err); }
+                try {
+                    if ( key == "rgb" ) {
+                        opts.target.set_rgb( val[0], val[1], val[2] );
+                        if ( val.len() > 3 ) opts.target.alpha = val[3];
+                    } else if ( key != "scale" ) {
+                        opts.target[ key ] = val;
+                    }
+                } catch (err) { print("error settings state: " + err); }
         }
         return this;
     }
