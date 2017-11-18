@@ -1,4 +1,24 @@
-local magic_image_settings = {
+///////////////////////////////////////////////////
+//
+// Attract-Mode Frontend - Magic Images plugin
+// by: liquid8d
+// version: 1.0
+//
+//  DESC:
+//  use premade magic image functions to add images for # of players, genre, region, esrb and system
+// 
+//  USAGE:
+//      fe.add_image("[!TYPE_image]", 0, 0, 100, 100) //where type is one of: players, genre, region, esrb or system
+//
+//  NOTES:
+//  ESRB and REGION uses TAGS! You must tag your games for them to show up
+//  Filenames are expected to be in images/TYPE/ with the extension specified in the magic_image_settings variable
+//  The supported filenames are the 'key' in the supported table for each function
+//  The names that will match the filename are in the array of the supported table for each function
+//
+///////////////////////////////////////////////////
+
+::magic_image_settings <- {
     players = { path = "images/players/", ext = ".png" },
     genre = { path = "images/genre/", ext = ".png", mode = 0 } // modes: 0 = first match, 1 = last match, 2 = random,
     region = { path = "images/region/", ext = ".png" },
@@ -7,7 +27,7 @@ local magic_image_settings = {
 }
 
 //return file_name for system
-function system( offset ) {
+function system_image( offset ) {
     local supported = {
         "nes": [ "nes", "nintendo", "nintendo entertainment system", "famicom" ],
         "snes": [ "snes", "super nintendo", "super nintendo entertainment system", "super famicom" ],
@@ -43,7 +63,7 @@ function system( offset ) {
 }
 
 //return file_name for esrb
-function esrb( offset ) {
+function esrb_image( offset ) {
    local supported = [ "esrb-c", "esrb-e", "esrb-e10", "esrb-t", "esrb-m", "esrb-a", "esrb-rp", "unknown" ]
    local tags = fe.game_info(Info.Tags, offset).tolower()
    local index = supported.find("unknown")
@@ -53,7 +73,7 @@ function esrb( offset ) {
 }
 
 //return file_name for region
-function region( offset ) {
+function region_image( offset ) {
    local supported = [ "usa", "japan", "brazil", "asia", "spain", "europe", "world", "unknown" ]
    local tags = fe.game_info(Info.Tags, offset).tolower()
    local index = supported.find("unknown")
@@ -63,7 +83,7 @@ function region( offset ) {
 }
 
 //return file_name for genre
-function genre( offset) {
+function genre_image( offset) {
    local supported = {
       //filename : [ match1, match2 ]
       "action": [ "action" ],
@@ -96,7 +116,7 @@ function genre( offset) {
 }
 
 //return file_name for players
-function players( offset ) {
+function players_image( offset ) {
    local info = fe.game_info( Info.Players, offset ).tolower()
    if ( info.len() >= 1 ) return magic_image_settings.players.path + info.slice(0, 1) + magic_image_settings.players.ext
    return magic_image_settings.players.path + "unknown" + magic_image_settings.players.ext
