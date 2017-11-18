@@ -5,7 +5,7 @@
 // version: 1.0
 //
 //  DESC:
-//  use premade magic image functions to add images for # of players, genre, region, esrb and system
+//  use premade magic image functions in your layout to add images for # of players, genre, region, esrb and system
 // 
 //  USAGE:
 //      Add the magic-images.nut and images folder into your layout
