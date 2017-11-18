@@ -8,6 +8,9 @@
 //  use premade magic image functions to add images for # of players, genre, region, esrb and system
 // 
 //  USAGE:
+//      Add the magic-images.nut and images folder into your layout
+//
+//      fe.do_nut("magic-images.nut");
 //      fe.add_image("[!TYPE_image]", 0, 0, 100, 100) //where type is one of: players, genre, region, esrb or system
 //
 //  NOTES:
