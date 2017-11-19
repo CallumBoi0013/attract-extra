@@ -77,7 +77,7 @@ class Animation {
         to = null,                  //state (values) we will animate to
         triggers = [],              //array of transitions that will trigger the animation
         trigger_restart = true,     //when a trigger occurs, the animation is restarted
-        default_state = "start"     //default state if no 'from' or 'to' is specified
+        default_state = "current"   //default state if no 'from' or 'to' is specified
         then = null,                //a function or state that is applied at the end of the animation
         duration = 0,               //duration of animation (if timed)
         speed = 1,                  //speed multiplier of animation
@@ -135,12 +135,6 @@ class Animation {
         return this;
     }
     
-    //set the target object for the animation
-    function target( ref ) {
-        opts.target <- ref;
-        return this;
-    }
-
     //listen to AM ticks
     function on_tick(ttime) {
         if ( running ) {
@@ -185,12 +179,16 @@ class Animation {
 
     //*** CHAINABLE METHODS ***
     function name( str ) { opts.name = str; return this; }
-    function debug( bool ) { opts.debug = bool; return this; }
-    function from( val ) { if ( typeof(val) == "string" && val in states ) opts.from = states[val]; else opts.from = val; return this; }
-    function to( val ) { if ( typeof(val) == "string" && val in states ) opts.to = states[val]; else opts.to = val; return this; }
+    function debug( bool = true ) { opts.debug = bool; return this; }
+    function target( ref ) { opts.target <- ref; return this; }
+    function get( ref ) { return target(ref); }     //alias for target
+    function from( val ) { opts.from = val; return this; }
+    function to( val ) { opts.to = val; return this; }
     function loops( count ) { opts.loops = count; return this; }
-    function reverse( bool = true ) { opts.reverse = bool; return this; }
+    function loop( count ) { return loops(count); } //alias for loops
+    function reverse( bool = null ) { opts.reverse = ( bool == null ) ? !opts.reverse : bool; if ( running ) do_reverse(); return this; }
     function yoyo( bool = true ) { opts.yoyo = bool; return this; }
+    function pulse( bool = true ) { return yoyo(bool); }    //alias for yoyo
     function interpolator( i ) { opts.interpolator = i; return this; }
     function triggers( triggers ) { opts.triggers = triggers; return this; }
     function then( then ) { opts.then = then; return this; }
@@ -255,14 +253,11 @@ class Animation {
         opts.delay = parse_time( opts.delay );
         opts.loops_delay = parse_time(opts.loops_delay);
 
+        _from = ( "from" in states ) ? states["from"] : opts.from;
+        _to = ( "to" in states ) ? states["to"] : opts.to;
+
         //reverse from and to if reverse is enabled
-        if ( opts.reverse ) {
-            _from = ( "to" in states == false ) ? opts.to : states["to"];
-            _to = ( "from" in states == false ) ? opts.from : states["from"];
-        } else {
-            _from = ( "from" in states == false ) ? opts.from : states["from"];
-            _to = ( "to" in states == false ) ? opts.to : states["to"];
-        }
+        do_reverse();
 
         //update times
         started = last_update = ::clock() * 1000;
@@ -276,8 +271,21 @@ class Animation {
 
     //update the animation
     function update() {
+        if ( _from == null || _to == null ) return;
         print( "p: " + progress + "\te: " + elapsed + " t: " + tick + "\tpc: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
         run_callback( "update", this );
+    }
+
+    //update the from and to values when reversed
+    function do_reverse() {
+        if ( opts.reverse ) {
+            _from = ( "to" in states ) ? states["to"] : opts.to;
+            _to = ( "from" in states ) ? states["from"] : opts.from;
+        } else {
+            _from = ( "from" in states ) ? states["from"] : opts.from;
+            _to = ( "to" in states ) ? states["to"] : opts.to;
+        }
+        run_callback( "reverse", this );
     }
 
     //pause animation at specified step (progress)
@@ -314,46 +322,63 @@ class Animation {
         }
         if ( yoyoing ) {
             //first half of 'yoyo' finished, restart to play second half
+            run_callback( "yoyo", this );
             restart();
         } else {
             if ( opts.loops == -1 || ( opts.loops > 0 && play_count < opts.loops ) ) {
                 //play loop
                 play_count++;
+                run_callback( "loop", this );
                 restart();
             } else {
-                //run a final update
-                update();
                 //finished animation
                 running = false;
                 run_callback( "stop", this );
                 play_count = 0;
-                //run then function or set state if either exist
-                if ( "then" in opts && opts.then != null )
-                    if ( typeof(opts.then) == "function" ) {
-                        opts.then(this);
-                        //don't keep running it .then()
-                        opts.then = null;
-                    }
                 print( "DONE. " + " p: " + progress + " e: " + elapsed + " tick: " + tick + " u: " + last_update + " c: " + play_count + " l: " + opts.loops + " r: " + opts.reverse + " y: " + yoyoing );
+                //run then function or set state if either exist
+                if ( "then" in opts && opts.then != null ) {
+                    local t = opts.then;
+                    //don't keep running .then() on loops or replayed anim.play() from then references
+                    opts.then = null;
+                    if ( typeof(t) == "function" ) {
+                        t(this);
+                    } else if ( typeof(t) == "table" ) {
+                        set_state(t);
+                    } else if ( typeof(t) == "string" && t in states ) {
+                        set_state(states[t]);
+                    }
+                }
             }
         }
     }
 
-    //cancel the animation
-    function cancel() {
+    //cancel animation, set key to specified state (origin, start, from or to, current)
+    function cancel( state = "current" ) {
+        print("animation canceled");
         running = false;
         progress = 1.0;
+        set_state(state);
         run_callback( "cancel", this );
     }
 
     //*****  Helper Functions  *****
 
-    //save a state
-    function save_state( name, table ) {
-        if ( name in states == false ) states[name] <- {};
-        if ( typeof(table) == "table" )
-            foreach( key, val in table )
-                states[ name ][ key ] <- val;
+    //set the target state
+    function set_state( state ) {
+        if ( "target" in opts && opts.target != null ) {
+            if ( typeof(state) == "string" && state in states ) state = states[state];
+            foreach( key, val in state )
+                try {
+                    if ( key == "rgb" ) {
+                        opts.target.set_rgb( val[0], val[1], val[2] );
+                        if ( val.len() > 3 ) opts.target.alpha = val[3];
+                    } else if ( key != "scale" ) {
+                        opts.target[ key ] = val;
+                    }
+                } catch (err) { print("error settings state: " + err); }
+        }
+        return this;
     }
 
     //run callbacks for an event
@@ -455,6 +480,7 @@ class Animation {
 }
 
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/property.nut");
+fe.do_nut(FeConfigDirectory + "modules/animate2/animations/shader.nut");
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/sprite.nut");
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/particles/module.nut");
 fe.do_nut(FeConfigDirectory + "modules/animate2/animations/timeline.nut");

@@ -41,7 +41,7 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |`.smoothing(float)`|0.033|tick update frequency, multiples speed
 |`.step(float)`||pause an animation and jump to a specified progress (0-1)
 |`.set_time_unit(string)`|"ms"|set the default time unit - ms or s - used for delays or duration|
-|`.default_state(string)`|"start"|default state used if 'from' or 'to' are not specified. This must be a state stored using the `state()` method. You can use the builtin "origin" or "start" state|
+|`.default_state(string)`|"current"|default state used if 'from' or 'to' are not specified. This must be a state stored using the `state()` method. You can use the builtin "origin", "start" or "current" states|
 |`state(string, table)`||save a state by name. This state can later be used by referencing its name using `from()`, `to()` or `default_state()`|
 |`.set_state( table )`||immediately set state values for a target (if target is specified )|
 |`.play()`||play animation immediately, triggers still apply|
@@ -49,7 +49,7 @@ Unless otherwise specified, Animations will accept an object, and an optional op
 |`.unpause()`||unpause animation - if not running, the animation will start running|
 |`.restart()`||restart an animation|
 |`.stop()`||stop an animation|
-|`.cancel(*string)`||cancel animation. Specify an optional state name to specify what state to put the target in - "origin", "start", "from" or "to"|
+|`.cancel(*string)`|"current"|cancel animation. Specify an optional state name to specify what state to put the target in - "origin", "start", "from" or "to"|
 |`.then( func )`||Run a function after animation completes (one-shot after), function is passed anim as param|
 |`.on( string, function )`||hook a callback to your own function, one of AnimationEvents, function is passed anim as param|
 |`.off( string, function )`||remove a callback that was hooked to an event, function is passed anim as param|

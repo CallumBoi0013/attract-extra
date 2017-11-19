@@ -1,6 +1,7 @@
 class PropertyAnimation extends Animation {
-    supported = [ "x", "y", "width", "height", "origin_x", "origin_y", "scale", "rotation", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "selbg_red", "selbg_green", "selbg_blue", "selbg_alpha", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize" ];
+    supported = [ "x", "y", "width", "height", "origin_x", "origin_y", "scale", "rotation", "rgb", "red", "green", "blue", "bg_red", "bg_green", "bg_blue", "sel_red", "sel_green", "sel_blue", "sel_alpha", "selbg_red", "selbg_green", "selbg_blue", "selbg_alpha", "alpha", "skew_x", "skew_y", "pinch_x", "pinch_y", "subimg_x", "subimg_y", "charsize", "zorder" ];
     scale = 1.0;
+    unique_keys = null;
 
     function defaults(params) {
         base.defaults(params);
@@ -16,16 +17,12 @@ class PropertyAnimation extends Animation {
     function target( ref ) {
         base.target( ref );
         //store objects origin values
-        save_state( "origin", collect_state(ref) );
+        state( "origin", collect_state(ref) );
         states["origin"].scale <- 1.0;
         return this;
     }
 
-    function key( key ) {
-        opts.key <- key;
-        return this;
-    }
-    
+    function key( key ) { opts.key <- key; return this; }
     function center_rotation(bool = true) { opts.center_rotation = bool; return this; }
     function center_scale(bool = true) { opts.center_scale = bool; return this; }
 
@@ -35,100 +32,83 @@ class PropertyAnimation extends Animation {
             return;
         }
 
-        //convert `from` and `to` to tables
-        if ( opts.to == null ) opts.to <- {}
-        if ( typeof(opts.to) != "table" ) {
-            local val = opts.to;
-            opts.to <- {}
-            opts.to[opts.key] <- val;
-        }
-        if ( opts.from == null ) opts.from <- {}
-        if ( typeof(opts.from) != "table" ) {
-            local val = opts.from;
-            opts.from <- {}
-            opts.from[opts.key] <- val;
-        }
-
         //save target states
         states["current"] <- collect_state( opts.target );
-        save_state( "start", clone(states["current"]) );
+        state( "start", clone(states["current"]) );
         
-        //ensure all keys are accounted for
-        foreach( key, val in opts.to )
-            if ( key in opts.from == false || opts.from[key] == null )
-                opts.from[key] <- ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
-        foreach( key, val in opts.from )
-            if ( key in opts.to == false || opts.from[key] == null )
-                opts.to[key] <- ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
+        //evaluate states["from"] and states["to"] from opts.from and opts.to
+        foreach( i, val in [ "from", "to" ]) {
+            if ( opts[val] == null ) {
+                //use default state
+                states[val] <- states[opts.default_state];
+            } else if ( typeof( opts[val] ) == "string" && opts[val] in states ) {
+                //use requested state
+                states[val] <- states[ opts[val] ];
+            } else if ( typeof( opts[val] ) == "table" ) {
+                //use provided table
+                states[val] <- opts[val];
+            } else {
+                //generate a table using opts.key as key, opts.from/to as val
+                states[val] <- {}
+                states[val][opts.key] <- opts[val];
+            }
+        }
 
-        save_state( "from", ( opts.from == null ) ? ( opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.from );
-        save_state( "to", ( opts.to == null ) ? (opts.default_state in states ) ? states[opts.default_state] : clone(state) : opts.to );
-                
+        //ensure all keys are accounted for
+        foreach( key, val in states["to"] )
+            states["from"][key] <- ( key in states["from"] ) ? states["from"][key] : ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
+        foreach( key, val in states["from"] )
+            states["to"][key] <- ( key in states["to"] ) ? states["to"][key] : ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
+        
+        //store a table of unique keys we are animating
+        unique_keys = {}
+        foreach ( key, val in states["from"] )
+            if ( states["from"][key] != states["to"][key] ) unique_keys[key] <- "";
+
         base.start();
     }
 
     function update() {
-        if ( opts.from == null || opts.to == null ) return;
-        base.update();
         foreach( key, val in states["to"] ) {
             if ( key == "scale" ) {
                 local s = opts.interpolator.interpolate(_from[key], _to[key], progress);
                 set_scale(s);
+            } else if ( key == "rgb" ) {
+                opts.target.set_rgb(
+                    opts.interpolator.interpolate(_from[key][0], _to[key][0], progress),
+                    opts.interpolator.interpolate(_from[key][1], _to[key][1], progress),
+                    opts.interpolator.interpolate(_from[key][2], _to[key][2], progress)
+                )
+                if ( _from[key].len() > 3 && _to[key].len() > 3 )
+                    opts.interpolator.interpolate(_from[key][3], _to[key][3], progress)
             } else if ( supported.find(key) != null ) {
                 opts.target[key] = opts.interpolator.interpolate(_from[key], _to[key], progress);
                 if ( key == "rotation" ) set_rotation(opts.target[key]);
             }
         }
+
         states["current"] <- collect_state(opts.target);
-    }
+        base.update();
 
-    function stop() {
-        base.stop();
-
-        foreach( key in supported )
-            try {
-                states["current"][key] <- target[key];    
-            } catch(e) {}
-        
-        if ( !yoyoing && opts.loops > 0 && play_count == 0 )
-            if ( "then" in opts && typeof(opts.then) == "table" ) {
-                set_state( opts.then );
-                //don't keep running it
-                opts.then = null;
-            }
-    }
-
-    //cancel animation, set key to specified state (origin, start, from or to)
-    function cancel( state = "") {
-        print("anim canceled");
-        if ( typeof(state) == "string" && state in states )
-            try {
-                opts.target[opts.key] = states[state][opts.key];
-                print("set cancel state to: " + state);
-            } catch(e) {
-                print("couldn't set " + opts.key + "for cancel state: " + state);
-            }
-        base.cancel();
+        if ( debug ) {
+            //during debug, print out values as they are animated
+            foreach( key, val in unique_keys )
+                unique_keys[key] <- states["current"][key];
+            print( "\t" + table_as_string(unique_keys));
+        }
     }
     
-    //set the target state
-    function set_state( state ) {
-        if ( "target" in opts && opts.target != null ) {
-            print( "set state: " + table_as_string( state ) );
-            foreach( key, val in state ) {
-                try { opts.target[ key ] = val; } catch (err) {}
-            }
-        }
-        return this;
-    }
-
     //collect supported key values in a state from target
     function collect_state(target) {
         if ( target == null ) return;
         local state = {}
         for ( local i = 0; i < supported.len(); i++)
             try {
-                state[supported[i]] <- target[supported[i]];
+                if ( supported[i] == "rgb" ) {
+                    state[supported[i]] <- [ target.red, target.green, target.blue, target.alpha ];
+                } else {
+                    state[supported[i]] <- target[supported[i]];
+                }
             } catch(e) {}
         state.scale <- 1;
         return state;
@@ -160,5 +140,6 @@ class PropertyAnimation extends Animation {
             opts.target.origin_x = states["origin"].origin_x * s;
             opts.target.origin_y = states["origin"].origin_y * s;
         }
+        states["current"].scale <- scale;
     }
 }
