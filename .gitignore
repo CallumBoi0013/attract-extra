@@ -10,6 +10,7 @@ modules/pan-and-scan.nut
 modules/submenu.nut
 modules/shader-module
 layouts/The-Eye
+layouts/magnus-verion
 plugins/Jukebox/jukebox.txt
 
 #################

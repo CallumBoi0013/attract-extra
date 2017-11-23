@@ -56,14 +56,17 @@ class PropertyAnimation extends Animation {
 
         //ensure all keys are accounted for
         foreach( key, val in states["to"] )
-            states["from"][key] <- ( key in states["from"] ) ? states["from"][key] : ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
+            if ( supported.find(key) != null )
+                states["from"][key] <- ( key in states["from"] ) ? states["from"][key] : ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
         foreach( key, val in states["from"] )
-            states["to"][key] <- ( key in states["to"] ) ? states["to"][key] : ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
+            if ( supported.find(key) != null )
+                states["to"][key] <- ( key in states["to"] ) ? states["to"][key] : ( opts.default_state in states ) ? states[opts.default_state][key] : states["current"][key];
         
         //store a table of unique keys we are animating
         unique_keys = {}
         foreach ( key, val in states["from"] )
-            if ( states["from"][key] != states["to"][key] ) unique_keys[key] <- "";
+            if ( supported.find(key) != null )
+                if ( states["from"][key] != states["to"][key] ) unique_keys[key] <- "";
 
         base.start();
     }
