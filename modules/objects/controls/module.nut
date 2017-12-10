@@ -80,21 +80,22 @@ class FeControls {
     constructor(opts = {}) {
         //set some default values, overriden by user provided values when merged
         this.opts = ::merge_opts({
-            enabled = true,         //whether controls manager takes control
-            selected = null,    //selected control
-            key_up = "up",
-            key_down = "down",
-            key_left = "left",
-            key_right = "right",
-            key_select = "select"
+            enabled = true,                     //whether controls manager takes control
+            selected = null,                    //selected control
+            last_selected = null,               //last selected control
+            clear_selection = true,             //clear selection on disable, restore selection on enable
+            key_up = "up",                      //up key
+            key_down = "down",                  //down key
+            key_left = "left",                  //left key
+            key_right = "right",                //right key
+            key_select = "select"               //select key
         }, opts);
 
         controls = {};
-        fe.add_signal_handler(this, "on_signal");
     }
 
     //enable or disable manager
-    function enabled(e) { opts.enabled = e; return this; }
+    //function enabled(e) { opts.enabled = e; return this; }
     //allow layout to customize user keys
     function up(str) { opts.key_up = str; return this; }
     function down(str) { opts.key_down = str; return this; }
@@ -109,6 +110,13 @@ class FeControls {
         return this;
     }
 
+    function clear_selection() {
+        foreach( ctl in controls )
+            ctl.trigger.call(ctl, "selected", false );
+        opts.last_selected = opts.selected;
+        opts.selected = null;
+    }
+
     //select control by id
     function select(id) {
         if ( id in controls == false ) return;
@@ -117,21 +125,41 @@ class FeControls {
                 ctl.trigger.call(ctl, "selected", true );
             else
                 ctl.trigger.call(ctl, "selected", false );
+        opts.last_selected = opts.selected;
         opts.selected = id;
     }
 
     //initialize manager
     function init() {
         select(opts.selected);
+        ::fe.add_signal_handler(this, "on_signal");
+    }
+    
+    function _get(key) {
+        if ( key in opts ) return opts[key];
+    }
+
+    function _set(key, val) {
+        if ( key == "enabled" ) {
+            if ( val != opts.enabled ) {
+                if ( opts.clear_selection && val ) select(opts.last_selected);
+                if ( opts.clear_selection && !val ) clear_selection(); 
+            }
+        }
+        if ( key in opts ) opts[key] <- val;
     }
 
     //catch keys we need (up/down/left/right/select)
     function on_signal(str) {
         if ( !opts.enabled || opts.selected == null ) return false;
         if ( str == opts.key_up || str == opts.key_down || str == opts.key_left || str == opts.key_right ) {
-            //select new control
-            if ( str in controls[opts.selected].opts )
-                select(controls[opts.selected].opts[str]);
+            //try to run function, or select new control
+            if ( str in controls[opts.selected].opts ) {
+                if ( typeof(controls[opts.selected].opts[str]) == "function" )
+                    controls[opts.selected].opts[str].call(controls[opts.selected]);
+                else if ( typeof(controls[opts.selected].opts[str]) == "string" )
+                    select(controls[opts.selected].opts[str]);
+            }
             return true;
         } else if ( str == opts.key_select && str in controls[opts.selected].opts ) {
             //run included opts function
