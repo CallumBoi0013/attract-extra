@@ -37,12 +37,12 @@
 //      //properties applied to control when in selected state
 //      rgb = [ 0, 150, 0 ]
 //   }
-//});
+//}));
 //
 // //Add an FeButton
 // manager.add(FeButton("myButton", 0, 0, 200, 30, {
 //   //same structure as label above for options
-// });
+// }));
 //
 // //Initialize controls manager
 // manager.init();
